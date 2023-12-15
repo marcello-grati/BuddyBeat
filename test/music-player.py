@@ -3,27 +3,30 @@ from pygame import mixer
 from tkinter import *
 import tkinter.font as font
 from tkinter import filedialog
+import os
 
+songlist={}
 
-#add many songs to the playlist
 def addsongs():
     #a list of songs is returned 
-    temp_song=filedialog.askopenfilenames(initialdir="Music/",title="Choose a song", filetypes=(("mp3 Files","*.mp3"),))
-    #loop through everyitem in the list
+    temp_song=filedialog.askopenfilenames(initialdir="/Users",title="Choose a song", filetypes=[("mp3 Files","*.mp3"), ("wav Files", "*.wav")])
     for s in temp_song:
-        s=s.replace("C:/Users/lenovo/Desktop/DataFlair/Notepad/Music/","")
-        songs_list.insert(END,s)
+        tmp = s
+        x=(os.path.splitext(s)[0]).split('/')[-1]
+        songlist.update({str(x): str(tmp)}) #full path
+        songs_list.insert(END,x) #name on list
         
             
 def deletesong():
     curr_song=songs_list.curselection()
     songs_list.delete(curr_song[0])
+    songlist.popitem(curr_song[0])
     
     
 def Play():
     song=songs_list.get(ACTIVE)
-    song=f'C:/Users/lenovo/Desktop/DataFlair/Notepad/Music/{song}'
-    mixer.music.load(song)
+    title=songlist.get(song)
+    mixer.music.load(title)
     mixer.music.play()
 
 #to pause the song 
@@ -48,8 +51,8 @@ def Previous():
     previous_one=previous_one[0]-1
     #to get the previous song
     temp2=songs_list.get(previous_one)
-    temp2=f'C:/Users/lenovo/Desktop/DataFlair/Notepad/Music/{temp2}'
-    mixer.music.load(temp2)
+    title=songlist.get(temp2)
+    mixer.music.load(title)
     mixer.music.play()
     songs_list.selection_clear(0,END)
     #activate new song
@@ -64,8 +67,8 @@ def Next():
     next_one=next_one[0]+1
     #to get the next song 
     temp=songs_list.get(next_one)
-    temp=f'C:/Users/lenovo/Desktop/DataFlair/Notepad/Music/{temp}'
-    mixer.music.load(temp)
+    title=songlist.get(temp)
+    mixer.music.load(title)
     mixer.music.play()
     songs_list.selection_clear(0,END)
     #activate newsong
@@ -75,7 +78,7 @@ def Next():
 
 #creating the root window 
 root=Tk()
-root.title('DataFlair Music player App ')
+root.title('BuddyBeat')
 #initialize mixer 
 mixer.init()
 
