@@ -3,13 +3,18 @@ from pygame import mixer
 from tkinter import *
 import tkinter.font as font
 from tkinter import filedialog
+import BPM_extractor
 import os
+import ctypes
+ 
+ctypes.windll.shcore.SetProcessDpiAwareness(1) # per migliorare risoluzione schermo
+
 
 songlist={}
 
 def addsongs():
     #a list of songs is returned 
-    temp_song=filedialog.askopenfilenames(initialdir="/Users",title="Choose a song", filetypes=[("mp3 Files","*.mp3"), ("wav Files", "*.wav")])
+    temp_song=filedialog.askopenfilenames(initialdir="/Users",title="Choose a song", filetypes=[(".mp3 files","*.mp3"), (".wav files", "*.wav"),("all files", "*.*")])
     for s in temp_song:
         tmp = s
         x=(os.path.splitext(s)[0]).split('/')[-1]
@@ -26,6 +31,7 @@ def deletesong():
 def Play():
     song=songs_list.get(ACTIVE)
     title=songlist.get(song)
+    BPM_extractor.print_bpm(title)
     mixer.music.load(title)
     mixer.music.play()
 
@@ -54,6 +60,7 @@ def Previous():
     title=songlist.get(temp2)
     mixer.music.load(title)
     mixer.music.play()
+    BPM_extractor.print_bpm(title)
     songs_list.selection_clear(0,END)
     #activate new song
     songs_list.activate(previous_one)
@@ -70,6 +77,7 @@ def Next():
     title=songlist.get(temp)
     mixer.music.load(title)
     mixer.music.play()
+    BPM_extractor.print_bpm(title)
     songs_list.selection_clear(0,END)
     #activate newsong
     songs_list.activate(next_one)
@@ -79,45 +87,52 @@ def Next():
 #creating the root window 
 root=Tk()
 root.title('BuddyBeat')
+
 #initialize mixer 
 mixer.init()
 
 #create the listbox to contain songs
 songs_list=Listbox(root,selectmode=SINGLE,bg="black",fg="white",font=('arial',15),height=12,width=47,selectbackground="gray",selectforeground="black")
-songs_list.grid(columnspan=9)
+songs_list.grid(columnspan=18)
 
 #font is defined which is to be used for the button font 
 defined_font = font.Font(family='Helvetica')
 
+photo_play = PhotoImage(file = r"src/play.png").subsample(10,10)
+photo_pause = PhotoImage(file = r"src/pause.png").subsample(10, 10) 
+photo_stop = PhotoImage(file = r"src/stop.png").subsample(10, 10) 
+photo_next = PhotoImage(file = r"src/next.png").subsample(10, 10) 
+photo_previous = PhotoImage(file = r"src/back.png").subsample(10, 10) 
+
 #play button
-play_button=Button(root,text="Play",width =7,command=Play)
+play_button=Button(root,text="Play",width=50, height=50, command=Play, image=photo_play)
 play_button['font']=defined_font
-play_button.grid(row=1,column=0)
+play_button.grid(row=1,column=0, columnspan=3)
 
 #pause button 
-pause_button=Button(root,text="Pause",width =7,command=Pause)
+pause_button=Button(root,text="Pause",width =50,height=50,command=Pause, image= photo_pause)
 pause_button['font']=defined_font
-pause_button.grid(row=1,column=1)
+pause_button.grid(row=1,column=3,columnspan=3)
 
 #stop button
-stop_button=Button(root,text="Stop",width =7,command=Stop)
+stop_button=Button(root,text="Stop",width =50,height=50,command=Stop, image=photo_stop)
 stop_button['font']=defined_font
-stop_button.grid(row=1,column=2)
+stop_button.grid(row=1,column=6,columnspan=3)
 
 #resume button
-Resume_button=Button(root,text="Resume",width =7,command=Resume)
+Resume_button=Button(root,text="Resume",width =50,height=50,command=Resume, image=photo_play)
 Resume_button['font']=defined_font
-Resume_button.grid(row=1,column=3)
+Resume_button.grid(row=1,column=9,columnspan=3)
 
 #previous button
-previous_button=Button(root,text="Prev",width =7,command=Previous)
+previous_button=Button(root,text="Prev",width =50,height=50,command=Previous, image=photo_previous)
 previous_button['font']=defined_font
-previous_button.grid(row=1,column=4)
+previous_button.grid(row=1,column=12,columnspan=3)
 
 #nextbutton
-next_button=Button(root,text="Next",width =7,command=Next)
+next_button=Button(root,text="Next",width =50,height=50,command=Next, image=photo_next)
 next_button['font']=defined_font
-next_button.grid(row=1,column=5)
+next_button.grid(row=1,column=15,columnspan=3)
 
 #menu 
 my_menu=Menu(root)

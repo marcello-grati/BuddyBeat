@@ -11,10 +11,11 @@ def get_bpm(audio_file):
     return tempo
 
 # Sostituisci con il percorso del tuo file audio
-audio_file_path = 'inserire/percorso/file/audio'
-if not os.path.exists(audio_file_path):
-    print(f"Errore: Il file '{audio_file_path}' non esiste.")
+def print_bpm(path):
+    audio_file_path = path
+    if not os.path.exists(audio_file_path):
+        print(f"Errore: Il file '{audio_file_path}' non esiste.")
 
-bpm = get_bpm(audio_file_path)
+    bpm = get_bpm(audio_file_path)  
 
-print(f'Tempo di battito: {bpm} bpm')
+    print(f'Tempo di battito di {path}: {bpm} bpm')
