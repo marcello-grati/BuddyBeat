@@ -4,7 +4,7 @@ from pygame import mixer
 import threading
 import time
 import tempfile
-from music-player import Play_Pause
+from music_player import Play_Pause
 from BPM_extractor import get_bpm 
 
 # Variabile globale per memorizzare il BPM precedente
