@@ -27,8 +27,11 @@ def update_bpm():
   bpm = int(alpha * new_bpm + (1-alpha)*bpm)
   print(bpm)
 
+def get_ideal_bpm():
+  return bpm
 
-if __name__ == "__main__":
+
+def bpm_computing_startup():
   parser = argparse.ArgumentParser()
   parser.add_argument("--ip", default="127.0.0.1", help="The ip to listen on")
   parser.add_argument("--port", type=int, default=57120, help="The port to listen on")
