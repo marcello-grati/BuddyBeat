@@ -5,7 +5,7 @@ from pythonosc import osc_server
 initial_bio_value = 60
 initial_sport_value = 100
 initial_bpm_value = 100
-alpha = 0.99
+alpha = 0.05
 bio_weight = 0.3
 sport_weight = 0.7
 
