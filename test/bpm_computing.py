@@ -6,7 +6,7 @@ import threading
 initial_bio_value = 60
 initial_sport_value = 100
 initial_bpm_value = 100
-ALPHA = 0.05
+ALPHA = 0.2
 bio_weight = 0.3
 sport_weight = 0.7
 
