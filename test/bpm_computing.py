@@ -1,46 +1,50 @@
 import argparse
 from pythonosc.dispatcher import Dispatcher
 from pythonosc import osc_server
+import threading
 
 initial_bio_value = 60
 initial_sport_value = 100
 initial_bpm_value = 100
-alpha = 0.05
+ALPHA = 0.05
 bio_weight = 0.3
 sport_weight = 0.7
 
-bpm = initial_bpm_value
-bio_value = initial_bio_value
-sport_value = initial_sport_value
+class BPM_computer:
+  def __init__(self):
 
-def update_sensors(a, b, c):
-  global bio_value, sport_value, alpha
+    self.bpm = initial_bpm_value
+    self.bio_value = initial_bio_value
+    self.sport_value = initial_sport_value
+    self.thread = threading.Thread(target=self.thread_function)
+    self.thread.start()
+    
+  def thread_function(self):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip", default="127.0.0.1", help="The ip to listen on")
+    parser.add_argument("--port", type=int, default=57120, help="The port to listen on")
+    args = parser.parse_args()
 
-  bio_value = alpha * float(b) + (1-alpha)*bio_value
-  sport_value = alpha * float(c) + (1-alpha)*sport_value
-  update_bpm()
-  #print(bio_value, sport_value)
+    dispatcher = Dispatcher()
+    dispatcher.map("/sensors", self.update_sensors)
 
-def update_bpm():
-  global bpm, bio_value, sport_value, alpha
-  new_bpm = bio_weight * bio_value + sport_weight * sport_value
-  bpm = int(alpha * new_bpm + (1-alpha)*bpm)
-  print(bpm)
+    server = osc_server.ThreadingOSCUDPServer(
+        (args.ip, args.port), dispatcher)
+    print("Serving on {}".format(server.server_address))
+    server.serve_forever()
 
-def get_ideal_bpm():
-  return bpm
+  def update_bpm(self):
+    new_bpm = bio_weight * self.bio_value + sport_weight * self.sport_value
+    self.bpm = int(ALPHA * new_bpm + (1-ALPHA) * self.bpm)
+    print(self.bpm)
 
+  def update_sensors(self, a, b, c):
+    self.bio_value = ALPHA * float(b) + (1-ALPHA) * self.bio_value
+    sport_value = ALPHA * float(c) + (1-ALPHA) * self.sport_value
+    self.update_bpm()
+    #print(bio_value, sport_value)
 
-def bpm_computing_startup():
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--ip", default="127.0.0.1", help="The ip to listen on")
-  parser.add_argument("--port", type=int, default=57120, help="The port to listen on")
-  args = parser.parse_args()
-
-  dispatcher = Dispatcher()
-  dispatcher.map("/sensors", update_sensors)
-
-  server = osc_server.ThreadingOSCUDPServer(
-      (args.ip, args.port), dispatcher)
-  print("Serving on {}".format(server.server_address))
-  server.serve_forever()
+  def get_ideal_bpm(self):
+    return self.bpm
+  
+  
