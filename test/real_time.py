@@ -35,7 +35,7 @@ def update_bpm(new_input_bpm, previous_input_bpm, next_buffer):
     mixer.music.queue(lambda: os.remove(temp_path))
 
 
-def extract_and_modify_buffers(song_path, window_size_ms, new_input_bpm_bpm):
+def extract_and_modify_buffers(song_path, window_size_ms, new_input_bpm):
     # Carica la canzone
     song = AudioSegment.from_file(song_path)
 
