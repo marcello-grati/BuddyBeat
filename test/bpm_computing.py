@@ -5,7 +5,7 @@ from pythonosc import osc_server
 initial_bio_value = 60
 initial_sport_value = 100
 initial_bpm_value = 100
-alpha = 0.99
+alpha = 0.05
 bio_weight = 0.3
 sport_weight = 0.7
 
@@ -27,8 +27,11 @@ def update_bpm():
   bpm = int(alpha * new_bpm + (1-alpha)*bpm)
   print(bpm)
 
+def get_ideal_bpm():
+  return bpm
 
-if __name__ == "__main__":
+
+def bpm_computing_startup():
   parser = argparse.ArgumentParser()
   parser.add_argument("--ip", default="127.0.0.1", help="The ip to listen on")
   parser.add_argument("--port", type=int, default=57120, help="The port to listen on")
