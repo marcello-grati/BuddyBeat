@@ -36,7 +36,7 @@ class BPM_computer:
   def update_bpm(self):
     new_bpm = bio_weight * self.bio_value + sport_weight * self.sport_value
     self.bpm = int(ALPHA * new_bpm + (1-ALPHA) * self.bpm)
-    print(self.bpm)
+    #print(self.bpm)
 
   def update_sensors(self, a, b, c):
     self.bio_value = ALPHA * float(b) + (1-ALPHA) * self.bio_value

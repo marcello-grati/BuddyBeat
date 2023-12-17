@@ -4,11 +4,13 @@ from pygame import mixer
 from tkinter import filedialog
 import os
 import ctypes
+import bpm_computing
 
 class MediaPlayer():
     
     def __init__(self):
         #initialize mixer 
+        self.bpm_comp= bpm_computing.BPM_computer()
         mixer.init()
         self.is_playing=False
         self.paused=False
@@ -175,6 +177,6 @@ class Gui(Tk):
 if __name__ == '__main__':
     
     root = Gui()
-    root.mainloop()
+    root.mainloop()    
 
 
