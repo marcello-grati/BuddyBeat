@@ -25,6 +25,7 @@ class DynamicPlayer:
         self.event = threading.Event()
         self.stream = None
         self.isPlaying = False
+        self.reproduction = None
 
     def callback(self, outdata, frames, time, status):
 
@@ -34,29 +35,34 @@ class DynamicPlayer:
             print(status)
         chunksize = min(len(self.data) - self.current_frame, frames)
         #print("chunksize: ", chunksize)
-        processed_chunk = stretch_function(
-            self.data[self.current_frame:self.current_frame + round(chunksize*id_bpm/self.original_bpm)+1], 
-            self.fs, 
-            self.original_bpm, 
-            id_bpm)
+        if (self.original_bpm!=None):
+            processed_chunk = stretch_function(
+                self.data[self.current_frame:self.current_frame + round(chunksize*id_bpm/self.original_bpm)+1], 
+                self.fs, 
+                self.original_bpm, 
+                id_bpm)
+        else :
+            processed_chunk = self.data[self.current_frame:self.current_frame + chunksize +1]
+
         #print("processed chunk: ",processed_chunk.shape)
         if len(processed_chunk) < frames:
             outdata[chunksize:] = 0
             self.isPlaying=False
             raise sd.CallbackStop()
-        outdata[:chunksize] = processed_chunk[:chunksize]        
-        self.current_frame += round(chunksize*id_bpm/self.original_bpm)
+        outdata[:chunksize] = processed_chunk[:chunksize] 
+        if (self.original_bpm!=None):       
+            self.current_frame += round(chunksize*id_bpm/self.original_bpm)
+        else :
+            self.current_frame += chunksize
         #print("current_frame: ", current_frame)
 
     def play(self):
         if ((self.file_path!=None) & (not self.isPlaying)):
             self.isPlaying = True
             print("play")
-            self.stream = sd.OutputStream(
-            samplerate=self.fs,
-            callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 8, latency="high")
-            with self.stream:
-                self.event.wait()  # Wait until playback is finished
+            self.reproduction = threading.Thread(target=self.reproduce)
+            self.reproduction.start()
+            
         else : 
             print("add song before playing")
 
@@ -87,3 +93,13 @@ class DynamicPlayer:
             self.isPlaying=False
         else : 
             print("no streaming playing")
+
+    def add_bpm(self, bpm):
+        self.original_bpm = bpm
+
+    def reproduce(self):
+        self.stream = sd.OutputStream(
+            samplerate=self.fs,
+            callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 8, latency="high")
+        with self.stream:
+            self.event.wait()  # Wait until playback is finished
