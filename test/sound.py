@@ -5,6 +5,7 @@ import sounddevice as sd
 import soundfile as sf
 import threading
 import time
+import rubberband
 
 import numpy as np
 import pyrubberband
@@ -65,29 +66,68 @@ def stretch_function(input, sr, bpm_start, bpm_arrive):
     #scipy.io.wavfile.write("stretcheder.wav", int(sr), out_stretch)
     return out_stretch
 
+# def stretch_function2(input, sr, ratio):
+
+#     return rubberband.stretch(input, rate=sr, ratio=ratio, crispness=5, precise=True)
+
+
+ratio = 107/100
+
 data, fs = sf.read("src/whenever.mp3", always_2d=True)
 
-# new_data = stretch_function(data, fs, 107, 150)
+# data = data[:,0]
+# data = data.tolist()
+
+#new_data = stretch_function(data, fs, 107, 107*ratio)
 
 event = threading.Event()
 
 current_frame = 0
+current_frame_dist = 0
+
+""" def callback(outdata, frames, time, status):
+    global current_frame, current_frame_dist, ratio
+    if status:
+        print(status)
+    chunksize = min(len(data) - current_frame, int(frames / ratio))
+    chunksize_dist = min(frames, (len(data) - current_frame)*ratio)
+    print(chunksize_dist, int(chunksize*ratio +1))
+    processed_chunk = stretch_function(data[current_frame:current_frame + chunksize + 1], fs, 107, int(107/ratio))
+    #processed_chunk = 0.5 * data[current_frame:current_frame + chunksize]
+    #processed_chunk = data[current_frame:current_frame + 5 * chunksize]
+    #new_data = stretch_function(data, fs, 107, 107*ratio)
+    #processed_chunk = new_data[current_frame_dist:current_frame_dist + 5 * chunksize_dist]
+    #processed_chunk = stretch_function2(data[current_frame:current_frame + chunksize +1], fs, ratio)
+    #processed_chunk = np.expand_dims(processed_chunk, axis=1)
+    outdata[:chunksize_dist] = processed_chunk[:chunksize_dist]
+    if chunksize_dist < frames:
+        outdata[chunksize_dist:] = 0
+        print("AAHAAAAAAAAAH")
+        raise sd.CallbackStop()
+    
+    current_frame += chunksize
+    current_frame_dist += chunksize_dist
+    print((processed_chunk[:chunksize_dist]).shape) """
 
 def callback(outdata, frames, time, status):
     global current_frame
     if status:
         print(status)
     chunksize = min(len(data) - current_frame, frames)
-    #processed_chunk = stretch_function(data[current_frame:current_frame + chunksize], fs, 107, 110)
-    processed_chunk = 0.5 * data[current_frame:current_frame + chunksize]
-    outdata[:chunksize] = processed_chunk
-    if chunksize < frames:
+    print("chunksize: ", chunksize)
+    processed_chunk = stretch_function(data[current_frame:current_frame + round(chunksize*120/107)+1], fs, 107, 120)
+    #processed_chunk = 0.5 * data[current_frame:current_frame + chunksize]
+    print("processed chunck: ",processed_chunk.shape)
+    if len(processed_chunk) < frames:
         outdata[chunksize:] = 0
         raise sd.CallbackStop()
-    current_frame += chunksize
+    outdata[:chunksize] = processed_chunk[:chunksize]        
+    current_frame += round(chunksize*120/107) -1
+    print("current_frame: ", current_frame)
+
 
 stream = sd.OutputStream(
     samplerate=fs,
-    callback=callback, channels=data.shape[1], finished_callback=event.set)
+    callback=callback, channels=2, finished_callback=event.set, blocksize=4096 * 4, latency="high")
 with stream:
     event.wait()  # Wait until playback is finished
