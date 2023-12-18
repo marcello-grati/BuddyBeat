@@ -5,10 +5,10 @@ import sounddevice as sd
 import soundfile as sf
 import threading
 import time
-import rubberband
 
 import numpy as np
 import pyrubberband
+import bpm_computing as bc
 
 # sr = 44100
 
@@ -75,6 +75,8 @@ ratio = 107/100
 
 data, fs = sf.read("src/whenever.mp3", always_2d=True)
 
+bpm_comp = bc.BPM_computer()
+
 # data = data[:,0]
 # data = data.tolist()
 
@@ -111,19 +113,20 @@ current_frame_dist = 0
 
 def callback(outdata, frames, time, status):
     global current_frame
+    id_bpm = bpm_comp.get_ideal_bpm()
+    print("ideal BPM: ", id_bpm)
     if status:
         print(status)
     chunksize = min(len(data) - current_frame, frames)
-    print("chunksize: ", chunksize)
-    processed_chunk = stretch_function(data[current_frame:current_frame + round(chunksize*120/107)+1], fs, 107, 120)
-    #processed_chunk = 0.5 * data[current_frame:current_frame + chunksize]
-    print("processed chunck: ",processed_chunk.shape)
+    #print("chunksize: ", chunksize)
+    processed_chunk = stretch_function(data[current_frame:current_frame + round(chunksize*id_bpm/107)+1], fs, 107, id_bpm)
+    #print("processed chunck: ",processed_chunk.shape)
     if len(processed_chunk) < frames:
         outdata[chunksize:] = 0
         raise sd.CallbackStop()
     outdata[:chunksize] = processed_chunk[:chunksize]        
-    current_frame += round(chunksize*120/107) -1
-    print("current_frame: ", current_frame)
+    current_frame += round(chunksize*id_bpm/107) -1
+    #print("current_frame: ", current_frame)
 
 
 stream = sd.OutputStream(
