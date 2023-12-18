@@ -1,4 +1,4 @@
-from pydub import AudioSegment
+""" from pydub import AudioSegment
 from pygame import mixer
 import threading
 import time
@@ -73,3 +73,4 @@ def update_bpm_continuously(new_input_bpm):
 # Avvia il thread per l'aggiornamento continuo del BPM
 update_thread = threading.Thread(target=update_bpm_continuously)
 update_thread.start()
+ """
