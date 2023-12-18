@@ -6,9 +6,10 @@ import threading
 initial_bio_value = 60
 initial_sport_value = 100
 initial_bpm_value = 100
-ALPHA = 0.2
-bio_weight = 0.3
-sport_weight = 0.7
+ALPHA = 0.5
+BETA = 0.9
+bio_weight = 0.5
+sport_weight = 0.5
 
 class BPM_computer:
   def __init__(self):
@@ -34,17 +35,18 @@ class BPM_computer:
     server.serve_forever()
 
   def update_bpm(self):
-    new_bpm = bio_weight * self.bio_value + sport_weight * self.sport_value
+    new_bpm = (bio_weight * self.bio_value) + (sport_weight * self.sport_value)
     self.bpm = int(ALPHA * new_bpm + (1-ALPHA) * self.bpm)
-    #print(self.bpm)
+    # print(self.bpm)
 
   def update_sensors(self, a, b, c):
-    self.bio_value = ALPHA * float(b) + (1-ALPHA) * self.bio_value
-    sport_value = ALPHA * float(c) + (1-ALPHA) * self.sport_value
+    self.bio_value = int(BETA * float(b) + (1-BETA) * self.bio_value)
+    self.sport_value = int(BETA * float(c) + (1-BETA) * self.sport_value)
     self.update_bpm()
-    #print(bio_value, sport_value)
+    # print(self.bio_value, self.sport_value)
 
   def get_ideal_bpm(self):
+    print(self.bio_value, self.sport_value)
     return self.bpm
   
   

@@ -46,7 +46,7 @@ def update_second_value(v):
 
 def send_values():
     client.send_message("/sensors", [first_value, second_value])
-    #print(first_value, second_value)
+    print(first_value, second_value)
     root.after(100, send_values)
 
 first_slider = Scale(root, from_=min_first, to_=max_first, orient=HORIZONTAL, length=500, width=30, label=first_label, command=update_first_value)
