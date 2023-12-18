@@ -22,6 +22,7 @@ class DynamicPlayer:
         self.bpm_comp = bpm_comp
         self.current_frame = 0
         self.event = threading.Event()
+        self.stream = None
 
     def callback(self, outdata, frames, time, status):
 
@@ -45,19 +46,32 @@ class DynamicPlayer:
         #print("current_frame: ", current_frame)
 
     def play(self):
-        stream = sd.OutputStream(
+        print("play")
+        self.stream = sd.OutputStream(
         samplerate=self.fs,
         callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 8, latency="high")
-        with stream:
+        with self.stream:
             self.event.wait()  # Wait until playback is finished
 
     def change(self, file_path, original_bpm=None):
+        print("change")
         self.file_path = file_path
         self.original_bpm = original_bpm
         self.data, self.fs = sf.read(file_path, always_2d=True)
         self.current_frame = 0
+        #self.event.clear()
+        # print("cambiato canzone \|T|/")
+
+    def stop(self):
+        print("stop")
+        self.stream.stop()
+        self.current_frame = 0
         self.event.clear()
-        print("cambiato canzone \|T|/")
+
+    def pause(self):
+        print("pause")
+        self.stream.stop()
+        self.event.clear()
         
 
 """ ratio = 107/100
