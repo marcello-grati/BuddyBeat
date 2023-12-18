@@ -15,14 +15,16 @@ def stretch_function(input, sr, bpm_start, bpm_arrive):
     return out_stretch
 
 class DynamicPlayer:
-    def __init__(self, file_path, bpm_comp, original_bpm=None):
-        self.file_path = file_path
-        self.original_bpm = original_bpm
-        self.data, self.fs = sf.read(file_path, always_2d=True)
+    def __init__(self, bpm_comp):
+        self.file_path = None
+        self.original_bpm = None
+        self.data = None
+        self.fs = None
         self.bpm_comp = bpm_comp
         self.current_frame = 0
         self.event = threading.Event()
         self.stream = None
+        self.isPlaying = False
 
     def callback(self, outdata, frames, time, status):
 
@@ -40,20 +42,25 @@ class DynamicPlayer:
         #print("processed chunk: ",processed_chunk.shape)
         if len(processed_chunk) < frames:
             outdata[chunksize:] = 0
+            self.isPlaying=False
             raise sd.CallbackStop()
         outdata[:chunksize] = processed_chunk[:chunksize]        
         self.current_frame += round(chunksize*id_bpm/self.original_bpm)
         #print("current_frame: ", current_frame)
 
     def play(self):
-        print("play")
-        self.stream = sd.OutputStream(
-        samplerate=self.fs,
-        callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 8, latency="high")
-        with self.stream:
-            self.event.wait()  # Wait until playback is finished
+        if ((self.file_path!=None) & (not self.isPlaying)):
+            self.isPlaying = True
+            print("play")
+            self.stream = sd.OutputStream(
+            samplerate=self.fs,
+            callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 8, latency="high")
+            with self.stream:
+                self.event.wait()  # Wait until playback is finished
+        else : 
+            print("add song before playing")
 
-    def change(self, file_path, original_bpm=None):
+    def add_song(self, file_path, original_bpm=None):
         print("change")
         self.file_path = file_path
         self.original_bpm = original_bpm
@@ -63,47 +70,20 @@ class DynamicPlayer:
         # print("cambiato canzone \|T|/")
 
     def stop(self):
-        print("stop")
-        self.stream.stop()
-        self.current_frame = 0
-        self.event.clear()
+        if (self.isPlaying):
+            print("stop")
+            self.stream.stop()
+            self.current_frame = 0
+            self.event.clear()
+            self.isPlaying=False
+        else : 
+            print("no streaming playing")
 
     def pause(self):
-        print("pause")
-        self.stream.stop()
-        self.event.clear()
-        
-
-""" ratio = 107/100
-
-data, fs = sf.read("src/whenever.mp3", always_2d=True)
-
-bpm_comp = bc.BPM_computer()
-
-event = threading.Event()
-
-current_frame = 0 """
-
-""" def callback(outdata, frames, time, status):
-    global current_frame
-    id_bpm = bpm_comp.get_ideal_bpm()
-    print("ideal BPM: ", id_bpm)
-    if status:
-        print(status)
-    chunksize = min(len(data) - current_frame, frames)
-    #print("chunksize: ", chunksize)
-    processed_chunk = stretch_function(data[current_frame:current_frame + round(chunksize*id_bpm/107)+1], fs, 107, id_bpm)
-    #print("processed chunck: ",processed_chunk.shape)
-    if len(processed_chunk) < frames:
-        outdata[chunksize:] = 0
-        raise sd.CallbackStop()
-    outdata[:chunksize] = processed_chunk[:chunksize]        
-    current_frame += round(chunksize*id_bpm/107) -1
-    #print("current_frame: ", current_frame) """
-
-
-""" stream = sd.OutputStream(
-    samplerate=fs,
-    callback=callback, channels=2, finished_callback=event.set, blocksize=4096 * 8, latency="high")
-with stream:
-    event.wait()  # Wait until playback is finished """
+        if (self.isPlaying):
+            print("pause")
+            self.stream.stop()
+            self.event.clear()
+            self.isPlaying=False
+        else : 
+            print("no streaming playing")
