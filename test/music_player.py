@@ -5,9 +5,10 @@ from tkinter import filedialog
 import os
 import ctypes
 import bpm_computing
-import BPM_extractor
 import librosa
 from threading import Thread
+import time as t
+from pygame import time
 
 class MediaPlayer():
     
@@ -18,6 +19,8 @@ class MediaPlayer():
         self.is_playing=False
         self.paused=False
         self.queue = []
+        self.extraction_completed=False
+        self.current_song = None
         
     def Play_Pause(self):
         if(self.is_playing and not self.paused):
@@ -30,11 +33,35 @@ class MediaPlayer():
             self.Play()
      
     def play_song(self, title):
+        self.current_song = title
+        root.mp.queue.remove(title)
+        root.mp.queue.insert(0, title)
+        if(root.mp.extraction_completed==True):
+            self.update_queue()
         path=root.songlist.get(title)[0]
         mixer.music.load(path)
         mixer.music.play()
         self.is_playing = True
         self.paused = False
+        
+    def update_queue(self):
+        #while(root.mp.extraction_completed==False):
+        #    time.sleep(0.5)
+        if(root.mp.extraction_completed==True):
+            current_bpm = root.mp.bpm_comp.get_ideal_bpm()
+            tmp_dict={}
+            for title in root.mp.queue[1:]:
+                bpm_song = root.songlist[title][1]
+                dist = abs(bpm_song-current_bpm)
+                tmp_dict.update({title: dist})
+            tmp_dict = dict(sorted(tmp_dict.items(), key=lambda x:x[1]))
+            print(tmp_dict)    
+            root.mp.queue[1:] = [key for key, _ in tmp_dict.items()]
+            print(root.mp.queue)
+            root.songs_list.delete(0, END)
+            for item in root.mp.queue:
+                root.songs_list.insert('end', item)
+            root.songs_list.selection_set(ACTIVE)
         
     def next_on_queue(self):
         if len(root.songlist) != 0:
@@ -46,10 +73,6 @@ class MediaPlayer():
             self.play_song(next_one) 
             self.queue.pop(0)
             print(self.queue)
-        
-    def update_queue(self):
-        # sorting queue according to parameters   
-        return
           
     def Play(self):
         if len(root.songlist) != 0:
@@ -132,13 +155,21 @@ class BPM_extractor(Thread):
             # Estrai il tempo di battito
             bpm, _ = librosa.beat.beat_track(y=y, sr=sr)
             root.songlist[title][1] = bpm
-        root.songlist = dict(sorted(root.songlist.items(), key=lambda x:x[1][1]))
-        root.mp.queue = [key for key, _ in root.songlist.items()]
-        print(root.songlist)
-        print(root.mp.queue)
-        root.songs_list.delete (0, END)
-        for item in root.mp.queue:
-            root.songs_list.insert('end', item)
+        root.mp.extraction_completed = True
+            
+class Queue(Thread):
+    # constructor
+    def __init__(self):
+        # execute the base constructor
+        Thread.__init__(self)
+ 
+    # function executed in a new thread
+    def run(self):
+        while(True):
+            t.sleep(1)
+            if(root.mp.extraction_completed==True):
+                root.mp.update_queue()
+                t.sleep(10)
 
 class Gui(Tk):
     
@@ -220,4 +251,6 @@ class Gui(Tk):
 if __name__ == '__main__':
     
     root = Gui()
+    queue = Queue()
+    queue.start()
     root.mainloop()    
