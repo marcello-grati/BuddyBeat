@@ -32,7 +32,7 @@ class DynamicPlayer:
     def callback(self, outdata, frames, time, status):
 
         id_bpm = self.bpm_comp.get_ideal_bpm()
-        print("ideal BPM: ", id_bpm)
+        # print("ideal BPM: ", id_bpm)
         if status:
             print(status)
         chunksize = min(len(self.data) - self.current_frame, frames)
@@ -50,6 +50,8 @@ class DynamicPlayer:
         if len(processed_chunk) < frames:
             outdata[chunksize:] = 0
             self.isPlaying=False
+            print("\nSong finished\n")
+            self.media_player.finishedSong = True
             raise sd.CallbackStop()
         outdata[:chunksize] = processed_chunk[:chunksize] 
         if (self.original_bpm!=None):       
@@ -65,6 +67,10 @@ class DynamicPlayer:
             print("play")
             self.reproduction = threading.Thread(target=self.reproduce)
             self.reproduction.start()
+            if (self.reproduction.is_alive()):
+                print("thread started\n", self.file_path)
+            
+            self.media_player.startedSong = True
             
         else : 
             print("add song before playing")
@@ -85,6 +91,8 @@ class DynamicPlayer:
             self.current_frame = 0
             self.event.clear()
             self.isPlaying=False
+            self.media_player.startedSong = False
+
         else : 
             print("no streaming playing")
 
@@ -94,6 +102,7 @@ class DynamicPlayer:
             self.stream.stop()
             self.event.clear()
             self.isPlaying=False
+            self.media_player.startedSong = False
         else : 
             print("no streaming playing")
 
@@ -108,6 +117,6 @@ class DynamicPlayer:
     def reproduce(self):
         self.stream = sd.OutputStream(
             samplerate=self.fs,
-            callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 8, latency="high")
+            callback=self.callback, channels=2, finished_callback=self.event.set, blocksize=4096 * 4, latency="high")
         with self.stream:
             self.event.wait()  # Wait until playback is finished

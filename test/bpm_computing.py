@@ -46,7 +46,7 @@ class BPM_computer:
     # print(self.bio_value, self.sport_value)
 
   def get_ideal_bpm(self):
-    print(self.bio_value, self.sport_value)
+    # print(self.bio_value, self.sport_value)
     return self.bpm
   
   

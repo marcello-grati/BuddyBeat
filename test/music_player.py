@@ -28,6 +28,22 @@ class MediaPlayer():
         self.extraction_completed=False
         self.current_song = None
         self.isGenerating = False
+        self.startedSong = False
+        self.finishedSong = False
+        self.start_next_song = Thread(target=self.check_finished_song)
+        self.start_next_song.start()
+
+    def check_finished_song(self):
+        while(True):
+            if (self.startedSong & self.finishedSong):
+                print("changing song")
+                self.dplayer.reproduction.join()
+                self.startedSong = False
+                self.finishedSong = False
+                self.dplayer.event.clear()
+                self.next_on_queue()
+            sleep(1)
+            
         
     def Play_Pause(self):
         if(self.is_playing and not self.paused):
@@ -93,6 +109,8 @@ class MediaPlayer():
             #self.already_played.append(self.queue.pop(0))
             if self.current_song is not None:
                 self.already_played.append(self.queue.pop(0))
+            print("next one is ", next_one)
+            self.dplayer.stop()
             self.play_song(next_one) 
 
     def gen_sounds(self):
@@ -217,7 +235,7 @@ class Queue(Thread):
             t.sleep(1)
             if(root.mp.extraction_completed==True):
                 root.mp.update_queue()
-                t.sleep(50)
+                t.sleep(10)
 
 #GUI
 class Gui(Tk):
