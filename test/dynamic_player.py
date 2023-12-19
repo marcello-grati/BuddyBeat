@@ -7,6 +7,7 @@ import threading
 import numpy as np
 import pyrubberband
 import bpm_computing as bc
+import ntpath
 
 def stretch_function(input, sr, bpm_start, bpm_arrive):
 
@@ -55,6 +56,7 @@ class DynamicPlayer:
             self.current_frame += round(chunksize*id_bpm/self.original_bpm)
         else :
             self.current_frame += chunksize
+            self.update_bpm()
         #print("current_frame: ", current_frame)
 
     def play(self):
@@ -95,8 +97,13 @@ class DynamicPlayer:
         else : 
             print("no streaming playing")
 
-    def add_bpm(self, bpm):
-        self.original_bpm = bpm
+    def update_bpm(self):
+        name = ntpath.basename(self.file_path)
+        title, ext = ntpath.splitext(name)
+        print("Update bpm of " + title)
+        self.original_bpm = self.media_player.get_bpm_from_dict(title)
+        if self.original_bpm != None :
+            print("Praise the Sun! \|T|/")
 
     def reproduce(self):
         self.stream = sd.OutputStream(
