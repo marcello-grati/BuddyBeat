@@ -39,18 +39,18 @@ class DynamicPlayer:
         #print("chunksize: ", chunksize)
         if (self.original_bpm!=None):
             processed_chunk = stretch_function(
-                self.data[self.current_frame:self.current_frame + round(chunksize*id_bpm/self.original_bpm)+1], 
+                0.1*self.data[self.current_frame:self.current_frame + round(chunksize*id_bpm/self.original_bpm)+1], 
                 self.fs, 
                 self.original_bpm, 
                 id_bpm)
         else :
-            processed_chunk = self.data[self.current_frame:self.current_frame + chunksize +1]
+            processed_chunk = 0.1*self.data[self.current_frame:self.current_frame + chunksize +1]
 
         #print("processed chunk: ",processed_chunk.shape)
         if len(processed_chunk) < frames:
             outdata[chunksize:] = 0
             self.isPlaying=False
-            print("\nSong finished\n")
+            #print("\nSong finished\n")
             self.media_player.finishedSong = True
             raise sd.CallbackStop()
         outdata[:chunksize] = processed_chunk[:chunksize] 
@@ -64,11 +64,11 @@ class DynamicPlayer:
     def play(self):
         if ((self.file_path!=None) & (not self.isPlaying)):
             self.isPlaying = True
-            print("play")
+            #print("play")
             self.reproduction = threading.Thread(target=self.reproduce)
             self.reproduction.start()
             if (self.reproduction.is_alive()):
-                print("thread started\n", self.file_path)
+                print("Reproducing ", self.file_path)
             
             self.media_player.startedSong = True
             
@@ -76,7 +76,7 @@ class DynamicPlayer:
             print("add song before playing")
 
     def add_song(self, file_path, original_bpm=None):
-        print("change")
+        #print("change")
         self.file_path = file_path
         self.original_bpm = original_bpm
         self.data, self.fs = sf.read(file_path, always_2d=True)
@@ -86,7 +86,7 @@ class DynamicPlayer:
 
     def stop(self):
         if (self.isPlaying):
-            print("stop")
+            #print("stop")
             self.stream.stop()
             self.current_frame = 0
             self.event.clear()
@@ -98,7 +98,7 @@ class DynamicPlayer:
 
     def pause(self):
         if (self.isPlaying):
-            print("pause")
+            #print("pause")
             self.stream.stop()
             self.event.clear()
             self.isPlaying=False
@@ -109,10 +109,10 @@ class DynamicPlayer:
     def update_bpm(self):
         name = ntpath.basename(self.file_path)
         title, ext = ntpath.splitext(name)
-        print("Update bpm of " + title)
+        #print("Update bpm of " + title)
         self.original_bpm = self.media_player.get_bpm_from_dict(title)
         if self.original_bpm != None :
-            print("Praise the Sun! \|T|/")
+            print("Bpm updated")
 
     def reproduce(self):
         self.stream = sd.OutputStream(

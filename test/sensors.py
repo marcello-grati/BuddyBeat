@@ -1,6 +1,8 @@
 from tkinter import *
 import argparse
 from pythonosc import udp_client
+import os
+import ctypes
 
 first_value = 60
 min_first = 50
@@ -33,6 +35,8 @@ client = start_osc_communication()
 
 #creating the root window 
 root=Tk()
+if os.name == 'nt':
+            ctypes.windll.shcore.SetProcessDpiAwareness(1) # per migliorare risoluzione schermo
 root.title('Sensors')
 root.geometry('500x300') 
 
@@ -46,7 +50,7 @@ def update_second_value(v):
 
 def send_values():
     client.send_message("/sensors", [first_value, second_value])
-    print(first_value, second_value)
+    #print(first_value, second_value)
     root.after(100, send_values)
 
 first_slider = Scale(root, from_=min_first, to_=max_first, orient=HORIZONTAL, length=500, width=30, label=first_label, command=update_first_value)

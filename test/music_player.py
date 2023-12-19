@@ -7,13 +7,9 @@ import bpm_computing
 import librosa
 from threading import Thread
 import time as t
-
 import dynamic_player
-
-import random
-import time
-from pythonosc import udp_client
-from time import sleep
+#from pythonosc import udp_client
+#from time import sleep
 
 class MediaPlayer():
     
@@ -27,7 +23,7 @@ class MediaPlayer():
         self.already_played = []
         self.extraction_completed=False
         self.current_song = None
-        self.isGenerating = False
+        #self.isGenerating = False
         self.startedSong = False
         self.finishedSong = False
         self.start_next_song = Thread(target=self.check_finished_song)
@@ -36,13 +32,13 @@ class MediaPlayer():
     def check_finished_song(self):
         while(True):
             if (self.startedSong & self.finishedSong):
-                print("changing song")
+                #print("changing song")
                 self.dplayer.reproduction.join()
                 self.startedSong = False
                 self.finishedSong = False
                 self.dplayer.event.clear()
                 self.next_on_queue()
-            sleep(1)
+            t.sleep(1)
             
         
     def Play_Pause(self):
@@ -62,7 +58,7 @@ class MediaPlayer():
             self.queue.remove(title)
         self.queue.insert(0, title) #current_song as first element of the queue
         self.current_song = title
-        print(self.current_song)
+        print("Current song: ", self.current_song)
         self.update_queue() #update queue
         path=root.songlist.get(title)[0]
         self.dplayer.add_song(path, root.songlist[title][1])
@@ -88,7 +84,7 @@ class MediaPlayer():
             tmp_dict = dict(sorted(tmp_dict.items(), key=lambda x:x[1]))
             #print(tmp_dict)    
             root.mp.queue[1:] = [key for key, _ in tmp_dict.items()]
-            print(root.mp.queue)
+            print("Updated queue:", root.mp.queue)
             root.songs_list.delete(0, END)
             for item in root.mp.queue:
                 root.songs_list.insert('end', item)
@@ -109,11 +105,11 @@ class MediaPlayer():
             #self.already_played.append(self.queue.pop(0))
             if self.current_song is not None:
                 self.already_played.append(self.queue.pop(0))
-            print("next one is ", next_one)
+            #print("next one is ", next_one)
             self.dplayer.stop()
             self.play_song(next_one) 
 
-    def gen_sounds(self):
+    """def gen_sounds(self):
         if self.isGenerating:
             self.isGenerating = False
             print("Generazione terminata")
@@ -130,7 +126,7 @@ class MediaPlayer():
             gen_bpm = self.bpm_comp.get_ideal_bpm()
             client.send_message("/bpm", gen_bpm)
             print(f"Valore di BPM inviato: {gen_bpm}")
-            time.sleep(delta_t)
+            t.sleep(delta_t)"""
 
     def get_bpm_from_dict(self, title):
         return root.songlist[title][1]
@@ -188,7 +184,7 @@ class MediaPlayer():
             song=root.songs_list.get(previous_one)
             self.play_song(song)
 
-    def Next(self):
+    """def Next(self):
         if len(root.songlist) != 0:
             #to get the selected song index
             next_one=root.songs_list.curselection()
@@ -203,7 +199,7 @@ class MediaPlayer():
             root.play_button.config(image=root.photo_pause)
             #to get the next song 
             song=root.songs_list.get(next_one)
-            self.play_song(song)
+            self.play_song(song)"""
 
 #extractor of bpm
 class BPM_extractor(Thread):
@@ -233,7 +229,7 @@ class Queue(Thread):
     def run(self):
         while(True):
             t.sleep(1)
-            if(root.mp.extraction_completed==True):
+            if(root.mp.extraction_completed==True and root.mp.is_playing == True):
                 root.mp.update_queue()
                 t.sleep(10)
 
@@ -295,9 +291,9 @@ class Gui(Tk):
         self.next_button.grid(row=1,column=151)
 
         #gen button
-        self.gen_button=Button(frB,width =50,height=60,image=self.photo_gen, bg="#fcfaf2",borderwidth=0, command=self.mp.gen_sounds)
-        self.gen_button['font']=defined_font
-        self.gen_button.grid(row=1,column=155)
+        #self.gen_button=Button(frB,width =50,height=60,image=self.photo_gen, bg="#fcfaf2",borderwidth=0, command=self.mp.gen_sounds)
+        #self.gen_button['font']=defined_font
+        #self.gen_button.grid(row=1,column=155)
 
         #menu 
         my_menu=Menu(self)
