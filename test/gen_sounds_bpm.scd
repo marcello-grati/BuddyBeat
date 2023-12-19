@@ -10,10 +10,10 @@ var probs = [1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8, 1/8];  // equal probabilities fo
 var pattern = Pbind(
     \instrument, \default,
     \dur, Pfunc({ dur }),  // use the current value of dur
-	\degree, Pseq(Pwrand(degrees, probs, 4).asStream.all, inf) // choose a random frequency for each note; the sequence has a complete duration of delta_t seconds (see correspondent python file)
+	\degree, Prand(Pwrand(degrees, probs, 6).asStream.all, inf) // choose a random frequency for each note; the sequence has a complete duration of delta_t seconds (see correspondent python file)
 );
 
-// OSCdef updates bpm and dur when a message is received
+// OSCdef updates bpm and dur when a message is received (default port 57120)
 OSCdef(\myOSCListener, { |msg, time, addr, recvPort|
     bpm = msg[1];
     dur = 60.0 / bpm;

@@ -4,8 +4,8 @@ import time
 from pythonosc import udp_client
 from time import sleep
 
-high_range = 80
-low_range = 140
+high_range = 40   #80
+low_range = 200   #140
 random.uniform(low_range, high_range)
 
 # intervallo di tempo tra due letture consecutive
