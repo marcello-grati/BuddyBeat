@@ -19,7 +19,7 @@ def start_osc_communication():
     # OSC server ip
     parser.add_argument("--ip", default='127.0.0.1', help="The ip of the OSC server")
     # OSC server port (check on SuperCollider)
-    parser.add_argument("--port", type=int, default=57120, help="The port the OSC server is listening on")
+    parser.add_argument("--port", type=int, default=57121, help="The port the OSC server is listening on")
 
     # Parse the arguments
     args = parser.parse_args()
