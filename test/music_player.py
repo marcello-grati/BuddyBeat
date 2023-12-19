@@ -27,6 +27,7 @@ class MediaPlayer():
         self.already_played = []
         self.extraction_completed=False
         self.current_song = None
+        self.isGenerating = False
         
     def Play_Pause(self):
         if(self.is_playing and not self.paused):
