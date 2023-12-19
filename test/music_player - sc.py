@@ -10,6 +10,11 @@ import time as t
 
 import dynamic_player
 
+import random
+import time
+from pythonosc import udp_client
+from time import sleep
+
 class MediaPlayer():
     
     def __init__(self):
@@ -22,6 +27,7 @@ class MediaPlayer():
         self.already_played = []
         self.extraction_completed=False
         self.current_song = None
+        self.isGenerating = False
         
     def Play_Pause(self):
         if(self.is_playing and not self.paused):
@@ -78,8 +84,29 @@ class MediaPlayer():
             #print(self.queue)
             self.already_played.append(self.queue.pop(0))
             self.play_song(next_one) 
+    
+    def gen_sounds(self):
+        if self.isGenerating:
+            self.isGenerating = False
+            print("Generazione terminata")
+        else:
+            self.isGenerating = True
+            gen_thread = Thread(target=self.start_sending)
+            gen_thread.start()
+        
             
-    def get_bpm_from_dict(title):
+
+    def start_sending(self):
+        delta_t = 2.0
+        client = udp_client.SimpleUDPClient("127.0.0.1", 57120)
+
+        while(self.isGenerating):
+            gen_bpm = self.bpm_comp.get_ideal_bpm()
+            client.send_message("/bpm", gen_bpm)
+            print(f"Valore di BPM inviato: {gen_bpm}")
+            time.sleep(delta_t)
+
+    def get_bpm_from_dict(self, title):
         return root.songlist[title][1]
     
     def Play(self):
@@ -216,6 +243,7 @@ class Gui(Tk):
         self.photo_stop = PhotoImage(file = r"src/stop.png").subsample(10, 10) 
         self.photo_next = PhotoImage(file = r"src/next.png").subsample(10, 10) 
         self.photo_previous = PhotoImage(file = r"src/back.png").subsample(10, 10) 
+        self.photo_gen = PhotoImage(file = r"src/icon_gen_sounds.png").subsample(10, 10)
 
         #play button
         self.play_button=Button(frB,width=50, height=60, image=self.photo_play, bg="#fcfaf2", borderwidth=0, command=self.mp.Play_Pause)
@@ -232,10 +260,15 @@ class Gui(Tk):
         self.previous_button['font']=defined_font
         self.previous_button.grid(row=1,column=148)
 
-        #nextbutton
+        #next button
         self.next_button=Button(frB,width =50,height=60,image=self.photo_next, bg="#fcfaf2",borderwidth=0, command=self.mp.next_on_queue)
         self.next_button['font']=defined_font
         self.next_button.grid(row=1,column=151)
+
+        #gen button
+        self.gen_button=Button(frB,width =50,height=60,image=self.photo_gen, bg="#fcfaf2",borderwidth=0, command=self.mp.gen_sounds)
+        self.gen_button['font']=defined_font
+        self.gen_button.grid(row=1,column=155)
 
         #menu 
         my_menu=Menu(self)
