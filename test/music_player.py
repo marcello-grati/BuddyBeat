@@ -59,6 +59,8 @@ class MediaPlayer():
         self.queue.insert(0, title) #current_song as first element of the queue
         self.current_song = title
         print("Current song: ", self.current_song)
+        if root.songlist[self.current_song][1] != None:
+            print("Bpm song: ",  root.songlist[self.current_song][1])
         self.update_queue() #update queue
         path=root.songlist.get(title)[0]
         self.dplayer.add_song(path, root.songlist[title][1])

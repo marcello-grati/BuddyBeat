@@ -1,9 +1,6 @@
-from pydub import AudioSegment
-from pydub.utils import get_array_type
 import sounddevice as sd
 import soundfile as sf
 import threading
-
 import numpy as np
 import pyrubberband
 import bpm_computing as bc
@@ -112,7 +109,7 @@ class DynamicPlayer:
         #print("Update bpm of " + title)
         self.original_bpm = self.media_player.get_bpm_from_dict(title)
         if self.original_bpm != None :
-            print("Bpm updated")
+            print("Bpm song: ", self.original_bpm)
 
     def reproduce(self):
         self.stream = sd.OutputStream(
