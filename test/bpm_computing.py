@@ -23,7 +23,7 @@ class BPM_computer:
   def thread_function(self):
     parser = argparse.ArgumentParser()
     parser.add_argument("--ip", default="127.0.0.1", help="The ip to listen on")
-    parser.add_argument("--port", type=int, default=57121, help="The port to listen on")
+    parser.add_argument("--port", type=int, default=57120, help="The port to listen on")
     args = parser.parse_args()
 
     dispatcher = Dispatcher()
