@@ -34,14 +34,14 @@ class MediaPlayer():
             self.Play()
      
     def play_song(self, title):
-        self.current_song = title
-        if title in root.mp.already_played:
-            root.mp.already_played.remove(title)
+        if title in self.already_played:
+            self.already_played.remove(title)
         else:
-            root.mp.queue.remove(title)
-        root.mp.queue.insert(0, title) #current_song as first element of the queue
-        if(root.mp.extraction_completed==True):
-            self.update_queue() #update queue
+            self.queue.remove(title)
+        self.queue.insert(0, title) #current_song as first element of the queue
+        self.current_song = title
+        print(self.current_song)
+        self.update_queue() #update queue
         path=root.songlist.get(title)[0]
         self.dplayer.add_song(path, root.songlist[title][1])
         self.dplayer.play() # play in dynamic player
@@ -49,6 +49,13 @@ class MediaPlayer():
         self.paused = False
         
     def update_queue(self):
+        root.songs_list.delete(0, END)
+        root.songs_list.insert(0, self.current_song)
+        for item in root.mp.queue[1:]:
+                root.songs_list.insert('end', item)
+        for item in root.mp.already_played:
+                root.songs_list.insert('end', item)
+        root.songs_list.selection_set(0)
         if(root.mp.extraction_completed==True):
             current_bpm = root.mp.bpm_comp.get_ideal_bpm()
             tmp_dict={}
@@ -57,7 +64,7 @@ class MediaPlayer():
                 dist = abs(bpm_song-current_bpm)
                 tmp_dict.update({title: dist})
             tmp_dict = dict(sorted(tmp_dict.items(), key=lambda x:x[1]))
-            print(tmp_dict)    
+            #print(tmp_dict)    
             root.mp.queue[1:] = [key for key, _ in tmp_dict.items()]
             print(root.mp.queue)
             root.songs_list.delete(0, END)
@@ -65,21 +72,24 @@ class MediaPlayer():
                 root.songs_list.insert('end', item)
             for item in root.mp.already_played:
                 root.songs_list.insert('end', item)
-            root.songs_list.selection_set(ACTIVE)
+            root.songs_list.selection_set(0)
         
     def next_on_queue(self):
         if len(root.songlist) != 0:
-            #to get the selected song index
-            if len(self.queue) == 0:
-                self.queue = self.already_played
+            #if queue is empty start again with the already played
+            if len(self.queue)-1 == 0:
+                self.queue[1:] = self.already_played
+                self.already_played = []
             next_one = self.queue[1]
             root.play_button.config(image=root.photo_pause)
             #to get the next song 
             #print(self.queue)
-            self.already_played.append(self.queue.pop(0))
+            #self.already_played.append(self.queue.pop(0))
+            if self.current_song is not None:
+                self.already_played.append(self.queue.pop(0))
             self.play_song(next_one) 
             
-    def get_bpm_from_dict(title):
+    def get_bpm_from_dict(self, title):
         return root.songlist[title][1]
     
     def Play(self):
@@ -87,8 +97,11 @@ class MediaPlayer():
             root.play_button.config(image=root.photo_pause)
             #root.songs_list.selection_set(ACTIVE)
             song=root.songs_list.get(ACTIVE)
+            if self.current_song is not None:
+                self.already_played.append(self.queue.pop(0))
+            if self.current_song is None:
+                self.current_song = song
             self.play_song(song)
-            # print(str(song) + str(root.songlist.get(song)[1])) # stampa bpm canzone
         
     def Pause(self):
         if len(root.songlist) != 0:
@@ -179,7 +192,7 @@ class Queue(Thread):
             t.sleep(1)
             if(root.mp.extraction_completed==True):
                 root.mp.update_queue()
-                t.sleep(10)
+                t.sleep(50)
 
 #GUI
 class Gui(Tk):
@@ -248,7 +261,8 @@ class Gui(Tk):
     def addsongs(self):
         tmp = filedialog.askdirectory(initialdir="/Users")
         if tmp is not None:
-            new_add={os.path.splitext(file)[0]: str(tmp)+'/'+str(file) for file in os.listdir(tmp)}
+            
+            new_add={os.path.splitext(file)[0]: str(tmp)+'/'+str(file) for file in os.listdir(tmp) if (os.path.splitext(file)[-1].lower()== ".mp3" or os.path.splitext(file)[-1].lower()== ".wav")}
             for title, path in new_add.items():
                 bpm=None
                 self.songs_list.insert(END,title) #listbox
