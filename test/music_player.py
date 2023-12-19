@@ -106,7 +106,7 @@ class MediaPlayer():
         
     def start_sending(self):
         delta_t = 2.0
-        client = udp_client.SimpleUDPClient("127.0.0.1", 57120)
+        client = udp_client.SimpleUDPClient("127.0.0.1", 57110)
 
         while(self.isGenerating):
             gen_bpm = self.bpm_comp.get_ideal_bpm()
