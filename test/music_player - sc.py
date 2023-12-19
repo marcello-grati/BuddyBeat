@@ -94,8 +94,6 @@ class MediaPlayer():
             gen_thread = Thread(target=self.start_sending)
             gen_thread.start()
         
-            
-
     def start_sending(self):
         delta_t = 2.0
         client = udp_client.SimpleUDPClient("127.0.0.1", 57120)
