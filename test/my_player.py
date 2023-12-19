@@ -1,6 +1,5 @@
 from tkinter import *
 import tkinter.font as font
-# from pygame import mixer
 from tkinter import filedialog
 import os
 import ctypes
@@ -8,7 +7,6 @@ import bpm_computing
 import librosa
 from threading import Thread
 import time as t
-from pygame import time
 
 import dynamic_player
 
@@ -18,7 +16,6 @@ class MediaPlayer():
         # to get ideal bpm
         self.bpm_comp= bpm_computing.BPM_computer()
         self.dplayer = dynamic_player.DynamicPlayer(self, self.bpm_comp)
-        ####################### mixer.init()
         self.is_playing=False
         self.paused=False
         self.queue = []
@@ -46,16 +43,12 @@ class MediaPlayer():
         if(root.mp.extraction_completed==True):
             self.update_queue() #update queue
         path=root.songlist.get(title)[0]
-        ######### mixer.music.load(path)
-        ######### mixer.music.play()
         self.dplayer.add_song(path, root.songlist[title][1])
         self.dplayer.play() # play in dynamic player
         self.is_playing = True
         self.paused = False
         
     def update_queue(self):
-        #while(root.mp.extraction_completed==False):
-        #    time.sleep(0.5)
         if(root.mp.extraction_completed==True):
             current_bpm = root.mp.bpm_comp.get_ideal_bpm()
             tmp_dict={}
@@ -100,7 +93,6 @@ class MediaPlayer():
     def Pause(self):
         if len(root.songlist) != 0:
             root.play_button.config(image=root.photo_play)
-            ########## mixer.music.pause()
             self.dplayer.pause() #pause in dinamic player
             self.paused = True
             self.is_playing = False
@@ -110,7 +102,6 @@ class MediaPlayer():
         if len(root.songlist) != 0:
             root.songs_list.selection_clear(ACTIVE)
             root.play_button.config(image=root.photo_play)
-            ########### mixer.music.stop()
             self.dplayer.stop() #stop in dinamic player
             self.paused = False
             self.is_playing = False
@@ -119,7 +110,6 @@ class MediaPlayer():
     def Resume(self):
         if len(root.songlist) != 0:
             root.play_button.config(image=root.photo_pause)
-            ############## mixer.music.unpause()
             self.dplayer.play() #play in dynamic player
             self.paused = False
             self.is_playing = True
