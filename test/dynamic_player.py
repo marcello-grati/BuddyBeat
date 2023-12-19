@@ -15,7 +15,7 @@ def stretch_function(input, sr, bpm_start, bpm_arrive):
     return out_stretch
 
 class DynamicPlayer:
-    def __init__(self, bpm_comp):
+    def __init__(self, media_player, bpm_comp):
         self.file_path = None
         self.original_bpm = None
         self.data = None
@@ -26,6 +26,7 @@ class DynamicPlayer:
         self.stream = None
         self.isPlaying = False
         self.reproduction = None
+        self.media_player = media_player
 
     def callback(self, outdata, frames, time, status):
 
