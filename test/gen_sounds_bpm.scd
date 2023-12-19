@@ -1,3 +1,4 @@
+s.boot;
 (
 var bpm = 120;  // default bpm
 var dur = 60.0 / bpm;  // duration of a quarter note
@@ -19,7 +20,7 @@ OSCdef(\myOSCListener, { |msg, time, addr, recvPort|
     dur = 60.0 / bpm;
     "Received BPM value".postln;
     bpm.postln;
-}, '/bpm');
+}, '/bpm', 57110);
 
 // Play the pattern
 pattern.play;
