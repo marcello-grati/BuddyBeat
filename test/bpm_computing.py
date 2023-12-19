@@ -6,10 +6,10 @@ import threading
 initial_bio_value = 60
 initial_sport_value = 100
 initial_bpm_value = 100
-ALPHA = 0.5
+ALPHA = 0.2
 BETA = 0.9
-bio_weight = 0.5
-sport_weight = 0.5
+bio_weight = 0.4
+sport_weight = 0.6
 
 class BPM_computer:
   def __init__(self):
