@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".playlist.PlaylistFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <!-- Image -->
+            <ImageView
+                android:id="@+id/album_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/album_cover"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/playlistimage" />
+
+            <!-- Album Description -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="16dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/album_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.8"
+                    android:text="@string/album_6_songs_2024"
+                    android:textSize="14sp"
+                    android:textColor="@color/textGray"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/album_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/workout_playlist"
+                    android:textSize="18sp"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/album_autor"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.8"
+                    android:text="@string/author"
+                    android:textSize="14sp"
+                    android:textColor="@color/textGray"
+                    android:textStyle="bold"/>
+
+                <ImageView
+                    android:id="@+id/album_download"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_download"
+                    android:scaleType="fitXY"
+                    android:contentDescription="@string/playlistimage" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Play and Shuffle Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:padding="16dp">
+
+            <Button
+                android:id="@+id/play_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawableStart="@drawable/ic_play"
+                android:drawablePadding="16dp"
+                android:background="@drawable/button_play"
+                android:text="@string/play"
+                android:textColor="@color/white"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:gravity="center_vertical"/>
+
+            <!-- Shuffle Button -->
+            <Button
+                android:id="@+id/shuffle_button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:drawableStart="@drawable/ic_shuffle"
+                android:drawablePadding="16dp"
+                android:background="@drawable/button_shuffle"
+                android:text="@string/shuffle"
+                android:textColor="@color/black"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center_vertical"/>
+        </LinearLayout>
+
+        <!-- List of Songs - RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/songs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            tools:listitem="@layout/playlist_item"/>
+    </LinearLayout>
+
+</FrameLayout>
