@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <!-- Number on the left -->
+    <TextView
+        android:id="@+id/numberTextView"
+        android:layout_width="30dp"
+        android:layout_height="match_parent"
+        android:text="01"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:gravity="center_vertical"
+        android:layout_gravity="start"
+        android:layout_marginEnd="8dp"/>
+
+    <!-- Text in the center -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:gravity="start"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/song_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="My Favourite Song"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_gravity="center"/>
+
+        <TextView
+            android:id="@+id/song_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Artist - 3:21"
+            android:textSize="14sp"
+            android:textColor="@color/textGray"
+            android:layout_gravity="center"/>
+
+    </LinearLayout>
+
+    <!-- Three dots icon on the right -->
+    <ImageView
+        android:id="@+id/dotsImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_more"
+        android:layout_gravity="center_vertical"/>
+
+</LinearLayout>
