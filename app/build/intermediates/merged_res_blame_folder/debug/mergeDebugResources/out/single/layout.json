@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.example.buddybeat.app-mergeDebugResources-50:/layout/fragment_song_player.xml",
+        "source": "com.example.buddybeat.app-main-53:/layout/fragment_song_player.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-mergeDebugResources-50:/layout/playlist_item.xml",
+        "source": "com.example.buddybeat.app-main-53:/layout/playlist_item.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-mergeDebugResources-50:/layout/fragment_playlist.xml",
+        "source": "com.example.buddybeat.app-main-53:/layout/fragment_playlist.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-mergeDebugResources-50:/layout/main_activity.xml",
+        "source": "com.example.buddybeat.app-main-53:/layout/main_activity.xml"
+    }
+]

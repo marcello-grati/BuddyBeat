@@ -1,0 +1,174 @@
+[
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xhdpi_ic_more.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xhdpi/ic_more.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xhdpi_ic_download.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xhdpi/ic_download.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-xxhdpi_ic_launcher.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-xxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-mdpi_ic_shuffle.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-mdpi/ic_shuffle.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxxhdpi_ic_play.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxxhdpi/ic_play.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-xhdpi_ic_launcher.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-xhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxxhdpi_ic_more.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxxhdpi/ic_more.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xhdpi_ic_play.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xhdpi/ic_play.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-hdpi_ic_download.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-hdpi/ic_download.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/layout_main_activity.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/layout/main_activity.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxxhdpi_ic_shuffle.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxxhdpi/ic_shuffle.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-xxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-xxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxhdpi_ic_shuffle.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxhdpi/ic_shuffle.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/layout_fragment_playlist.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/layout/fragment_playlist.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-hdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-hdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable_album_cover.jpg.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable/album_cover.jpg"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxhdpi_ic_download.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxhdpi/ic_download.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-mdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-mdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xhdpi_ic_shuffle.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xhdpi/ic_shuffle.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-hdpi_ic_play.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-hdpi/ic_play.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/xml_backup_rules.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-mdpi_ic_play.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-mdpi/ic_play.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/layout_playlist_item.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/layout/playlist_item.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-mdpi_ic_launcher.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-mdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable_button_shuffle.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable/button_shuffle.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-mdpi_ic_more.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-mdpi/ic_more.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-xxxhdpi_ic_launcher.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-xxxhdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/xml_data_extraction_rules.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxxhdpi_ic_download.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxxhdpi/ic_download.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-xxxhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxhdpi_ic_more.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxhdpi/ic_more.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-hdpi_ic_launcher.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-hdpi/ic_launcher.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-hdpi_ic_more.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-hdpi/ic_more.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-xxhdpi_ic_play.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-xxhdpi/ic_play.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/mipmap-xhdpi_ic_launcher_round.webp.flat",
+        "source": "com.example.buddybeat.app-main-53:/mipmap-xhdpi/ic_launcher_round.webp"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable_button_play.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable/button_play.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-hdpi_ic_shuffle.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-hdpi/ic_shuffle.png"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/layout_fragment_song_player.xml.flat",
+        "source": "com.example.buddybeat.app-main-53:/layout/fragment_song_player.xml"
+    },
+    {
+        "merged": "com.example.buddybeat.app-debug-51:/drawable-mdpi_ic_download.png.flat",
+        "source": "com.example.buddybeat.app-main-53:/drawable-mdpi/ic_download.png"
+    }
+]
