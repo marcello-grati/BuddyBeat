@@ -38,11 +38,6 @@ class PlaylistAdapter(private var parentActivity: MainActivity) : RecyclerView.A
             Snackbar.make(it, "${song.description}", Snackbar.LENGTH_SHORT).show()
             val songFragment = SongPlayerFragment.newInstance(song.title, song.description)
             parentActivity.replaceFragment(songFragment,"details")
-
-            //val f1 = parentActivity.supportFragmentManager.findFragmentByTag("playlist") as PlaylistFragment
-            //val transaction = parentActivity.supportFragmentManager.beginTransaction()
-            //transaction.replace(R.id.fragment_container, SongPlayerFragment(), "detail")
-            //transaction.commit()
         }
     }
 
