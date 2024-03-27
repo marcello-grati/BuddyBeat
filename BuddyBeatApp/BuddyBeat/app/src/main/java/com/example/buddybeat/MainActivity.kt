@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //creazione del menu che contiene le opzioni "Aggiungi canzone" e "Elimina canzone"
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         MenuInflater(applicationContext).inflate(R.menu.menu, menu)
         return true
@@ -46,17 +46,13 @@ class MainActivity : AppCompatActivity() {
         return super.onPrepareOptionsMenu(menu)
     }
 
-    //metodo chiamato quando una delle opzioni del menu viene selezionata
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.add -> {
-                //se seleziono la voce "Aggiungi canzone" controllo se ci sono i permessi per leggere la memoria esterna e
-                //se non ci sono viene richiesto all'utente di consentire l'accesso alla memoria. Se viene dato il permesso,
-                //chiamo il metodo addMusic() che gestisce l'aggiunta di una canzone
                 addMusic()
                 true
             }
-
             else -> super.onOptionsItemSelected(item)
         }
     }
