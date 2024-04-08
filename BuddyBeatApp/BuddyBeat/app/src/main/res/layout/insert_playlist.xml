@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:cardCornerRadius="6dp"
+    app:cardUseCompatPadding="true"
+    android:background="@android:drawable/dialog_frame"
+    tools:context=".InsertPlaylistFragment">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:backgroundTint="#00FFFFFF"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/titolo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:contentDescription="@string/app_name"
+                android:gravity="center"
+                android:text="Insert New Playlist:"
+                android:textAlignment="center"
+                android:textColor="@color/black"
+                android:textSize="20dp" />
+
+            <EditText
+                android:id="@+id/name_playlist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Name"
+                android:inputType="textCapSentences"
+                android:layout_below="@id/titolo"/>
+
+            <EditText
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:hint="Description"
+                android:inputType="textCapSentences"
+                android:layout_below="@id/name_playlist"/>
+
+            <!--<androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/wrap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/description"
+                android:orientation="horizontal">
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/guide"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_begin="194dp">
+
+                </androidx.constraintlayout.widget.Guideline>
+
+
+                <Button
+                    android:id="@+id/cancel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/white"
+                    android:text="Cancel"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/guide"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    style="@style/Base.Widget.AppCompat.Button.Borderless">
+
+                </Button>
+
+                <Button
+                    android:id="@+id/Insert"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:backgroundTint="@color/white"
+                    android:text="Insert"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/guide"
+                    app:layout_constraintTop_toTopOf="parent"
+                    style="@style/Base.Widget.AppCompat.Button.Borderless">
+
+                </Button>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>-->
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
