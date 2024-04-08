@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".playlist.PlaylistFragment">
 
     <LinearLayout
@@ -125,5 +126,15 @@
             android:padding="16dp"
             tools:listitem="@layout/playlist_item"/>
     </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabsong"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="30dp"
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/black"
+        android:contentDescription="@string/add_song" />
 
 </FrameLayout>

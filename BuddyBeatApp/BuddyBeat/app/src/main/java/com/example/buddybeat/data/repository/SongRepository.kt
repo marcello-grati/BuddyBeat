@@ -1,12 +1,11 @@
 package com.example.buddybeat.data.repository
 
 import android.app.Application
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.SongDao
 import com.example.buddybeat.data.SongDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class SongRepository(application: Application) {
 
@@ -17,28 +16,39 @@ class SongRepository(application: Application) {
     init {
         val database : SongDatabase = SongDatabase.getDatabase(application)
         songDao = database.songDao()
-        allSongs = songDao.getAll()
+        allSongs = songDao.getAllSongs()
     }
+
 
     fun getAllSongs() : LiveData<MutableList<Song>> {
         return allSongs
     }
 
-    suspend fun findSongById(id : Int): Song {
-        return withContext(Dispatchers.IO) {
-            songDao.findSongById(id)
-        }
+    /*fun getAllIds() : List<Long>{
+        return songDao.getAllIds()
+    }*/
+
+    suspend fun findSongById(id: Long): Song {
+        return songDao.findSongById(id)
     }
 
+    suspend fun getIdSong(uri: String): Long {
+        return songDao.getIdSong(uri)
+    }
+
+
+    @WorkerThread
+    suspend fun insertSong(song: Song): Long {
+        return songDao.insertSong(song)
+    }
+
+    @WorkerThread
     suspend fun insert(song: Song) {
-        return withContext(Dispatchers.IO) {
-            songDao.insert(song)
-        }
+        songDao.insert(song)
     }
 
+    @WorkerThread
     suspend fun delete(song: Song) {
-        return withContext(Dispatchers.IO) {
-            songDao.delete(song)
-        }
+        songDao.delete(song)
     }
 }

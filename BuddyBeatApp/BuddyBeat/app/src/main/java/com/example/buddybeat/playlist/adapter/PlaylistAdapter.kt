@@ -1,15 +1,13 @@
 package com.example.buddybeat.playlist.adapter
 
 import android.view.LayoutInflater
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.buddybeat.MainActivity
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.databinding.PlaylistItemBinding
-import com.example.buddybeat.songplayer.SongPlayerFragment
-import com.google.android.material.snackbar.Snackbar
 
-class PlaylistAdapter(private var parentActivity: MainActivity) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>() {
+class PlaylistAdapter(private val onClickListener: OnClickListener) : RecyclerView.Adapter<PlaylistAdapter.PlaylistViewHolder>() {
 
     lateinit var songs: MutableList<Song>
 
@@ -27,23 +25,21 @@ class PlaylistAdapter(private var parentActivity: MainActivity) : RecyclerView.A
 
     override fun onBindViewHolder(holder: PlaylistViewHolder, position: Int) {
         val song = songs[position]
-        holder.view.numberTextView.text = position.toString()
+        holder.view.numberTextView.text = (position+1).toString()
         holder.view.songTitle.text = song.title.toString()
         holder.view.songDescription.text = buildString {
             append(song.artist)
             append(" - ")
             append(song.duration)
         }
-        holder.itemView.setOnClickListener {
-            Snackbar.make(it, "${song.description}", Snackbar.LENGTH_SHORT).show()
-            val songFragment = SongPlayerFragment.newInstance(song.title, song.description)
-            parentActivity.replaceFragment(songFragment,"details")
+        with(holder.itemView) {
+            tag = song
+            setOnClickListener(onClickListener)
         }
     }
 
     fun setValues(songs: MutableList<Song>) {
         this.songs = songs
-        //notifica all'adapter che i dati sono cambiati
         notifyDataSetChanged()
     }
 
