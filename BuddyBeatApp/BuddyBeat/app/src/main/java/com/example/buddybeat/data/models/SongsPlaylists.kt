@@ -1,6 +1,5 @@
 package com.example.buddybeat.data.models
 
-import androidx.lifecycle.LiveData
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
@@ -15,13 +14,13 @@ data class Song(
     @PrimaryKey(autoGenerate = true)
     val songId : Long = 0,
     @ColumnInfo(name = "title")
-    val title: String?,
+    val title: String,
     @ColumnInfo(name = "artist")
-    val artist: String?,
+    val artist: String,
     @ColumnInfo(name = "description")
-    val description: String?,
+    val description: String,
     @ColumnInfo(name = "duration")
-    val duration: String?,
+    val duration: Int,
     @ColumnInfo(name = "uri")
     val uri: String)
 {
