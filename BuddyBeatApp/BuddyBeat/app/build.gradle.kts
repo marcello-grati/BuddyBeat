@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.buddybeat"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -53,6 +53,10 @@ android {
 }
 
 dependencies {
+
+    debugImplementation(files("libs/dsp-debug.aar"))
+    releaseImplementation(files("libs/dsp-release.aar"))
+    implementation(libs.ffmpeg.kit.full)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
