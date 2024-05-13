@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +79,8 @@ class MainActivity : ComponentActivity() {
     private var job: Job? = Job()
 
     var speed : Float = 1f
+
+    val bpmExtractor : BeatExtractor = BeatExtractor(this)
 
 
     //to check
@@ -130,10 +133,6 @@ class MainActivity : ComponentActivity() {
                     rememberPermissionState(permission = Manifest.permission.READ_EXTERNAL_STORAGE)
                 when {
                     state.status.isGranted -> {
-                        val list = ContentResolverHelper(applicationContext).getAudioData()
-                        list.forEach { song ->
-                            viewModel.insert(song)
-                        }
                         //ShowList()
                         MusicPlayerApp(
                             viewModel = viewModel,
@@ -233,6 +232,7 @@ class MainActivity : ComponentActivity() {
             val media = buildMediaItem(audio)
             controller?.addMediaItem(media)
         }
+
         Log.d("count", controller?.mediaItemCount.toString())
     }
 
@@ -304,9 +304,19 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun RequiredPermission(state: PermissionState) {
         Scaffold {
-            LaunchedEffect(Unit) {
+            DisposableEffect(state) {
                 state.launchPermissionRequest()
+                onDispose {
+                    val list = ContentResolverHelper(applicationContext).getAudioData()
+                    list.forEach { song ->
+                        viewModel.insert(song)
+                    }
+                    list.forEach { audio ->
+                        Log.d(audio.title, bpmExtractor.beatDetection(audio.uri, audio.duration).toString())
+                    }
+                }
             }
+
             Box(
                 Modifier
                     .fillMaxSize()

@@ -21,9 +21,10 @@ constructor(@ApplicationContext val context: Context) {
         MediaStore.Audio.AudioColumns.TITLE
     )
 
+    private val x = "<unknown>"
     private var selectionClause: String? =
-        "${MediaStore.Audio.AudioColumns.IS_MUSIC} = ?"
-    private var selectionArg = arrayOf("1")
+        "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0" + " AND ${MediaStore.Audio.AudioColumns.ARTIST} != '<unknown>'"
+    //private var selectionArg = arrayOf("1")
 
     private val sortOrder = "${MediaStore.Audio.AudioColumns.DISPLAY_NAME} ASC"
 
@@ -41,7 +42,7 @@ constructor(@ApplicationContext val context: Context) {
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,
             selectionClause,
-            selectionArg,
+            null,
             sortOrder
         )
 

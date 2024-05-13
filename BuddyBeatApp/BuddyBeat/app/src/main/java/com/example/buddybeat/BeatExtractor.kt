@@ -21,16 +21,16 @@ class BeatExtractor(val context: Context) {
             override fun handleOnset(time: Double, salience: Double) {
                 val bpm = (60 / (time - last_time))
                 BPM.add(bpm)
-                Log.d("Beat", "Music bpm : " + bpm + " Salience : " + salience)
+                //Log.d("Beat", "Music bpm : " + bpm + " Salience : " + salience)
                 last_time = time
             }
         }
 
-        val begin = duration / 1000.0 / 3.0
+        //val begin = duration / 1000.0 / 3.0
+        val duration1 = Math.min(duration, 300000)
         val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe(
             context, path.toUri(),
-            begin, 4.4, 44100, fftsize, fftsize / 2
-        )
+            0.0, duration1.toDouble(), 44100, fftsize, fftsize / 2)
 
         val detector = ComplexOnsetDetector(fftsize)
         val handler = BeatRootOnsetEventHandler()
@@ -43,8 +43,9 @@ class BeatExtractor(val context: Context) {
         dispatcher.stop()
 
         val x = mode(BPM)
+        val y = BPM.average()
 
-        return Math.round(x).toInt()
+        return Math.round(y).toInt()
     }
 
     private fun mode(data: MutableList<Double>): Double {
