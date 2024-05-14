@@ -2,7 +2,6 @@ package com.example.buddybeat
 
 
 import android.content.Context
-import android.util.Log
 import androidx.core.net.toUri
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.beatroot.BeatRootOnsetEventHandler
