@@ -26,11 +26,11 @@ class BeatExtractor(val context: Context) {
             }
         }
 
-        //val begin = duration / 1000.0 / 3.0
-        val duration1 = Math.min(duration, 300000)
+        val begin = Math.min(duration / 1000.0 / 10.0, 2.0)
+        val duration1 = Math.min(duration/1000.0, 360.0)
         val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe(
             context, path.toUri(),
-            0.0, duration1.toDouble(), 44100, fftsize, fftsize / 2)
+            begin, duration1, 44100, fftsize, fftsize / 2)
 
         val detector = ComplexOnsetDetector(fftsize)
         val handler = BeatRootOnsetEventHandler()
@@ -42,7 +42,7 @@ class BeatExtractor(val context: Context) {
         handler.trackBeats(onsetHandler)
         dispatcher.stop()
 
-        val x = mode(BPM)
+        //val x = mode(BPM)
         val y = BPM.average()
 
         return Math.round(y).toInt()

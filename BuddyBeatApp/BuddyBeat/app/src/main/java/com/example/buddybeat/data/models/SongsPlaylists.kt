@@ -22,7 +22,9 @@ data class Song(
     @ColumnInfo(name = "duration")
     val duration: Int,
     @ColumnInfo(name = "uri")
-    val uri: String)
+    val uri: String,
+    @ColumnInfo(name = "bpm")
+    val bpm: Int = -1)
 {
     override fun toString(): String = title + "\n" + artist
 }
@@ -33,9 +35,9 @@ data class Playlist(
     @PrimaryKey(autoGenerate = true)
     val playlistId : Long = 0,
     @ColumnInfo(name = "title")
-    val title: String?,
+    val title: String,
     @ColumnInfo(name = "description")
-    val description: String?)
+    val description: String)
 {
     override fun toString(): String = title + "\n"
 }

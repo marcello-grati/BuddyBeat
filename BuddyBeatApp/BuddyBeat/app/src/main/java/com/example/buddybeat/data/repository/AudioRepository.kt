@@ -2,6 +2,7 @@ package com.example.buddybeat.data.repository
 
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
+import androidx.room.Query
 import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.SongDatabase
 import com.example.buddybeat.data.models.Song
@@ -17,10 +18,28 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         contentResolverHelper.getAudioData()
     }
 
+
+    suspend fun getAllIds(): List<Long> {
+        return database.songDao().getAllIds()
+    }
+
+
     private val allSongs: LiveData<MutableList<Song>> = database.songDao().getAllSongs()
 
     fun getAllSongs() : LiveData<MutableList<Song>> {
         return allSongs
+    }
+
+    suspend fun getSongs() : List<Song> {
+        return database.songDao().getSongs()
+    }
+
+    fun getBpm(id: Long) : Int {
+        return database.songDao().getBpm(id)
+    }
+
+    suspend fun updateBpm(id: Long, bpm : Int) {
+        database.songDao().updateBpm(id, bpm)
     }
 
     @WorkerThread

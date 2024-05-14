@@ -1,7 +1,8 @@
 package com.example.buddybeat.di
 
 import android.content.Context
-import com.example.buddybeat.data.ContentResolverHelper
+import com.example.buddybeat.BeatExtractor
+import com.example.buddybeat.DataStoreManager
 import com.example.buddybeat.data.SongDatabase
 import dagger.Module
 import dagger.Provides
@@ -19,8 +20,24 @@ object MediaModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context
-    ) : SongDatabase {
-        val songdb = SongDatabase.getDatabase(context)
-        return songdb
+    ): SongDatabase {
+        return SongDatabase.getDatabase(context)
     }
+
+    @Provides
+    @Singleton
+    fun provideBeatExtractor(
+        @ApplicationContext context: Context
+    ): BeatExtractor {
+        return BeatExtractor(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataStoreManager(
+        @ApplicationContext context: Context
+    ): DataStoreManager {
+        return DataStoreManager(context)
+    }
+
 }

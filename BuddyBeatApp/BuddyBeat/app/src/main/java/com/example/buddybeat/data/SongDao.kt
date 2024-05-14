@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
@@ -15,11 +16,20 @@ import com.example.buddybeat.data.models.Song
 @Dao
 interface SongDao {
 
+    @Query("SELECT bpm FROM song_table WHERE songId LIKE :id")
+    fun getBpm(id:Long): Int
+
+    @Query("UPDATE song_table SET bpm = :bpm WHERE songId = :id")
+    suspend fun updateBpm(id: Long, bpm: Int)
+
     @Query("SELECT * FROM song_table ORDER BY title ASC")
     fun getAllSongs(): LiveData<MutableList<Song>>
 
+    @Query("SELECT * FROM song_table ORDER BY title ASC")
+    suspend fun getSongs(): List<Song>
+
     @Query("SELECT songId FROM song_table")
-    fun getAllIds(): List<Long>
+    suspend fun getAllIds(): List<Long>
 
     @Query("SELECT * FROM playlist_table")
     fun getAllPlaylists(): LiveData<MutableList<Playlist>>

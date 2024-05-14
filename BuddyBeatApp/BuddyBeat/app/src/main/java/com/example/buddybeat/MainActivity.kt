@@ -3,10 +3,7 @@ package com.example.buddybeat
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -31,7 +28,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,8 +45,8 @@ import androidx.media3.session.SessionToken
 import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
-import com.example.buddybeat.ui.audio.MusicPlayerApp
 import com.example.buddybeat.ui.MyViewModel
+import com.example.buddybeat.ui.audio.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
@@ -62,7 +60,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
 
 
 @AndroidEntryPoint
@@ -79,9 +76,6 @@ class MainActivity : ComponentActivity() {
     private var job: Job? = Job()
 
     var speed : Float = 1f
-
-    val bpmExtractor : BeatExtractor = BeatExtractor(this)
-
 
     //to check
     private var listener = object : Player.Listener {
@@ -133,7 +127,14 @@ class MainActivity : ComponentActivity() {
                     rememberPermissionState(permission = Manifest.permission.READ_EXTERNAL_STORAGE)
                 when {
                     state.status.isGranted -> {
-                        //ShowList()
+                        val isUploaded by viewModel.isUploaded.observeAsState()
+                        val bpmUpdated by viewModel.bpmUpdated.observeAsState()
+                        if(isUploaded == true && bpmUpdated==false) {
+                            viewModel.updateBpm()
+                        }
+                        if(bpmUpdated == true){
+                            Log.d("FINITOOOOOOOOO", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                        }
                         MusicPlayerApp(
                             viewModel = viewModel,
                             onItemClick = {
@@ -300,7 +301,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalPermissionsApi::class)
+    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
     @Composable
     fun RequiredPermission(state: PermissionState) {
         Scaffold {
@@ -308,12 +309,7 @@ class MainActivity : ComponentActivity() {
                 state.launchPermissionRequest()
                 onDispose {
                     val list = ContentResolverHelper(applicationContext).getAudioData()
-                    list.forEach { song ->
-                        viewModel.insert(song)
-                    }
-                    list.forEach { audio ->
-                        Log.d(audio.title, bpmExtractor.beatDetection(audio.uri, audio.duration).toString())
-                    }
+                    viewModel.update(list)
                 }
             }
 
