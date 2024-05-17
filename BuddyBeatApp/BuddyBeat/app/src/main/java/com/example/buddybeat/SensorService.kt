@@ -1,13 +1,18 @@
 package com.example.buddybeat
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Build
 import android.os.IBinder
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +23,7 @@ import kotlinx.coroutines.launch
 import java.util.LinkedList
 import kotlin.math.ceil
 import kotlin.math.sqrt
+
 
 class SensorService : Service(), SensorEventListener {
     // Override callback methods here
@@ -50,8 +56,34 @@ class SensorService : Service(), SensorEventListener {
     private var threshold = 3  //per calcolo steps
     private var deltaTime = 300// 0.5s intervallo di aggiornamento dati
 
+    companion object {
+        const val CHANNEL_ID = "SensorsChannel"
+    }
+
+
+
+    // Create the NotificationChannel.
+//    val name = "sensor_channel"
+//    val descriptionText = "Notification channel used for sensors"
+//    val importance = NotificationManager.IMPORTANCE_DEFAULT
+//    val mChannel = NotificationChannel("my_channel_id", name, importance)
+//    mChannel.description = descriptionText
+//    // Register the channel with the system. You can't change the importance
+//    // or other notification behaviors after this.
+//    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//    notificationManager.createNotificationChannel(mChannel)
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class) override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
+        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
+            .setContentTitle("Music Player")
+            .setContentText("Playing music in the background")
+            .setSmallIcon(R.drawable.ic_play)
+            .build()
+
+        startForeground(1, notification)
         scope.launch {
             while (true) {
                 Log.d("SensorService", "Step Count: $steps")
@@ -63,6 +95,7 @@ class SensorService : Service(), SensorEventListener {
     }
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannel()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
@@ -79,8 +112,9 @@ class SensorService : Service(), SensorEventListener {
         return null
     }
 
-    override fun onDestroy() {
+    @OptIn(UnstableApi::class) override fun onDestroy() {
 
+        Log.d("SensorService", "Distruggo il service")
         scope.cancel()
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
@@ -135,6 +169,18 @@ class SensorService : Service(), SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
 
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val serviceChannel = NotificationChannel(
+                CHANNEL_ID,
+                "Sesnors Service Channel",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(serviceChannel)
+        }
     }
 
 }
