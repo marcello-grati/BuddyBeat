@@ -77,17 +77,12 @@ class SensorService : Service(), SensorEventListener {
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class) override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("Music Player")
-            .setContentText("Playing music in the background")
-            .setSmallIcon(R.drawable.ic_play)
-            .build()
-
-        startForeground(1, notification)
+        startForegroundService()
         scope.launch {
             while (true) {
                 Log.d("SensorService", "Step Count: $steps")
                 Log.d("SensorService", "Step Cadence: $stepFrequency")
+                updateNotification()
                 delay(1000)
             }
         }
@@ -176,11 +171,39 @@ class SensorService : Service(), SensorEventListener {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Sesnors Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun startForegroundService() {
+
+        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
+            .setContentTitle("Sport Activity")
+            .setContentText("Steps: $steps\nStep Frequency: $stepFrequency")
+            .setSmallIcon(R.drawable.ic_play)
+            .build()
+
+        startForeground(1, notification)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun updateNotification() {
+        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
+            .setContentTitle("Sport Activity")
+            .setContentText("Steps: $steps\nStep Frequency: $stepFrequency")
+            .setSmallIcon(R.drawable.ic_play)
+            .build()
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(1, notification)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        stopSelf()
     }
 
 }
