@@ -2,22 +2,22 @@ package com.example.buddybeat
 
 import android.app.Service
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.IBinder
 import androidx.annotation.OptIn
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import kotlinx.coroutines.cancel
-import kotlin.math.sqrt
 import java.util.LinkedList
+import kotlin.math.ceil
+import kotlin.math.sqrt
 
 class SensorService : Service(), SensorEventListener {
     // Override callback methods here
@@ -28,7 +28,6 @@ class SensorService : Service(), SensorEventListener {
     private var gyroSensor: Sensor? = null
     private var accelSensor: Sensor? = null
 
-    // Intervallo di tempo tra le letture dei sensori in millisecondi
 
     private var lastUpdate: Long = 0
     private var lastAcceleration: Float = 0f
@@ -46,6 +45,11 @@ class SensorService : Service(), SensorEventListener {
     private var stepData: String = ""
     private var stepFreq: String = ""
 
+    /* variabili da regolare */
+    private var unitTime = 30000  //60000 millisecondi = 60 secondi
+    private var threshold = 3  //per calcolo steps
+    private var deltaTime = 300// 0.5s intervallo di aggiornamento dati
+
     @OptIn(UnstableApi::class) override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         scope.launch {
@@ -59,6 +63,7 @@ class SensorService : Service(), SensorEventListener {
     }
     override fun onCreate() {
         super.onCreate()
+
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         accelSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -68,6 +73,7 @@ class SensorService : Service(), SensorEventListener {
 
         val intent = Intent(this, SensorService::class.java)
         startService(intent)
+        startTime = System.currentTimeMillis()
     }
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -97,33 +103,32 @@ class SensorService : Service(), SensorEventListener {
 
                 /* filtro passa basso rispetto a delta */
                 acceleration = acceleration * 0.9f + delta
-                val threshold = 5 /* aggiustare il valore */
+                val now = System.currentTimeMillis()
 
                 if (acceleration > threshold) {
-                    val now = System.currentTimeMillis()
-                    if ((now - lastUpdate) > 500) { // 0.5s minimum between each step
+                    if ((now - lastUpdate) > deltaTime) {
                         lastUpdate = now
                         steps++
                         stepTimes.add(now)
-
-                        stepData ="Steps: $steps"
-
-                        // Remove times older than one minute
-                        while ((stepTimes.firstOrNull() ?: Long.MAX_VALUE) < now - 60000) {
-                            stepTimes.removeFirstOrNull()
-                        }
-
-                        // Calculate step frequency
-                        if (now - startTime < 60000) {  //60000 millesimi di secondo=1 min
-                            stepFrequency = steps.toFloat() / ((now - startTime) / 1000f) * 60f
-                        } else {
-                            stepFrequency = stepTimes.size.toFloat() / 60f
-                        }
-
-                        lastStepTime = now
-                        stepFreq = "Frequency: $stepFrequency step/min"
                     }
                 }
+
+                stepData ="Steps: $steps"
+
+                // Remove times older than one minute
+                while ((stepTimes.firstOrNull() ?: Long.MAX_VALUE) < now - unitTime) {
+                    stepTimes.removeFirstOrNull()
+                }
+
+                // Calculate step frequency
+                if (now - startTime < unitTime) {  //60000 millesimi di secondo=1 min
+                    stepFrequency = ceil((stepTimes.size.toFloat() / (now - startTime))*60000F)
+                } else {
+                    stepFrequency = ceil((stepTimes.size.toFloat()/(unitTime))*60000F)
+                }
+
+                lastStepTime = now
+                stepFreq = "Frequency: $stepFrequency step/min"
             }
         }
     }
