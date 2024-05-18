@@ -1,5 +1,6 @@
 package com.example.buddybeat.ui.components
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,19 +17,61 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun FilledCardExample(
-    text: String
+    stepFreq: String,
+    bpm: String,
+    ratio: String
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        modifier = Modifier
-            .size(width = 100.dp, height = 50.dp).padding(top = 5.dp, bottom = 5.dp),
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.width(100.dp).height(50.dp).wrapContentHeight(),
-            textAlign = TextAlign.Center,
-        )
+    Row {
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            modifier = Modifier
+                .size(width = 100.dp, height = 100.dp)
+                .padding(top = 5.dp, bottom = 5.dp),
+        ) {
+            Text(
+                text = "StepFreq: \n $stepFreq",
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(100.dp)
+                    .wrapContentHeight(),
+                textAlign = TextAlign.Center,
+            )
+        }
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            modifier = Modifier
+                .size(width = 100.dp, height = 100.dp)
+                .padding(top = 5.dp, bottom = 5.dp, start = 5.dp, end = 5.dp),
+        ) {
+            Text(
+                text = "Bpm: \n $bpm",
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(100.dp)
+                    .wrapContentHeight(),
+                textAlign = TextAlign.Center,
+            )
+        }
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            modifier = Modifier
+                .size(width = 100.dp, height = 100.dp)
+                .padding(top = 5.dp, bottom = 5.dp),
+        ) {
+            Text(
+                text = "Ratio: \n $ratio",
+                modifier = Modifier
+                    .width(100.dp)
+                    .height(100.dp)
+                    .wrapContentHeight(),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }

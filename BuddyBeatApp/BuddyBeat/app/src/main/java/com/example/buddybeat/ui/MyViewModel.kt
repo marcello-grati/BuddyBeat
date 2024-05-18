@@ -43,6 +43,9 @@ class MyViewModel @Inject constructor(
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
+    private val _currentBpm = MutableStateFlow(0)
+    val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()
+
     private val _audioList = songRepo.getSongsOrdered()
     val audioList = _audioList
 
@@ -105,12 +108,17 @@ class MyViewModel @Inject constructor(
     fun changeSong(song: MediaItem) {
         val currentSongTitle = song.mediaMetadata.title.toString()
         val currentSongArtist = song.mediaMetadata.artist.toString()
+        val currentSongBpm = song.mediaMetadata.extras?.getInt("bpm")
         _currentSong.update {
             it.copy(
                 title = currentSongTitle,
                 artist = currentSongArtist
             )
         }
+        if (currentSongBpm != null)
+            _currentBpm.update {
+                currentSongBpm
+            }
     }
 
     fun updateIsPlaying(isPlaying:Boolean) {

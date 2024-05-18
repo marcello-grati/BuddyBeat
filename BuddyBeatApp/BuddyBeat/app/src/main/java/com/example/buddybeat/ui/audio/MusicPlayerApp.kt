@@ -28,7 +28,8 @@ fun MusicPlayerApp(
     onProgress: (Float) -> Unit,
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit
+    decrementSpeed: () -> Unit,
+    text3 : String
 ) {
     val navController = rememberNavController()
     MusicPlayerNavHost(
@@ -40,7 +41,8 @@ fun MusicPlayerApp(
         nextSong = nextSong,
         prevSong = prevSong,
         incrementSpeed = incrementSpeed,
-        decrementSpeed = decrementSpeed
+        decrementSpeed = decrementSpeed,
+        text3 = text3
     )
 }
 
@@ -56,6 +58,7 @@ fun MusicPlayerNavHost(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
+    text3 : String
 ) {
 
     NavHost(navController = navController, startDestination = Destination.home) {
@@ -67,7 +70,8 @@ fun MusicPlayerNavHost(
             val count by viewModel.itemCount.observeAsState(initial = 1)
             val isPlaying by viewModel.isPlaying.collectAsState()
             val progress by viewModel.progress.collectAsState()
-            val text by viewModel.stepFreq.collectAsState(0)
+            val stepFreq by viewModel.stepFreq.collectAsState(0)
+            val bpm by viewModel.currentBpm.collectAsState(0)
             Box(modifier = Modifier.fillMaxSize()) {
                 Column {
                     HomeScreen(
@@ -88,7 +92,9 @@ fun MusicPlayerNavHost(
                         prevSong = prevSong,
                         incrementSpeed = incrementSpeed,
                         decrementSpeed = decrementSpeed,
-                        text = text.toString()
+                        text1 = stepFreq.toString(),
+                        text2 = bpm.toString(),
+                        text3 = text3
                     )
                 }
             }

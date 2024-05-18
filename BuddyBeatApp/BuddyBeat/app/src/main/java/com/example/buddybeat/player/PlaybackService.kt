@@ -33,6 +33,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     private lateinit var mService: SensorService
     private var mBound: Boolean = false
 
+    var ratio = 1f
+
     private val connection = object : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -104,8 +106,32 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     private fun updateDataTextView() {
         run{
             Log.d("StepCadence from PlaybackService", mService.stepFreq.toString())
+            updateSpeedSong()
         }
 
+    }
+
+    private fun updateSpeedSong(){
+
+        val stepFreq = mService.stepFreq
+        val bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
+        Log.d("BPM", bpm.toString())
+
+        if(bpm!=0 && bpm != null){
+            ratio = stepFreq.toFloat()/bpm.toFloat()
+            Log.d("RATIO_1", ratio.toString())
+            if(ratio < 0.8)
+                ratio *= 2
+            Log.d("RATIO_2", ratio.toString())
+        }
+        if (stepFreq < 60)
+            ratio = 1f
+
+        ratio = ratio.coerceAtLeast(0.9f)
+        ratio = ratio.coerceAtMost(1.1f)
+
+        Log.d("RATIO_3", ratio.toString())
+        mediaSession?.player?.setPlaybackSpeed(ratio)
     }
 
     private val sensorDataRunnable = object : Runnable {

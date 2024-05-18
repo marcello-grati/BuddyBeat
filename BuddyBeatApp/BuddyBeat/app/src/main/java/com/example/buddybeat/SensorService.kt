@@ -108,9 +108,9 @@ class SensorService : Service(), SensorEventListener {
         startTime = System.currentTimeMillis()
         scope.launch {
             while (true) {
-                Log.d("Service", this@SensorService.toString())
-                Log.d("SensorService", "Step Count: $steps")
-                Log.d("SensorService", "Step Cadence: $stepFrequency")
+                //Log.d("Service", this@SensorService.toString())
+                //Log.d("SensorService", "Step Count: $steps")
+                //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
                 delay(1000)
             }

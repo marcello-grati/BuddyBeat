@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.lifecycle.LiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -66,6 +68,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
@@ -84,7 +90,8 @@ class MainActivity : ComponentActivity() {
 
     var speed : Float = 1f
 
-
+    var _ratio : MutableStateFlow<Float> = MutableStateFlow(1f)
+    val ratio : StateFlow<Float> = _ratio.asStateFlow()
 
     //to check
     private var listener = object : Player.Listener {
@@ -164,7 +171,7 @@ class MainActivity : ComponentActivity() {
                     state.status.isGranted -> {
                         val isUploaded by viewModel.isUploaded.observeAsState()
                         val bpmUpdated by viewModel.bpmUpdated.observeAsState()
-
+                        val r by ratio.collectAsState()
                         if(isUploaded == true && bpmUpdated==false) {
                             viewModel.updateBpm()
                         }
@@ -194,7 +201,8 @@ class MainActivity : ComponentActivity() {
                             },
                             prevSong = {
                                 prevSong()
-                            })
+                            },
+                            text3 = r.toString())
                     }
                     else -> RequiredPermission(state)
                 }
@@ -208,9 +216,30 @@ class MainActivity : ComponentActivity() {
     private fun updateDataTextView() {
         run{
             viewModel.updateFreq(mService.stepFreq)
+            updateSpeedSong()
         }
 
     }
+
+    private fun updateSpeedSong(){
+
+        val stepFreq = mService.stepFreq
+        val bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
+        var rat = 1f
+        if(bpm!=0 && bpm != null){
+            rat = stepFreq.toFloat()/bpm.toFloat()
+            if(rat < 0.8)
+                rat *= 2
+        }
+        if (stepFreq < 60)
+            rat = 1f
+
+        rat = rat.coerceAtLeast(0.9f)
+        rat = rat.coerceAtMost(1.1f)
+
+        _ratio.update {rat}
+    }
+
 
     private val sensorDataRunnable = object : Runnable {
         override fun run() {
@@ -325,6 +354,7 @@ class MainActivity : ComponentActivity() {
                     .setArtist(audio.artist)
                     .setTitle(audio.title)
                     .setDisplayTitle(audio.title)
+                    .setExtras(Bundle().apply { putInt("bpm", audio.bpm)})
                     .build()
             )
             .build()

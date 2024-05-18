@@ -32,14 +32,16 @@ fun HomeScreen(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    text: String
+    text1: String,
+    text2: String,
+    text3: String
 ) {
     Scaffold {
         Column {
             if(!loading)
                 LinearDeterminateIndicator(currentProgress)
             Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
-                FilledCardExample(text)
+                FilledCardExample(text1, text2, text3)
             }
             LazyColumn(
                 contentPadding = it,
