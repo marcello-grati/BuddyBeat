@@ -45,7 +45,7 @@ import com.example.buddybeat.ui.CurrentSong
 @Composable
 fun HomeBottomBar(
     modifier: Modifier = Modifier,
-    song: CurrentSong?,
+    song: CurrentSong,
     onBarClick: () -> Unit,
     prevSong: () -> Unit,
     nextSong: () -> Unit,
@@ -63,49 +63,45 @@ fun HomeBottomBar(
         visible = true,
         modifier = modifier.height(100.dp)
     ) {
-        if (song != null) {
-            if (song.title != "") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectDragGestures(
-                                onDragEnd = {
-                                    when {
-                                        offsetX > 0 -> {
-                                            prevSong()
-                                        }
-
-                                        offsetX < 0 -> {
-                                            nextSong()
-                                        }
-                                    }
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    val (x, _) = dragAmount
-                                    offsetX = x
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragEnd = {
+                            when {
+                                offsetX > 0 -> {
+                                    prevSong()
                                 }
-                            )
 
+                                offsetX < 0 -> {
+                                    nextSong()
+                                }
+                            }
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val (x, _) = dragAmount
+                            offsetX = x
                         }
-                        .background(
-                            MaterialTheme.colorScheme.background
-                        ),
-                ) {
-                    HomeBottomBarItem(
-                        song = song,
-                        onBarClick = onBarClick,
-                        progress = progress,
-                        onProgress = onProgress,
-                        isPlaying = isPlaying,
-                        onStart = onStart,
-                        onNext = nextSong,
-                        incrementSpeed = incrementSpeed,
-                        decrementSpeed = decrementSpeed
                     )
+
                 }
-            }
+                .background(
+                    MaterialTheme.colorScheme.background
+                ),
+        ) {
+            HomeBottomBarItem(
+                song = song,
+                onBarClick = onBarClick,
+                progress = progress,
+                onProgress = onProgress,
+                isPlaying = isPlaying,
+                onStart = onStart,
+                onNext = nextSong,
+                incrementSpeed = incrementSpeed,
+                decrementSpeed = decrementSpeed
+            )
         }
     }
 }
@@ -174,11 +170,11 @@ fun HomeBottomBarItem(
 
 @Composable
 fun MediaPlayerController(
-    isAudioPlaying : Boolean,
-    onStart : () -> Unit,
-    onNext : () -> Unit,
-    incrementSpeed : () -> Unit,
-    decrementSpeed : () -> Unit
+    isAudioPlaying: Boolean,
+    onStart: () -> Unit,
+    onNext: () -> Unit,
+    incrementSpeed: () -> Unit,
+    decrementSpeed: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -188,25 +184,28 @@ fun MediaPlayerController(
         PlayerIconItem(
             icon = if (isAudioPlaying) Icons.Default.Pause
             else Icons.Default.PlayArrow
-        ){
+        ) {
             onStart()
         }
         Spacer(modifier = Modifier.size(8.dp))
         PlayerIconItem(
-            icon = Icons.Default.SkipNext ){
+            icon = Icons.Default.SkipNext
+        ) {
             onNext()
         }
         Spacer(modifier = Modifier.size(8.dp))
         Column {
             PlayerIconItem(
                 icon = Icons.Default.Add,
-                modifier = Modifier.size(30.dp)){
+                modifier = Modifier.size(30.dp)
+            ) {
                 incrementSpeed()
             }
             Spacer(modifier = Modifier.size(2.dp))
             PlayerIconItem(
                 icon = Icons.Default.Remove,
-                modifier = Modifier.size(30.dp)){
+                modifier = Modifier.size(30.dp)
+            ) {
                 decrementSpeed()
             }
         }
@@ -216,8 +215,8 @@ fun MediaPlayerController(
 @Composable
 fun ArtistInfo(
     modifier: Modifier = Modifier,
-    title : String,
-    artist : String
+    title: String,
+    artist: String
 ) {
     Row(
         modifier = modifier.padding(4.dp),
@@ -258,7 +257,7 @@ fun PlayerIconItem(
     borderStroke: BorderStroke? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
     color: Color = MaterialTheme.colorScheme.onSurface,
-    onClick : ()-> Unit
+    onClick: () -> Unit
 ) {
     Surface(
         shape = CircleShape,

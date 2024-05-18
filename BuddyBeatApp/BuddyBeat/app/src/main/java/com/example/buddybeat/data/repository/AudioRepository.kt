@@ -28,8 +28,16 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         return database.songDao().getSongs()
     }
 
+    fun getSongsOrdered() : LiveData<MutableList<Song>> {
+        return database.songDao().getSongsOrdered()
+    }
+
     fun getBpm(id: Long) : Int {
         return database.songDao().getBpm(id)
+    }
+
+    fun getCount() : LiveData<Int> {
+        return database.songDao().getItemCount()
     }
 
     suspend fun updateBpm(id: Long, bpm : Int) {

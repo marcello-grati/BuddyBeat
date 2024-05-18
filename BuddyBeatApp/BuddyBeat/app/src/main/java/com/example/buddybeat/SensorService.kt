@@ -3,12 +3,14 @@ package com.example.buddybeat
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.annotation.OptIn
@@ -46,10 +48,6 @@ class SensorService : Service(), SensorEventListener {
     private val stepTimes = LinkedList<Long>()
     private var startTime: Long = 0
 
-    private var gyroData: String = ""
-    private var accelData: String = ""
-    private var stepData: String = ""
-    private var stepFreq: String = ""
 
     /* variabili da regolare */
     private var unitTime = 30000  //60000 millisecondi = 60 secondi
@@ -61,6 +59,19 @@ class SensorService : Service(), SensorEventListener {
     }
 
 
+    private val binder = LocalBinder()
+
+    inner class LocalBinder : Binder() {
+        // Return this instance of LocalService so clients can call public methods.
+        fun getService(): SensorService = this@SensorService
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        return binder
+    }
+
+    val stepFreq: Int
+        get() = stepFrequency.toInt()
 
     // Create the NotificationChannel.
 //    val name = "sensor_channel"
@@ -75,20 +86,13 @@ class SensorService : Service(), SensorEventListener {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @OptIn(UnstableApi::class) override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         startForegroundService()
-        scope.launch {
-            while (true) {
-                Log.d("SensorService", "Step Count: $steps")
-                Log.d("SensorService", "Step Cadence: $stepFrequency")
-                updateNotification()
-                delay(1000)
-            }
-        }
         return START_STICKY
     }
-    override fun onCreate() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
 
@@ -102,9 +106,15 @@ class SensorService : Service(), SensorEventListener {
         val intent = Intent(this, SensorService::class.java)
         startService(intent)
         startTime = System.currentTimeMillis()
-    }
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+        scope.launch {
+            while (true) {
+                Log.d("Service", this@SensorService.toString())
+                Log.d("SensorService", "Step Count: $steps")
+                Log.d("SensorService", "Step Cadence: $stepFrequency")
+                updateNotification()
+                delay(1000)
+            }
+        }
     }
 
     @OptIn(UnstableApi::class) override fun onDestroy() {
@@ -119,12 +129,12 @@ class SensorService : Service(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor == gyroSensor) {
-                gyroData = "Gyroscope data: ${it.values[0]}, ${it.values[1]}, ${it.values[2]}"
+                //gyroData = "Gyroscope data: ${it.values[0]}, ${it.values[1]}, ${it.values[2]}"
             } else if (it.sensor == accelSensor) {
                 val x = it.values[0]
                 val y = it.values[1]
                 val z = it.values[2]
-                accelData = "Accelerometer data: ${it.values[0]}, ${it.values[1]}, ${it.values[2]}"
+                //accelData = "Accelerometer data: ${it.values[0]}, ${it.values[1]}, ${it.values[2]}"
 
                 lastAcceleration = currentAcceleration
                 currentAcceleration = sqrt((x * x + y * y + z * z))
@@ -142,7 +152,7 @@ class SensorService : Service(), SensorEventListener {
                     }
                 }
 
-                stepData ="Steps: $steps"
+                //stepData ="Steps: $steps"
 
                 // Remove times older than one minute
                 while ((stepTimes.firstOrNull() ?: Long.MAX_VALUE) < now - unitTime) {
@@ -157,7 +167,7 @@ class SensorService : Service(), SensorEventListener {
                 }
 
                 lastStepTime = now
-                stepFreq = "Frequency: $stepFrequency step/min"
+                //stepFreq = "Frequency: $stepFrequency step/min"
             }
         }
     }
@@ -170,7 +180,7 @@ class SensorService : Service(), SensorEventListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
-                "Sesnors Service Channel",
+                "Sensors Service Channel",
                 NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NotificationManager::class.java)
@@ -185,6 +195,9 @@ class SensorService : Service(), SensorEventListener {
             .setContentTitle("Sport Activity")
             .setContentText("Steps: $steps\nStep Frequency: $stepFrequency")
             .setSmallIcon(R.drawable.ic_play)
+            .setContentIntent(PendingIntent.getActivity(
+                this, 0,
+                Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))
             .build()
 
         startForeground(1, notification)
@@ -196,6 +209,9 @@ class SensorService : Service(), SensorEventListener {
             .setContentTitle("Sport Activity")
             .setContentText("Steps: $steps\nStep Frequency: $stepFrequency")
             .setSmallIcon(R.drawable.ic_play)
+            .setContentIntent(PendingIntent.getActivity(
+                this, 0,
+                Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))
             .build()
 
         val notificationManager = getSystemService(NotificationManager::class.java)

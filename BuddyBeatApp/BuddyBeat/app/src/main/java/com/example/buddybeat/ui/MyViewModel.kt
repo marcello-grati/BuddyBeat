@@ -1,6 +1,7 @@
 package com.example.buddybeat.ui
 
 import androidx.datastore.preferences.core.Preferences
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -42,11 +43,22 @@ class MyViewModel @Inject constructor(
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
-    private val _audioList = songRepo.getAllSongs()
+    private val _audioList = songRepo.getSongsOrdered()
     val audioList = _audioList
 
     val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
     val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
+
+    private val _progressLoading = MutableStateFlow(0)
+    val progressLoading: StateFlow<Int> = _progressLoading.asStateFlow()
+
+    private val _stepFreq = MutableStateFlow(0)
+    val stepFreq: StateFlow<Int> = _stepFreq.asStateFlow()
+
+    private val _itemCount = songRepo.getCount()
+    val itemCount: LiveData<Int> = _itemCount
+
+
 
 
     fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
@@ -67,16 +79,22 @@ class MyViewModel @Inject constructor(
     }
 
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO){
-        simple().collect { value -> songRepo.updateBpm(value.first, value.second) }
+        simple().collect { value ->
+            songRepo.updateBpm(value.first, value.second)
+        }
     }
-    private fun simple() : Flow<Pair<Long, Int>> = flow { // flow builder
+    private fun simple() : Flow<Pair<Long, Int>> = flow {
+        // flow builder
         for (i in songRepo.getSongs()) {
             if (songRepo.getBpm(i.songId)==-1) {
                 val x = beatExtractor.beatDetection(
                     i.uri,
                     i.duration
-                ) // pretend we are doing something useful here
+                )
                 emit(Pair(i.songId, x)) // emit next value
+            }
+            _progressLoading.update {
+                _progressLoading.value+1
             }
         }
         setPreference(BPM_UPDATED_KEY, true)
@@ -111,6 +129,12 @@ class MyViewModel @Inject constructor(
         _progress.update {
             if (progr>0) (((progr.toFloat())/(duration.value.toFloat()) * 100f))
             else 0f
+        }
+    }
+
+    fun updateFreq(stepFreq: Int) {
+        _stepFreq.update{
+            stepFreq
         }
     }
 }

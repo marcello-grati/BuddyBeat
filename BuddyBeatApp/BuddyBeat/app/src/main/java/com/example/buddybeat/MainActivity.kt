@@ -3,10 +3,15 @@ package com.example.buddybeat
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -30,14 +35,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -82,6 +84,8 @@ class MainActivity : ComponentActivity() {
 
     var speed : Float = 1f
 
+
+
     //to check
     private var listener = object : Player.Listener {
 
@@ -121,6 +125,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    //Bind to SensorService
+    private lateinit var mService: SensorService
+    private var mBound: Boolean = false
+
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance.
+            val binder = service as SensorService.LocalBinder
+            mService = binder.getService()
+            mBound = true
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            mBound = false
+        }
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalPermissionsApi::class)
@@ -129,6 +151,10 @@ class MainActivity : ComponentActivity() {
 
         // startService(Intent(this, SensorService::class.java))
         startForegroundService(Intent(this, SensorService::class.java))
+        Intent(this, SensorService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+        handler.postDelayed(sensorDataRunnable, interval)
 
         setContent {
             BuddyBeatTheme {
@@ -138,11 +164,12 @@ class MainActivity : ComponentActivity() {
                     state.status.isGranted -> {
                         val isUploaded by viewModel.isUploaded.observeAsState()
                         val bpmUpdated by viewModel.bpmUpdated.observeAsState()
+
                         if(isUploaded == true && bpmUpdated==false) {
                             viewModel.updateBpm()
                         }
                         if(bpmUpdated == true){
-                            Log.d("FINITOOOOOOOOO", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+                            Log.d("bpmUpdated", "BPMs are updated")
                         }
                         MusicPlayerApp(
                             viewModel = viewModel,
@@ -154,6 +181,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onStart = {
                                 playPause()
+
                             },
                             incrementSpeed = {
                                 incrementSpeed(+1)
@@ -170,6 +198,25 @@ class MainActivity : ComponentActivity() {
                     }
                     else -> RequiredPermission(state)
                 }
+            }
+        }
+    }
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val interval: Long = 1000
+
+    private fun updateDataTextView() {
+        run{
+            viewModel.updateFreq(mService.stepFreq)
+        }
+
+    }
+
+    private val sensorDataRunnable = object : Runnable {
+        override fun run() {
+            if (mBound) {
+                updateDataTextView()
+                handler.postDelayed(this, interval)
             }
         }
     }
@@ -199,6 +246,8 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopProgressUpdate()
+        unbindService(connection)
+        mBound = false
     }
 
     private fun setController() {
