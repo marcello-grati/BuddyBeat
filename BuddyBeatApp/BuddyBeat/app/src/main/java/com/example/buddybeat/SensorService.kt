@@ -5,11 +5,13 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.ContentValues
 import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.icu.text.SimpleDateFormat
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -25,6 +27,14 @@ import kotlinx.coroutines.launch
 import java.util.LinkedList
 import kotlin.math.ceil
 import kotlin.math.sqrt
+
+import android.os.Environment
+import android.provider.MediaStore
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.Date
+import java.util.Locale
 
 
 class SensorService : Service(), SensorEventListener {
@@ -84,6 +94,10 @@ class SensorService : Service(), SensorEventListener {
 //    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 //    notificationManager.createNotificationChannel(mChannel)
 
+    private val DIRECTORY_NAME = "BuddyBeat Logs"
+    data class ValueTimestamp(val timestamp: String, val spm: String)
+
+    private val activityLogs = mutableListOf<ValueTimestamp>()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -112,6 +126,8 @@ class SensorService : Service(), SensorEventListener {
                 //Log.d("SensorService", "Step Count: $steps")
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
+                val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+                updateActivityLogs(stepFreq.toString(), currentTime)
                 delay(1000)
             }
         }
@@ -120,6 +136,9 @@ class SensorService : Service(), SensorEventListener {
     @OptIn(UnstableApi::class) override fun onDestroy() {
 
         Log.d("SensorService", "Distruggo il service")
+        // writeToFile("BuddyBeat Logs", "Hello, this is a test!")
+
+        writeToCsvFile(activityLogs)
         scope.cancel()
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
@@ -222,4 +241,59 @@ class SensorService : Service(), SensorEventListener {
         stopSelf()
     }
 
+    @OptIn(UnstableApi::class) private fun writeToCsvFile(data: List<ValueTimestamp>) {
+        // Generate a timestamp for the file name
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "$timeStamp.csv"
+
+        // Convert data to CSV format
+        val csvContent = StringBuilder()
+        csvContent.append("Timestamp,SPM\n")  // Add header
+        for (entry in data) {
+            csvContent.append("${entry.timestamp},${entry.spm}\n")
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // For Android 10 and above, use the MediaStore API
+            val resolver = contentResolver
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOCUMENTS}/$DIRECTORY_NAME")
+            }
+
+            val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
+            uri?.let {
+                resolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(csvContent.toString().toByteArray())
+                    outputStream.close()
+                    Log.d("SensorService", "CSV file written to ${uri.path}")
+                }
+            }
+        } else {
+            // For Android 9 and below, use the traditional file method
+            val documentsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), DIRECTORY_NAME)
+            if (!documentsDir.exists()) {
+                documentsDir.mkdirs()
+            }
+            val file = File(documentsDir, fileName)
+            try {
+                val fos = FileOutputStream(file)
+                fos.write(csvContent.toString().toByteArray())
+                fos.close()
+                Log.d("SensorService", "CSV file written to ${file.absolutePath}")
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun updateActivityLogs(value: String, timestamp: String) {
+        activityLogs.add(
+            ValueTimestamp(
+            spm = value,
+            timestamp = timestamp
+        )
+        )
+    }
 }
