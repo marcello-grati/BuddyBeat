@@ -60,9 +60,9 @@ class SensorService : Service(), SensorEventListener {
 
 
     /* variabili da regolare */
-    private var unitTime = 30000  //60000 millisecondi = 60 secondi
+    private var unitTime = 60000  //60000 millisecondi = 60 secondi
     private var threshold = 2  //per calcolo steps
-    private var deltaTime = 500// 0.5s intervallo di aggiornamento dati
+    private var deltaTime = 300// 0.5s intervallo di aggiornamento dati
 
     companion object {
         const val CHANNEL_ID = "SensorsChannel"
