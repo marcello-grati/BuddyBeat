@@ -129,6 +129,7 @@ class MainActivity : ComponentActivity() {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             controller?.currentMediaItem?.let { viewModel.changeSong(it) }
             controller?.let { viewModel.updateDuration(it.duration) }
+            controller?.mediaMetadata?.extras?.getInt("bpm")?.let { mService.updateBpm(it) }
         }
     }
 

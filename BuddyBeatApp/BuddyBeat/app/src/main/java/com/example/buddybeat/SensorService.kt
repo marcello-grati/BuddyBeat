@@ -58,6 +58,8 @@ class SensorService : Service(), SensorEventListener {
     private val stepTimes = LinkedList<Long>()
     private var startTime: Long = 0
 
+    private var bpm_song = 0
+
 
     /* variabili da regolare */
     private var unitTime = 60000  //60000 millisecondi = 60 secondi
@@ -80,6 +82,10 @@ class SensorService : Service(), SensorEventListener {
         return binder
     }
 
+    fun updateBpm(bpm : Int){
+        bpm_song = bpm
+    }
+
     val stepFreq: Int
         get() = stepFrequency.toInt()
 
@@ -95,7 +101,7 @@ class SensorService : Service(), SensorEventListener {
 //    notificationManager.createNotificationChannel(mChannel)
 
     private val DIRECTORY_NAME = "BuddyBeat Logs"
-    data class ValueTimestamp(val timestamp: String, val spm: String)
+    data class ValueTimestamp(val timestamp: String, val spm: String, val bpm : String)
 
     private val activityLogs = mutableListOf<ValueTimestamp>()
 
@@ -127,7 +133,7 @@ class SensorService : Service(), SensorEventListener {
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                updateActivityLogs(stepFreq.toString(), currentTime)
+                updateActivityLogs(stepFreq.toString(), currentTime, bpm_song.toString())
                 delay(1000)
             }
         }
@@ -248,9 +254,9 @@ class SensorService : Service(), SensorEventListener {
 
         // Convert data to CSV format
         val csvContent = StringBuilder()
-        csvContent.append("Timestamp,SPM\n")  // Add header
+        csvContent.append("Timestamp,SPM,BPM\n")  // Add header
         for (entry in data) {
-            csvContent.append("${entry.timestamp},${entry.spm}\n")
+            csvContent.append("${entry.timestamp},${entry.spm},${entry.bpm}\n")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -288,11 +294,12 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    private fun updateActivityLogs(value: String, timestamp: String) {
+    private fun updateActivityLogs(value: String, timestamp: String, bpm: String) {
         activityLogs.add(
             ValueTimestamp(
             spm = value,
-            timestamp = timestamp
+            timestamp = timestamp,
+            bpm = bpm
         )
         )
     }
