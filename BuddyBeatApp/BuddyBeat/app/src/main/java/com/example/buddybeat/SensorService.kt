@@ -12,9 +12,13 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.icu.text.SimpleDateFormat
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Binder
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.media3.common.util.Log
@@ -25,6 +29,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.LinkedList
+import android.os.SystemClock
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -60,11 +65,22 @@ class SensorService : Service(), SensorEventListener {
 
     private var bpm_song = 0
 
+    // Step frequency variables
+    private var lastUpdateTime : Int = 0 //new
+    private var penultimateUpdateTime: Int = 0 //new
+    private var deltaTime: Int = 0 //new
+    private var stepFreqNow : Int = 0 //new: starting value di frequenza passi
+    private val previousStepFrequency = mutableListOf<Int>()
+    private val currentFrequency = mutableListOf<Int>()
+    private val frequency = mutableListOf<Int>()
+    private var lastF: Int = 0
+
 
     /* variabili da regolare */
-    private var unitTime = 60000  //60000 millisecondi = 60 secondi
+    //private var unitTime = 60000  //60000 millisecondi = 60 secondi
     private var threshold = 2  //per calcolo steps
     private var deltaTime = 300// 0.5s intervallo di aggiornamento dati
+    private val n = 15 //stabilizzazione valori frequenza
 
     companion object {
         const val CHANNEL_ID = "SensorsChannel"
@@ -177,6 +193,38 @@ class SensorService : Service(), SensorEventListener {
                     }
                 }
 
+                if (acceleration > threshold) {
+                    // step frequency
+                    if (stepTimes.size >= 2) {
+                        lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
+                        penultimateUpdateTime = stepTimes[stepTimes.size - 2].toInt()
+                        deltaTime = lastUpdateTime - penultimateUpdateTime
+                        stepFreqNow = (60000 / deltaTime)
+
+                        //definizione due liste: current and previous frequency
+                        currentFrequency.add(stepFreqNow)
+                        if (currentFrequency.size >= 2) {
+                            previousStepFrequency.add(currentFrequency[currentFrequency.size - 2])
+                        }else{
+                            previousStepFrequency.add(0)
+                        }
+
+                        //stabilizzazione frequency steps
+                        val lastNValues = if (currentFrequency.size >= n) {
+                            currentFrequency.takeLast(n)
+                        } else {
+                            currentFrequency
+                        }
+                        val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
+                        val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
+                        val weightedAverage = weightedSum / weights.sum()
+                        frequency.add(weightedAverage.toInt())
+                        lastF = frequency[frequency.size-1]
+
+                    }
+                }
+
+                /*
                 //stepData ="Steps: $steps"
 
                 // Remove times older than one minute
@@ -192,7 +240,7 @@ class SensorService : Service(), SensorEventListener {
                 }
 
                 lastStepTime = now
-                //stepFreq = "Frequency: $stepFrequency step/min"
+                //stepFreq = "Frequency: $stepFrequency step/min" */
             }
         }
     }
