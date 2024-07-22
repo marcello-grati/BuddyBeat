@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.log2
 
 
 @HiltViewModel
@@ -46,7 +49,7 @@ class MyViewModel @Inject constructor(
     private val _currentBpm = MutableStateFlow(0)
     val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()
 
-    private val _audioList = songRepo.getSongsOrdered()
+    private val _audioList = orderSongs()
     val audioList = _audioList
 
     val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
@@ -62,6 +65,29 @@ class MyViewModel @Inject constructor(
     val itemCount: LiveData<Int> = _itemCount
 
 
+    private fun orderSongs() : LiveData<MutableList<Song>> {
+
+        val songs = songRepo.getSongsOrdered()
+        val myCustomComparator =  Comparator<Song> { a, b ->
+
+            var logBpmA = log2(a.bpm.toFloat())
+            var logBpmB = log2(b.bpm.toFloat())
+            var logStepFreq = log2(stepFreq.value.toFloat())
+            logBpmA -= floor(logBpmA)
+            logBpmB -= floor(logBpmB)
+            logStepFreq -= floor(logStepFreq)
+            val distA = abs(logBpmA - logStepFreq)
+            val distB = abs(logBpmB - logStepFreq)
+
+            when {
+                distA < distB -> return@Comparator -1
+                distA > distB -> return@Comparator 1
+                else ->  return@Comparator 0
+            }
+        }
+        songs.value?.sortWith(myCustomComparator)
+        return songs
+    }
 
 
     fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
