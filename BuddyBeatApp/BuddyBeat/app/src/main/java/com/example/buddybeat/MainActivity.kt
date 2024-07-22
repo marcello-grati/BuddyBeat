@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.LiveData
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -73,6 +72,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.floor
+import kotlin.math.log2
 
 
 @AndroidEntryPoint
@@ -222,21 +223,50 @@ class MainActivity : ComponentActivity() {
 
     }
 
+//    private fun updateSpeedSong(){
+//
+//        val stepFreq = mService.stepFreq
+//        val bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
+//        var rat = 1f
+//        if(bpm!=0 && bpm != null){
+//            rat = stepFreq.toFloat()/bpm.toFloat()
+//            if(rat < 0.8)
+//                rat *= 2
+//        }
+//        if (stepFreq < 60)
+//            rat = 1f
+//
+//        rat = rat.coerceAtLeast(0.9f)
+//        rat = rat.coerceAtMost(1.1f)
+//
+//        _ratio.update {rat}
+//    }
+
     private fun updateSpeedSong(){
 
         val stepFreq = mService.stepFreq
-        val bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
+        var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
         var rat = 1f
         if(bpm!=0 && bpm != null){
+
+            var logStepFreq = log2(stepFreq.toFloat())
+            var logBpm = log2(bpm.toFloat())
+            logStepFreq -= floor(logStepFreq)
+            logBpm -= floor(logBpm)
+
+            if (logStepFreq > logBpm && stepFreq < bpm ) {
+                bpm /= 2
+            }
+            else if (logStepFreq < logBpm && stepFreq > bpm) {
+                bpm *= 2
+            }
             rat = stepFreq.toFloat()/bpm.toFloat()
-            if(rat < 0.8)
-                rat *= 2
         }
         if (stepFreq < 60)
             rat = 1f
 
-        rat = rat.coerceAtLeast(0.9f)
-        rat = rat.coerceAtMost(1.1f)
+        rat = rat.coerceAtLeast(0.8f)
+        rat = rat.coerceAtMost(1.2f)
 
         _ratio.update {rat}
     }
