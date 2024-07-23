@@ -81,7 +81,9 @@ class MyViewModel @Inject constructor(
                     var logBpmB = log2(b.bpm.toFloat())
                     var logStepFreq = log2(stepFreq.value.toFloat())
                     logBpmA -= floor(logBpmA)
+                    if (logBpmA > 0.5f) logBpmA = 1.0f - logBpmA
                     logBpmB -= floor(logBpmB)
+                    if (logBpmB > 0.5f) logBpmB = 1.0f - logBpmB
                     logStepFreq -= floor(logStepFreq)
                     val distA = abs(logBpmA - logStepFreq)
                     val distB = abs(logBpmB - logStepFreq)
