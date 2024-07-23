@@ -75,7 +75,7 @@ class MyViewModel @Inject constructor(
             when {
                 a.bpm <= 0 && b.bpm <= 0 -> return@Comparator 0
                 a.bpm <= 0 -> return@Comparator 1
-                b.bpm <= 0 -> return@Comparator 1
+                b.bpm <= 0 -> return@Comparator -1
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
