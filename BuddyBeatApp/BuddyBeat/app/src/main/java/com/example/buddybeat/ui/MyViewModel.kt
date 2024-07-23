@@ -1,8 +1,10 @@
 package com.example.buddybeat.ui
 
+import android.util.Log
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -49,7 +51,7 @@ class MyViewModel @Inject constructor(
     private val _currentBpm = MutableStateFlow(0)
     val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()
 
-    private val _audioList = orderSongs()
+    private val _audioList = songRepo.getSongsOrdered()
     val audioList = _audioList
 
     val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
@@ -65,11 +67,16 @@ class MyViewModel @Inject constructor(
     val itemCount: LiveData<Int> = _itemCount
 
 
-    private fun orderSongs() : LiveData<MutableList<Song>> {
+    private fun orderSongs() {
 
-        val songs = songRepo.getSongsOrdered()
+        Log.d("Ordering", "Song list reordered")
         val myCustomComparator =  Comparator<Song> { a, b ->
 
+            when {
+                a.bpm == -1 && b.bpm == -1 -> return@Comparator 0
+                a.bpm == -1 -> return@Comparator 1
+                b.bpm == -1 -> return@Comparator 1
+            }
             var logBpmA = log2(a.bpm.toFloat())
             var logBpmB = log2(b.bpm.toFloat())
             var logStepFreq = log2(stepFreq.value.toFloat())
@@ -85,8 +92,7 @@ class MyViewModel @Inject constructor(
                 else ->  return@Comparator 0
             }
         }
-        songs.value?.sortWith(myCustomComparator)
-        return songs
+        audioList.value?.sortWith(myCustomComparator)
     }
 
 
@@ -170,6 +176,7 @@ class MyViewModel @Inject constructor(
         _stepFreq.update{
             stepFreq
         }
+        orderSongs()
     }
 }
 
