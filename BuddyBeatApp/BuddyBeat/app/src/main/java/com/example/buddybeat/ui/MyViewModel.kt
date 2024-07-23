@@ -73,24 +73,27 @@ class MyViewModel @Inject constructor(
         val myCustomComparator =  Comparator<Song> { a, b ->
 
             when {
-                a.bpm == -1 && b.bpm == -1 -> return@Comparator 0
-                a.bpm == -1 -> return@Comparator 1
-                b.bpm == -1 -> return@Comparator 1
-            }
-            var logBpmA = log2(a.bpm.toFloat())
-            var logBpmB = log2(b.bpm.toFloat())
-            var logStepFreq = log2(stepFreq.value.toFloat())
-            logBpmA -= floor(logBpmA)
-            logBpmB -= floor(logBpmB)
-            logStepFreq -= floor(logStepFreq)
-            val distA = abs(logBpmA - logStepFreq)
-            val distB = abs(logBpmB - logStepFreq)
+                a.bpm <= 0 && b.bpm <= 0 -> return@Comparator 0
+                a.bpm <= 0 -> return@Comparator 1
+                b.bpm <= 0 -> return@Comparator 1
+                else -> {
+                    var logBpmA = log2(a.bpm.toFloat())
+                    var logBpmB = log2(b.bpm.toFloat())
+                    var logStepFreq = log2(stepFreq.value.toFloat())
+                    logBpmA -= floor(logBpmA)
+                    logBpmB -= floor(logBpmB)
+                    logStepFreq -= floor(logStepFreq)
+                    val distA = abs(logBpmA - logStepFreq)
+                    val distB = abs(logBpmB - logStepFreq)
 
-            when {
-                distA < distB -> return@Comparator -1
-                distA > distB -> return@Comparator 1
-                else ->  return@Comparator 0
+                    when {
+                        distA < distB -> return@Comparator -1
+                        distA > distB -> return@Comparator 1
+                        else ->  return@Comparator 0
+                    }
+                }
             }
+
         }
         audioList.value?.sortWith(myCustomComparator)
         Log.d("songlist", audioList.value.toString())
