@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.buddybeat.data.models.Song
@@ -58,6 +59,11 @@ fun AudioItem(
                     maxLines = 1
                 )
             }
+            Text(
+                text = audio.bpm.toString(),
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.size(12.dp))
             Text(
                 text = timeStampToDuration(position = audio.duration.toLong())
             )
