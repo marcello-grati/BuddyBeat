@@ -347,17 +347,17 @@ class MainActivity : ComponentActivity() {
     //used in UI
 
     private fun setPlaylist() {
+        controller?.clearMediaItems()
         viewModel.audioList.value?.forEach { audio ->
             val media = buildMediaItem(audio)
             controller?.addMediaItem(media)
         }
 
-        Log.d("count", controller?.mediaItemCount.toString())
+        Log.d("mediaItemCount", controller?.mediaItemCount.toString())
     }
 
     private fun setSong(index: Int) {
-        if (controller?.mediaItemCount == 0)
-            setPlaylist()
+        setPlaylist()
         when (index) {
             controller?.currentMediaItemIndex -> {
                 playPause()

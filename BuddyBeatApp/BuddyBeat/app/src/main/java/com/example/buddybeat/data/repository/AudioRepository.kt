@@ -29,7 +29,7 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
     }
 
     fun getSongsOrdered() : LiveData<MutableList<Song>> {
-        return database.songDao().getAllSongs()
+        return database.songDao().getSongsOrdered()
     }
 
     fun getBpm(id: Long) : Int {

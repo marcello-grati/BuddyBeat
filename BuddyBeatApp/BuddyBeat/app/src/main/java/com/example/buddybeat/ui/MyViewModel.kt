@@ -51,7 +51,7 @@ class MyViewModel @Inject constructor(
     private val _currentBpm = MutableStateFlow(0)
     val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()
 
-    private val _audioList = songRepo.getSongsOrdered()
+    private val _audioList = songRepo.getAllSongs()
     val audioList = _audioList
 
     val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
@@ -93,6 +93,7 @@ class MyViewModel @Inject constructor(
             }
         }
         audioList.value?.sortWith(myCustomComparator)
+        Log.d("songlist", audioList.value.toString())
     }
 
 
@@ -113,13 +114,14 @@ class MyViewModel @Inject constructor(
         setPreference(IS_UPLOADED_KEY, true)
     }
 
+    // functions to update bpm of songs at the beginning
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO){
         simple().collect { value ->
             songRepo.updateBpm(value.first, value.second)
         }
     }
     private fun simple() : Flow<Pair<Long, Int>> = flow {
-        // flow builder
+        //for each song in database calculate bpm and update
         for (i in songRepo.getSongs()) {
             if (songRepo.getBpm(i.songId)==-1) {
                 val x = beatExtractor.beatDetection(
