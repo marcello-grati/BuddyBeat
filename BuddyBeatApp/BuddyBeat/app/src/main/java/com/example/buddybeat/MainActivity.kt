@@ -72,7 +72,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.floor
+import kotlin.math.abs
 import kotlin.math.log2
 
 
@@ -242,6 +242,35 @@ class MainActivity : ComponentActivity() {
 //        _ratio.update {rat}
 //    }
 
+//    private fun updateSpeedSong(){
+//
+//        val stepFreq = mService.stepFreq
+//        var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
+//        var rat = 1f
+//        if(bpm!=0 && bpm != null){
+//
+//            var logStepFreq = log2(stepFreq.toFloat())
+//            var logBpm = log2(bpm.toFloat())
+//            logStepFreq -= floor(logStepFreq)
+//            logBpm -= floor(logBpm)
+//
+//            if (logStepFreq > logBpm && stepFreq < bpm ) {
+//                bpm /= 2
+//            }
+//            else if (logStepFreq < logBpm && stepFreq > bpm) {
+//                bpm *= 2
+//            }
+//            rat = stepFreq.toFloat()/bpm.toFloat()
+//        }
+//        if (stepFreq < 60)
+//            rat = 1f
+//
+//        rat = rat.coerceAtLeast(0.8f)
+//        rat = rat.coerceAtMost(1.2f)
+//
+//        _ratio.update {rat}
+//    }
+
     private fun updateSpeedSong(){
 
         val stepFreq = mService.stepFreq
@@ -249,22 +278,26 @@ class MainActivity : ComponentActivity() {
         var rat = 1f
         if(bpm!=0 && bpm != null){
 
-            var logStepFreq = log2(stepFreq.toFloat())
-            var logBpm = log2(bpm.toFloat())
-            logStepFreq -= floor(logStepFreq)
-            logBpm -= floor(logBpm)
+            // We compute the log_2() of step frequency and of double, half and original value of BPM
+            val logStepFreq = log2(stepFreq.toFloat())
+            val logBpm = log2(bpm.toFloat())
+            val logHalfBPM = log2(bpm.toFloat()/2.0f)
+            val logDoubleBPM = log2(bpm.toFloat()*2.0f)
 
-            if (logStepFreq > logBpm && stepFreq < bpm ) {
+            // We update BPM if one of its multiples has a smaller distance value
+            if (abs(logStepFreq-logBpm) > abs(logStepFreq-logHalfBPM)) {
                 bpm /= 2
             }
-            else if (logStepFreq < logBpm && stepFreq > bpm) {
+            else if (abs(logStepFreq-logBpm) > abs(logStepFreq-logDoubleBPM)) {
                 bpm *= 2
             }
+            // Speed-up ratio computed as step frequency / BPM
             rat = stepFreq.toFloat()/bpm.toFloat()
         }
         if (stepFreq < 60)
             rat = 1f
 
+        // ratio forced into [0.8, 1.2] range
         rat = rat.coerceAtLeast(0.8f)
         rat = rat.coerceAtMost(1.2f)
 
