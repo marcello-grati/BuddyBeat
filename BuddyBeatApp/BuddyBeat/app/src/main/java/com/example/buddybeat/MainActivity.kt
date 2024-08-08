@@ -167,8 +167,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BuddyBeatTheme {
-                val state =
+                val state : PermissionState = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                     rememberPermissionState(permission = Manifest.permission.READ_EXTERNAL_STORAGE)
+                } else {
+                    rememberPermissionState(permission = Manifest.permission.READ_MEDIA_AUDIO)
+                }
                 when {
                     state.status.isGranted -> {
                         val isUploaded by viewModel.isUploaded.observeAsState()

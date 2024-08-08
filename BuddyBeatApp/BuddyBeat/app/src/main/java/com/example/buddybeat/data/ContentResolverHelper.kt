@@ -21,10 +21,9 @@ constructor(@ApplicationContext val context: Context) {
         MediaStore.Audio.AudioColumns.TITLE
     )
 
-    private val x = "<unknown>"
-    private var selectionClause: String? =
-        "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0" + " AND ${MediaStore.Audio.AudioColumns.ARTIST} != '<unknown>'"
-    //private var selectionArg = arrayOf("1")
+    private var selectionClause: String? = "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0"
+    // if we want to remove "<unknown>" artist
+    //private var selectionClause: String? = "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0" + " AND ${MediaStore.Audio.AudioColumns.ARTIST} != '<unknown>'"
 
     private val sortOrder = "${MediaStore.Audio.AudioColumns.DISPLAY_NAME} ASC"
 
@@ -45,6 +44,7 @@ constructor(@ApplicationContext val context: Context) {
             null,
             sortOrder
         )
+
 
         mCursor?.use { cursor ->
             val idColumn =
@@ -74,6 +74,7 @@ constructor(@ApplicationContext val context: Context) {
                             title = title, artist = artist, duration = duration,
                             uri = uri.toString(), description = "$title $artist"
                         )
+
                     }
                 }
             }
