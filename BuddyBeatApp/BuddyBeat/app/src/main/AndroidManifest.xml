@@ -11,15 +11,16 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.ACCELEROMETER"/>
     <uses-permission android:name="android.permission.GYROSCOPE"/>
-    <uses-permission android:name="android.permission.BODY_SENSORS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+<!--    <uses-permission android:name="android.permission.BODY_SENSORS"/>-->
     <uses-feature android:name="android.hardware.sensor.accelerometer"/>
     <uses-feature android:name="android.hardware.sensor.gyroscope"/>
     <uses-feature android:name="android.hardware.sensor.body_sensor"/>
-    <uses-feature android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
-    <uses-feature android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
-    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
+<!--    <uses-feature android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>-->
+<!--    <uses-feature android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>-->
+<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />-->
+<!--    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />-->
+<!--    <uses-permission android:name="android.permission.BODY_SENSORS" />-->
 
 
     <application
@@ -53,7 +54,7 @@
         </service>
         <service
             android:name=".SensorService"
-            android:foregroundServiceType="health">
+            android:foregroundServiceType="specialUse">
         </service>
 
     </application>
