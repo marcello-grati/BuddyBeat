@@ -22,6 +22,9 @@ import com.example.buddybeat.SensorService
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.update
+import kotlin.math.abs
+import kotlin.math.log2
 
 
 @UnstableApi @AndroidEntryPoint
@@ -111,26 +114,36 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     }
 
-    private fun updateSpeedSong(){
-
+    private fun updateSpeedSong() {
         val stepFreq = mService.stepFreq
-        val bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
-        Log.d("BPM", bpm.toString())
+        var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
+        var rat = 1f
+        if (bpm != 0 && bpm != null) {
 
-        if(bpm!=0 && bpm != null){
-            ratio = stepFreq.toFloat()/bpm.toFloat()
-            Log.d("RATIO_1", ratio.toString())
-            if(ratio < 0.8)
-                ratio *= 2
-            Log.d("RATIO_2", ratio.toString())
+            // We compute the log_2() of step frequency and of double, half and original value of BPM
+            val logStepFreq = log2(stepFreq.toFloat())
+            val logBpm = log2(bpm.toFloat())
+            val logHalfBPM = log2(bpm.toFloat() / 2.0f)
+            val logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+
+            // We update BPM if one of its multiples has a smaller distance value
+            if (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+                bpm /= 2
+            } else if (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+                bpm *= 2
+            }
+            // Speed-up ratio computed as step frequency / BPM
+            rat = stepFreq.toFloat() / bpm.toFloat()
         }
         if (stepFreq < 60)
-            ratio = 1f
+            rat = 1f
 
-        ratio = ratio.coerceAtLeast(0.9f)
-        ratio = ratio.coerceAtMost(1.1f)
+        // ratio forced into [0.8, 1.2] range
+        rat = rat.coerceAtLeast(0.8f)
+        rat = rat.coerceAtMost(1.2f)
 
         Log.d("RATIO_3", ratio.toString())
+
         mediaSession?.player?.setPlaybackSpeed(ratio)
     }
 
