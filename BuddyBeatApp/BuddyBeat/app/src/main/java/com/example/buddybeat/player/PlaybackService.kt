@@ -22,7 +22,6 @@ import com.example.buddybeat.SensorService
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.update
 import kotlin.math.abs
 import kotlin.math.log2
 
@@ -141,6 +140,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         // ratio forced into [0.8, 1.2] range
         rat = rat.coerceAtLeast(0.8f)
         rat = rat.coerceAtMost(1.2f)
+
+        ratio = rat
 
         Log.d("RATIO_3", ratio.toString())
 
