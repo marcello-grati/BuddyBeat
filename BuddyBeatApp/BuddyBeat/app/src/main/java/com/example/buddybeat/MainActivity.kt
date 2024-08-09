@@ -57,9 +57,8 @@ import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionState
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.MultiplePermissionsState
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -89,10 +88,10 @@ class MainActivity : ComponentActivity() {
 
     private var job: Job? = Job()
 
-    var speed : Float = 1f
+    var speed: Float = 1f
 
-    var _ratio : MutableStateFlow<Float> = MutableStateFlow(1f)
-    val ratio : StateFlow<Float> = _ratio.asStateFlow()
+    var _ratio: MutableStateFlow<Float> = MutableStateFlow(1f)
+    val ratio: StateFlow<Float> = _ratio.asStateFlow()
 
     //to check
     private var listener = object : Player.Listener {
@@ -116,9 +115,9 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Player.STATE_BUFFERING -> {
-                //
+                    //
                 }
-           }
+            }
 
         }
 
@@ -154,33 +153,37 @@ class MainActivity : ComponentActivity() {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @OptIn(ExperimentalPermissionsApi::class)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // startService(Intent(this, SensorService::class.java))
+    private fun startSensorService() {
         startForegroundService(Intent(this, SensorService::class.java))
         Intent(this, SensorService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
         handler.postDelayed(sensorDataRunnable, interval)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(ExperimentalPermissionsApi::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
         setContent {
             BuddyBeatTheme {
-                val state : PermissionState = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    rememberPermissionState(permission = Manifest.permission.READ_EXTERNAL_STORAGE)
-                } else {
-                    rememberPermissionState(permission = Manifest.permission.READ_MEDIA_AUDIO)
-                }
+                val state: MultiplePermissionsState =
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                    } else {
+                        rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.POST_NOTIFICATIONS))
+                    }
                 when {
-                    state.status.isGranted -> {
+                    state.allPermissionsGranted -> {
+                        startSensorService()
                         val isUploaded by viewModel.isUploaded.observeAsState()
                         val bpmUpdated by viewModel.bpmUpdated.observeAsState()
                         val r by ratio.collectAsState()
-                        if(isUploaded == true && bpmUpdated==false) {
+                        if (isUploaded == true && bpmUpdated == false) {
                             viewModel.updateBpm()
                         }
-                        if(bpmUpdated == true){
+                        if (bpmUpdated == true) {
                             Log.d("bpmUpdated", "BPMs are updated")
                         }
                         MusicPlayerApp(
@@ -193,7 +196,6 @@ class MainActivity : ComponentActivity() {
                             },
                             onStart = {
                                 playPause()
-
                             },
                             incrementSpeed = {
                                 incrementSpeed(+1)
@@ -207,47 +209,47 @@ class MainActivity : ComponentActivity() {
                             prevSong = {
                                 prevSong()
                             },
-                            text3 = r.toString())
+                            text3 = r.toString()
+                        )
                     }
                     else -> RequiredPermission(state)
                 }
-            }
-        }
+          }
+         }
     }
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
 
     private fun updateDataTextView() {
-        run{
+        run {
             viewModel.updateFreq(mService.stepFreq)
             updateSpeedSong()
         }
 
     }
 
-    private fun updateSpeedSong(){
+    private fun updateSpeedSong() {
 
         val stepFreq = mService.stepFreq
         var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
         var rat = 1f
-        if(bpm!=0 && bpm != null){
+        if (bpm != 0 && bpm != null) {
 
             // We compute the log_2() of step frequency and of double, half and original value of BPM
             val logStepFreq = log2(stepFreq.toFloat())
             val logBpm = log2(bpm.toFloat())
-            val logHalfBPM = log2(bpm.toFloat()/2.0f)
-            val logDoubleBPM = log2(bpm.toFloat()*2.0f)
+            val logHalfBPM = log2(bpm.toFloat() / 2.0f)
+            val logDoubleBPM = log2(bpm.toFloat() * 2.0f)
 
             // We update BPM if one of its multiples has a smaller distance value
-            if (abs(logStepFreq-logBpm) > abs(logStepFreq-logHalfBPM)) {
+            if (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
                 bpm /= 2
-            }
-            else if (abs(logStepFreq-logBpm) > abs(logStepFreq-logDoubleBPM)) {
+            } else if (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
                 bpm *= 2
             }
             // Speed-up ratio computed as step frequency / BPM
-            rat = stepFreq.toFloat()/bpm.toFloat()
+            rat = stepFreq.toFloat() / bpm.toFloat()
         }
         if (stepFreq < 60)
             rat = 1f
@@ -256,7 +258,7 @@ class MainActivity : ComponentActivity() {
         rat = rat.coerceAtLeast(0.8f)
         rat = rat.coerceAtMost(1.2f)
 
-        _ratio.update {rat}
+        _ratio.update { rat }
     }
 
 
@@ -283,7 +285,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onResume() {
         super.onResume()
-        GlobalScope.launch(Dispatchers.Main){ startProgressUpdate() }
+        GlobalScope.launch(Dispatchers.Main) { startProgressUpdate() }
     }
 
     override fun onStop() {
@@ -328,10 +330,6 @@ class MainActivity : ComponentActivity() {
     }
 
 
-
-
-
-
     //used in UI
 
     private fun setPlaylist() {
@@ -373,7 +371,7 @@ class MainActivity : ComponentActivity() {
                     .setArtist(audio.artist)
                     .setTitle(audio.title)
                     .setDisplayTitle(audio.title)
-                    .setExtras(Bundle().apply { putInt("bpm", audio.bpm)})
+                    .setExtras(Bundle().apply { putInt("bpm", audio.bpm) })
                     .build()
             )
             .build()
@@ -395,25 +393,26 @@ class MainActivity : ComponentActivity() {
         controller?.seekToPreviousMediaItem()
     }
 
-    private fun incrementSpeed(value : Int){
-        if(value > 0)
+    private fun incrementSpeed(value: Int) {
+        if (value > 0)
             speed += 0.05f
         else
             speed -= 0.05f
         controller?.setPlaybackSpeed(speed)
     }
 
-    private fun onProgress(seekTo : Float){
-        controller?.seekTo((controller?.duration?.times(seekTo.toLong()) ?: 0) /100)
+    private fun onProgress(seekTo: Float) {
+        controller?.seekTo((controller?.duration?.times(seekTo.toLong()) ?: 0) / 100)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
     @Composable
-    fun RequiredPermission(state: PermissionState) {
+    fun RequiredPermission(state: MultiplePermissionsState) {
         Scaffold {
             DisposableEffect(state) {
-                state.launchPermissionRequest()
+                state.launchMultiplePermissionRequest()
                 onDispose {
                     val list = ContentResolverHelper(applicationContext).getAudioData()
                     viewModel.update(list)
@@ -432,12 +431,22 @@ class MainActivity : ComponentActivity() {
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(Modifier.height(8.dp))
+                    val text = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        "Read external storage permissions required"
+                    } else {
+                        "Read external storage and notification permissions required"
+                    }
                     Text(
-                        "Read external storage permission required",
+                        text,
                         style = MaterialTheme.typography.titleLarge
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text("This is required in order for the app to collect the songs")
+                    val text1 = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        "This is required in order for the app to collect the songs"
+                    } else {
+                        "This is required in order for the app to collect the songs and calculate the step frequency"
+                    }
+                    Text(text1)
                 }
                 val context = LocalContext.current
                 Button(
