@@ -151,6 +151,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val handler = Handler(Looper.getMainLooper())
+    private val interval: Long = 1000
+
+    private val sensorDataRunnable = object : Runnable {
+        override fun run() {
+            if (mBound) {
+                updateDataTextView()
+                handler.postDelayed(this, interval)
+            }
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startSensorService() {
@@ -218,19 +229,76 @@ class MainActivity : ComponentActivity() {
          }
     }
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val interval: Long = 1000
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
+    @Composable
+    fun RequiredPermission(state: MultiplePermissionsState) {
+        Scaffold {
+            DisposableEffect(state) {
+                state.launchMultiplePermissionRequest()
+                onDispose {
+                    val list = ContentResolverHelper(applicationContext).getAudioData()
+                    viewModel.loadSongs(list)
+                }
+            }
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                Column(Modifier.padding(vertical = 120.dp, horizontal = 16.dp)) {
+                    Icon(
+                        Icons.Rounded.LibraryMusic,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    val text = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        "Read external storage permissions required"
+                    } else {
+                        "Read external storage and notification permissions required"
+                    }
+                    Text(
+                        text,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    val text1 = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        "This is required in order for the app to collect the songs"
+                    } else {
+                        "This is required in order for the app to collect the songs and calculate the step frequency"
+                    }
+                    Text(text1)
+                }
+                val context = LocalContext.current
+                Button(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    onClick = {
+                        val intent =
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                        startActivity(intent)
+                    }) {
+                    Text("Go to settings")
+                }
+            }
+        }
+    }
 
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(mService.stepFreq)
             updateSpeedSong()
         }
-
     }
 
     private fun updateSpeedSong() {
-
         val stepFreq = mService.stepFreq
         var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
         var rat = 1f
@@ -261,16 +329,6 @@ class MainActivity : ComponentActivity() {
         _ratio.update { rat }
     }
 
-
-    private val sensorDataRunnable = object : Runnable {
-        override fun run() {
-            if (mBound) {
-                updateDataTextView()
-                handler.postDelayed(this, interval)
-            }
-        }
-    }
-
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onStart() {
         super.onStart()
@@ -279,7 +337,19 @@ class MainActivity : ComponentActivity() {
         controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
         controllerFuture.addListener({ setController() }, ContextCompat.getMainExecutor(this))
         //controllerFuture.addListener({ setController() }, MoreExecutors.directExecutor())
+    }
 
+    private fun setController() {
+        val controller = this.controller ?: return
+        controller.addListener(listener)
+        initController(controller)
+    }
+
+    private fun initController(controller: MediaController) {
+        controller.currentMediaItem?.let { viewModel.changeSong(it) }
+        controller.isPlaying.let { viewModel.updateIsPlaying(it) }
+        controller.duration.let { viewModel.updateDuration(it) }
+        controller.currentPosition.let { viewModel.updateProgress(it) }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -298,19 +368,6 @@ class MainActivity : ComponentActivity() {
         stopProgressUpdate()
         unbindService(connection)
         mBound = false
-    }
-
-    private fun setController() {
-        val controller = this.controller ?: return
-        controller.addListener(listener)
-        initController(controller)
-    }
-
-    private fun initController(controller: MediaController) {
-        controller.currentMediaItem?.let { viewModel.changeSong(it) }
-        controller.isPlaying.let { viewModel.updateIsPlaying(it) }
-        controller.duration.let { viewModel.updateDuration(it) }
-        controller.currentPosition.let { viewModel.updateProgress(it) }
     }
 
     private suspend fun startProgressUpdate() {
@@ -405,66 +462,5 @@ class MainActivity : ComponentActivity() {
         controller?.seekTo((controller?.duration?.times(seekTo.toLong()) ?: 0) / 100)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
-    @Composable
-    fun RequiredPermission(state: MultiplePermissionsState) {
-        Scaffold {
-            DisposableEffect(state) {
-                state.launchMultiplePermissionRequest()
-                onDispose {
-                    val list = ContentResolverHelper(applicationContext).getAudioData()
-                    viewModel.update(list)
-                }
-            }
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                Column(Modifier.padding(vertical = 120.dp, horizontal = 16.dp)) {
-                    Icon(
-                        Icons.Rounded.LibraryMusic,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    val text = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        "Read external storage permissions required"
-                    } else {
-                        "Read external storage and notification permissions required"
-                    }
-                    Text(
-                        text,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    val text1 = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        "This is required in order for the app to collect the songs"
-                    } else {
-                        "This is required in order for the app to collect the songs and calculate the step frequency"
-                    }
-                    Text(text1)
-                }
-                val context = LocalContext.current
-                Button(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    onClick = {
-                        val intent =
-                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-                        startActivity(intent)
-                    }) {
-                    Text("Go to settings")
-                }
-            }
-        }
-    }
 }
 

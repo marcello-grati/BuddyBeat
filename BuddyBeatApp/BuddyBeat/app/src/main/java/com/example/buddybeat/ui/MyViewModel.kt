@@ -36,6 +36,21 @@ class MyViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
 
+    val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
+    val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
+
+    private val _progressLoading = MutableStateFlow(0)
+    val progressLoading: StateFlow<Int> = _progressLoading.asStateFlow()
+
+    private val _audioList = songRepo.getAllSongs()
+    val audioList = _audioList
+
+    private val _itemCount = songRepo.getCount()
+    val itemCount: LiveData<Int> = _itemCount
+
+    private val _stepFreq = MutableStateFlow(0)
+    val stepFreq: StateFlow<Int> = _stepFreq.asStateFlow()
+
     private val _currentSong = MutableStateFlow(CurrentSong("", ""))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
 
@@ -51,69 +66,15 @@ class MyViewModel @Inject constructor(
     private val _currentBpm = MutableStateFlow(0)
     val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()
 
-    private val _audioList = songRepo.getAllSongs()
-    val audioList = _audioList
 
-    val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
-    val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
-
-    private val _progressLoading = MutableStateFlow(0)
-    val progressLoading: StateFlow<Int> = _progressLoading.asStateFlow()
-
-    private val _stepFreq = MutableStateFlow(0)
-    val stepFreq: StateFlow<Int> = _stepFreq.asStateFlow()
-
-    private val _itemCount = songRepo.getCount()
-    val itemCount: LiveData<Int> = _itemCount
-
-
-    private fun orderSongs() {
-
-        Log.d("Ordering", "Song list reordered")
-        val myCustomComparator =  Comparator<Song> { a, b ->
-
-            when {
-                a.bpm <= 0 && b.bpm <= 0 -> return@Comparator 0
-                a.bpm <= 0 -> return@Comparator 1
-                b.bpm <= 0 -> return@Comparator -1
-                else -> {
-                    var logBpmA = log2(a.bpm.toFloat())
-                    var logBpmB = log2(b.bpm.toFloat())
-                    var logStepFreq = log2(stepFreq.value.toFloat())
-                    logBpmA -= floor(logBpmA)
-                    if (logBpmA > 0.5f) logBpmA = 1.0f - logBpmA
-                    logBpmB -= floor(logBpmB)
-                    if (logBpmB > 0.5f) logBpmB = 1.0f - logBpmB
-                    logStepFreq -= floor(logStepFreq)
-                    val distA = abs(logBpmA - logStepFreq)
-                    val distB = abs(logBpmB - logStepFreq)
-
-                    when {
-                        distA < distB -> return@Comparator -1
-                        distA > distB -> return@Comparator 1
-                        else ->  return@Comparator 0
-                    }
-                }
-            }
-
-        }
-        audioList.value?.sortWith(myCustomComparator)
-        Log.d("songlist", audioList.value.toString())
-    }
-
-
-    fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
+    private fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
         viewModelScope.launch {
             dataStoreManager.setPreference(key, value)
         }
     }
 
-    private fun insert(song: Song) = viewModelScope.launch {
-        songRepo.insert(song)
-    }
-
-    fun update(list: List<Song>) = viewModelScope.launch {
-        var one = list.forEach {
+    fun loadSongs(list: List<Song>) = viewModelScope.launch {
+        list.forEach {
             songRepo.insert(it)
         }
         setPreference(IS_UPLOADED_KEY, true)
@@ -121,11 +82,11 @@ class MyViewModel @Inject constructor(
 
     // functions to update bpm of songs at the beginning
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO){
-        simple().collect { value ->
+        calculateBpm().collect { value ->
             songRepo.updateBpm(value.first, value.second)
         }
     }
-    private fun simple() : Flow<Pair<Long, Int>> = flow {
+    private fun calculateBpm() : Flow<Pair<Long, Int>> = flow {
         //for each song in database calculate bpm and update
         for (i in songRepo.getSongs()) {
             if (songRepo.getBpm(i.songId)==-1) {
@@ -141,7 +102,6 @@ class MyViewModel @Inject constructor(
         }
         setPreference(BPM_UPDATED_KEY, true)
     }
-
 
 
     fun changeSong(song: MediaItem) {
@@ -184,6 +144,40 @@ class MyViewModel @Inject constructor(
             stepFreq
         }
         orderSongs()
+    }
+
+    private fun orderSongs() {
+
+        Log.d("Ordering", "Song list reordered")
+        val myCustomComparator =  Comparator<Song> { a, b ->
+
+            when {
+                a.bpm <= 0 && b.bpm <= 0 -> return@Comparator 0
+                a.bpm <= 0 -> return@Comparator 1
+                b.bpm <= 0 -> return@Comparator -1
+                else -> {
+                    var logBpmA = log2(a.bpm.toFloat())
+                    var logBpmB = log2(b.bpm.toFloat())
+                    var logStepFreq = log2(stepFreq.value.toFloat())
+                    logBpmA -= floor(logBpmA)
+                    if (logBpmA > 0.5f) logBpmA = 1.0f - logBpmA
+                    logBpmB -= floor(logBpmB)
+                    if (logBpmB > 0.5f) logBpmB = 1.0f - logBpmB
+                    logStepFreq -= floor(logStepFreq)
+                    val distA = abs(logBpmA - logStepFreq)
+                    val distB = abs(logBpmB - logStepFreq)
+
+                    when {
+                        distA < distB -> return@Comparator -1
+                        distA > distB -> return@Comparator 1
+                        else ->  return@Comparator 0
+                    }
+                }
+            }
+
+        }
+        audioList.value?.sortWith(myCustomComparator)
+        Log.d("songlist", audioList.value.toString())
     }
 }
 
