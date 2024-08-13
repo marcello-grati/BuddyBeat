@@ -129,5 +129,5 @@ dependencies {
     implementation("androidx.media3:media3-effect:1.3.1")
 
     // Coil
-    //implementation("io.coil-kt:coil-compose:2.3.0")
+    implementation("io.coil-kt:coil-compose:2.3.0")
 }

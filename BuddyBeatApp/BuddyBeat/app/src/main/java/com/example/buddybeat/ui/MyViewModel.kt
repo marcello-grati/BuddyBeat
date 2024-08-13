@@ -79,7 +79,12 @@ class MyViewModel @Inject constructor(
         }
         setPreference(IS_UPLOADED_KEY, true)
     }
-
+    fun update(list: List<Song>) = viewModelScope.launch {
+        var one = list.forEach {
+            songRepo.insert(it)
+        }
+        setPreference(IS_UPLOADED_KEY, true)
+    }
     // functions to update bpm of songs at the beginning
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO){
         calculateBpm().collect { value ->

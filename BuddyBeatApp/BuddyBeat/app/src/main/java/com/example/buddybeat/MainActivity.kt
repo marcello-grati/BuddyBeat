@@ -35,9 +35,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,10 +58,11 @@ import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.ui.MyViewModel
-import com.example.buddybeat.ui.audio.MusicPlayerApp
+import com.example.buddybeat.ui.PlayScreenDesign
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
+import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
@@ -80,6 +85,7 @@ class MainActivity : ComponentActivity() {
 
 
     private val viewModel: MyViewModel by viewModels()
+
 
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val controller: MediaController?
@@ -178,118 +184,129 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+            var permissionsRequested by remember { mutableStateOf(false) }
+
             BuddyBeatTheme {
-                val state: MultiplePermissionsState =
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-                    } else {
-                        rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_MEDIA_AUDIO, Manifest.permission.POST_NOTIFICATIONS))
-                    }
-                when {
-                    state.allPermissionsGranted -> {
-                        startSensorService()
-                        val isUploaded by viewModel.isUploaded.observeAsState()
-                        val bpmUpdated by viewModel.bpmUpdated.observeAsState()
-                        val r by ratio.collectAsState()
-                        if (isUploaded == true && bpmUpdated == false) {
-                            viewModel.updateBpm()
-                        }
-                        if (bpmUpdated == true) {
-                            Log.d("bpmUpdated", "BPMs are updated")
-                        }
-                        MusicPlayerApp(
-                            viewModel = viewModel,
-                            onItemClick = {
-                                setSong(it)
-                            },
-                            nextSong = {
-                                nextSong()
-                            },
-                            onStart = {
-                                playPause()
-                            },
-                            incrementSpeed = {
-                                incrementSpeed(+1)
-                            },
-                            decrementSpeed = {
-                                incrementSpeed(-1)
-                            },
-                            onProgress = {
-                                onProgress(it)
-                            },
-                            prevSong = {
-                                prevSong()
-                            },
-                            text3 = r.toString()
+                val state = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    rememberMultiplePermissionsState(
+                        permissions = listOf(
+                            Manifest.permission.READ_MEDIA_AUDIO,
+                            Manifest.permission.READ_MEDIA_IMAGES
                         )
-                    }
-                    else -> RequiredPermission(state)
-                }
-          }
-         }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
-    @Composable
-    fun RequiredPermission(state: MultiplePermissionsState) {
-        Scaffold {
-            DisposableEffect(state) {
-                state.launchMultiplePermissionRequest()
-                onDispose {
-                    val list = ContentResolverHelper(applicationContext).getAudioData()
-                    viewModel.loadSongs(list)
-                }
-            }
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                Column(Modifier.padding(vertical = 120.dp, horizontal = 16.dp)) {
-                    Icon(
-                        Icons.Rounded.LibraryMusic,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onBackground
                     )
-                    Spacer(Modifier.height(8.dp))
-                    val text = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        "Read external storage permissions required"
-                    } else {
-                        "Read external storage and notification permissions required"
-                    }
-                    Text(
-                        text,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    val text1 = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        "This is required in order for the app to collect the songs"
-                    } else {
-                        "This is required in order for the app to collect the songs and calculate the step frequency"
-                    }
-                    Text(text1)
+                } else {
+                    rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
                 }
-                val context = LocalContext.current
-                Button(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    onClick = {
-                        val intent =
-                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-                        startActivity(intent)
-                    }) {
-                    Text("Go to settings")
+
+
+                LaunchedEffect(Unit) {
+                    if(!state.allPermissionsGranted){
+                        state.launchMultiplePermissionRequest()
+                    }
                 }
+
+                LaunchedEffect(state.allPermissionsGranted) {
+                    if (state.allPermissionsGranted) {
+                        val list = ContentResolverHelper(applicationContext).getAudioData()
+                        viewModel.update(list)
+                    }
+                }
+
+//                when {
+//                    state.allPermissionsGranted  -> {
+                val isUploaded by viewModel.isUploaded.observeAsState()
+                val bpmUpdated by viewModel.bpmUpdated.observeAsState()
+                val r by ratio.collectAsState()
+                if (isUploaded == true && bpmUpdated == false) {
+                    viewModel.updateBpm()
+                }
+                if (bpmUpdated == true) {
+                    Log.d("bpmUpdated", "BPMs are updated")
+                }
+                PlayScreenDesign()
+//                        MusicPlayerApp(
+//                            viewModel = viewModel,
+//                            onItemClick = {
+//                                setSong(it)
+//                            },
+//                            nextSong = {
+//                                nextSong()
+//                            },
+//                            onStart = {
+//                                playPause()
+//
+//                            },
+//                            incrementSpeed = {
+//                                incrementSpeed(+1)
+//                            },
+//                            decrementSpeed = {
+//                                incrementSpeed(-1)
+//                            },
+//                            onProgress = {
+//                                onProgress(it)
+//                            },
+//                            prevSong = {
+//                                prevSong()
+//                            },
+//                            text3 = r.toString()
+//                        )
+//                    }
+//                    else -> RequiredPermission(state = state) {
+//                        state.launchMultiplePermissionRequest()
+//                    }
+//                }
             }
         }
     }
+
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
+    @Composable
+    fun RequiredPermission(
+        state: MultiplePermissionsState,
+        onRequestPermission: () -> Unit
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Column(Modifier.padding(vertical = 120.dp, horizontal = 16.dp)) {
+                Icon(
+                    Icons.Rounded.LibraryMusic,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Read external storage permission required",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(Modifier.height(4.dp))
+                Text("This is required in order for the app to collect the songs")
+            }
+            val context = LocalContext.current
+            Button(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                onClick = {
+                    if (state.shouldShowRationale) {
+                        onRequestPermission()
+                    } else {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    }
+                }
+            ) {
+                Text(if (state.shouldShowRationale) "Request Permission" else "Go to settings")
+            }
+        }
+    }
+
 
     private fun updateDataTextView() {
         run {
