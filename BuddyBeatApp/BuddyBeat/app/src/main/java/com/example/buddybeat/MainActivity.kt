@@ -31,10 +31,8 @@ import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,7 +60,6 @@ import com.example.buddybeat.ui.PlayScreenDesign
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
-import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
@@ -323,15 +320,20 @@ class MainActivity : ComponentActivity() {
 
             // We compute the log_2() of step frequency and of double, half and original value of BPM
             val logStepFreq = log2(stepFreq.toFloat())
-            val logBpm = log2(bpm.toFloat())
-            val logHalfBPM = log2(bpm.toFloat() / 2.0f)
-            val logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+            var logBpm = log2(bpm.toFloat())
+            var logHalfBPM = log2(bpm.toFloat() / 2.0f)
+            var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
 
             // We update BPM if one of its multiples has a smaller distance value
-            if (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+            while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
                 bpm /= 2
-            } else if (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+                logBpm = logHalfBPM
+                logHalfBPM = log2(bpm.toFloat() / 2.0f)
+            }
+            while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
                 bpm *= 2
+                logBpm = logDoubleBPM
+                logDoubleBPM = log2(bpm.toFloat() * 2.0f)
             }
             // Speed-up ratio computed as step frequency / BPM
             rat = stepFreq.toFloat() / bpm.toFloat()
