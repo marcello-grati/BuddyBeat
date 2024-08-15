@@ -173,9 +173,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private val MANUAL_MODE = false
+    private val DEFAULT_BPM = 100
 
     private var speedMode = !MANUAL_MODE
-    private var manualBpm = -1
+    private var manualBpm = DEFAULT_BPM
     
     fun toggleSpeedMode() {
         speedMode = !speedMode
@@ -183,6 +184,12 @@ class MainActivity : ComponentActivity() {
 
     fun setManualBpm(bpm : Int) {
         manualBpm = bpm
+    }
+    fun increaseManualBpm(amount : Int) {
+        manualBpm += amount
+    }
+    fun decreaseManualBpm(amount : Int) {
+        manualBpm -= amount
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
