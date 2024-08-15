@@ -123,6 +123,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     ): ListenableFuture<List<MediaItem>> {
         val updatedMediaItems = mediaItems.map { mediaitem -> mediaitem.buildUpon().setUri(mediaitem.requestMetadata.mediaUri).build() }
         playlist.add(updatedMediaItems.last().mediaId)
+        if(playlist.size > ((audiolist.value?.size?.div(2)) ?: 1))
+            playlist.removeFirstOrNull()
         Log.d("onAddMediaItems", playlist.toString())
         return Futures.immediateFuture(updatedMediaItems)
     }
@@ -177,12 +179,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private val orderSongsRunnable = object : Runnable {
         override fun run() {
-            Log.d("IOOOO", "orderSongsRunnable")
             if (mBound) {
                 val pos = mediaSession?.player?.currentPosition
                 val dur = mediaSession?.player?.duration
-                Log.d("pos", pos.toString())
-                Log.d("dur", dur.toString())
                 if(pos!=null && dur!=null && dur>0) {
                     Log.d("pos", pos.toString())
                     Log.d("dur", dur.toString())
