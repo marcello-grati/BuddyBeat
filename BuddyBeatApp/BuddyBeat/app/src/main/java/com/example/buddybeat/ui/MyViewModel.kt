@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
@@ -54,6 +53,9 @@ class MyViewModel @Inject constructor(
     private val _currentSong = MutableStateFlow(CurrentSong("", ""))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
 
+    private val _currentId = MutableStateFlow(-1L)
+    val currentId: StateFlow<Long> = _currentId.asStateFlow()
+
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
@@ -79,12 +81,7 @@ class MyViewModel @Inject constructor(
         }
         setPreference(IS_UPLOADED_KEY, true)
     }
-    fun update(list: List<Song>) = viewModelScope.launch {
-        var one = list.forEach {
-            songRepo.insert(it)
-        }
-        setPreference(IS_UPLOADED_KEY, true)
-    }
+
     // functions to update bpm of songs at the beginning
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO){
         calculateBpm().collect { value ->
@@ -109,20 +106,28 @@ class MyViewModel @Inject constructor(
     }
 
 
-    fun changeSong(song: MediaItem) {
-        val currentSongTitle = song.mediaMetadata.title.toString()
-        val currentSongArtist = song.mediaMetadata.artist.toString()
-        val currentSongBpm = song.mediaMetadata.extras?.getInt("bpm")
-        _currentSong.update {
-            it.copy(
-                title = currentSongTitle,
-                artist = currentSongArtist
-            )
-        }
-        if (currentSongBpm != null)
-            _currentBpm.update {
-                currentSongBpm
+    fun changeSong(song: MediaItem?) {
+        if(song!=null){
+            val currentSongTitle = song.mediaMetadata.title.toString()
+            val currentSongArtist = song.mediaMetadata.artist.toString()
+            val currentSongBpm = song.mediaMetadata.extras?.getInt("bpm")
+            val currentSongId = song.mediaMetadata.extras?.getLong("id")
+            _currentSong.update {
+                it.copy(
+                    title = currentSongTitle,
+                    artist = currentSongArtist
+                )
             }
+            if (currentSongId != null)
+                _currentId.update {
+                    currentSongId
+                }
+            if (currentSongBpm != null)
+                _currentBpm.update {
+                    currentSongBpm
+                }
+        }
+
     }
 
     fun updateIsPlaying(isPlaying:Boolean) {
@@ -148,10 +153,10 @@ class MyViewModel @Inject constructor(
         _stepFreq.update{
             stepFreq
         }
-        orderSongs()
+        //orderSongs()
     }
 
-    private fun orderSongs() {
+    fun orderSongs(list: MutableList<Song>) : MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered")
         val myCustomComparator =  Comparator<Song> { a, b ->
@@ -163,15 +168,19 @@ class MyViewModel @Inject constructor(
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    var logStepFreq = log2(stepFreq.value.toFloat())
+                    val s = stepFreq.value.toFloat()
+                    //val s = 180f
+                    var logStepFreq = log2(s)
                     logBpmA -= floor(logBpmA)
-                    if (logBpmA > 0.5f) logBpmA = 1.0f - logBpmA
                     logBpmB -= floor(logBpmB)
-                    if (logBpmB > 0.5f) logBpmB = 1.0f - logBpmB
                     logStepFreq -= floor(logStepFreq)
-                    val distA = abs(logBpmA - logStepFreq)
-                    val distB = abs(logBpmB - logStepFreq)
-
+                    var distA = abs(logBpmA - logStepFreq)
+                    var distB = abs(logBpmB - logStepFreq)
+                    if (distA > 0.5f)
+                        distA = 1.0f - distA
+                    if (distB > 0.5f)
+                        distB = 1.0f - distB
+                    //Log.d("Comparator", "Comparing ${a.bpm} and ${b.bpm} => result: $distA, $distB")
                     when {
                         distA < distB -> return@Comparator -1
                         distA > distB -> return@Comparator 1
@@ -181,8 +190,11 @@ class MyViewModel @Inject constructor(
             }
 
         }
-        audioList.value?.sortWith(myCustomComparator)
-        Log.d("songlist", audioList.value.toString())
+        val l = list.sortedWith(myCustomComparator).toMutableList()
+        l.forEach{
+            Log.d(it.toString(), it.bpm.toString())
+        }
+        return l
     }
 }
 

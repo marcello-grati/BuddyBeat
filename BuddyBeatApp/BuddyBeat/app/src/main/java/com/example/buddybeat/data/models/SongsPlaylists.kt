@@ -26,7 +26,7 @@ data class Song(
     @ColumnInfo(name = "bpm")
     val bpm: Int = -1)
 {
-    override fun toString(): String = title + "\n" + artist
+    override fun toString(): String = "$title - $artist"
 }
 
 
