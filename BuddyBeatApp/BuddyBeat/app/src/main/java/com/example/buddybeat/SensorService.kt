@@ -112,7 +112,7 @@ class SensorService : Service(), SensorEventListener {
 //    notificationManager.createNotificationChannel(mChannel)
 
     private val DIRECTORY_NAME = "BuddyBeat Logs"
-    data class ValueTimestamp(val timestamp: String, val spm: String, val bpm : String)
+    data class ValueTimestamp(val timestamp: String, val spm: String, val spm2: String, val bpm : String)
 
     private val activityLogs = mutableListOf<ValueTimestamp>()
 
@@ -144,7 +144,7 @@ class SensorService : Service(), SensorEventListener {
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                updateActivityLogs(stepFreq.toString(), currentTime, bpm_song.toString())
+                updateActivityLogs(stepFreq.toString(), lastF.toString(), currentTime, bpm_song.toString())
                 delay(1000)
             }
         }
@@ -337,10 +337,11 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    private fun updateActivityLogs(value: String, timestamp: String, bpm: String) {
+    private fun updateActivityLogs(value: String, value2: String, timestamp: String, bpm: String) {
         activityLogs.add(
             ValueTimestamp(
             spm = value,
+            spm2 = value2,
             timestamp = timestamp,
             bpm = bpm
         )
