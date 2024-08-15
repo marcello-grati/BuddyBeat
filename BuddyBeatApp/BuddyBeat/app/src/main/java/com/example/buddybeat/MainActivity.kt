@@ -172,6 +172,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val MANUAL_MODE = false
+
+    private var speedMode = !MANUAL_MODE
+    private var manualBpm = -1
+    
+    fun toggleSpeedMode() {
+        speedMode = !speedMode
+    }
+
+    fun setManualBpm(bpm : Int) {
+        manualBpm = bpm
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startSensorService() {
         startForegroundService(Intent(this, SensorService::class.java))
@@ -380,13 +393,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateRatio() {
-        val stepFreq = mService.stepFreq
+
+        val stepFreq = when {
+            speedMode == MANUAL_MODE -> manualBpm.toFloat()
+            else -> mService.stepFreq.toFloat()
+        }
         var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
         var rat = 1f
         if (bpm != 0 && bpm != null) {
 
             // We compute the log_2() of step frequency and of double, half and original value of BPM
-            val logStepFreq = log2(stepFreq.toFloat())
+            val logStepFreq = log2(stepFreq)
             var logBpm = log2(bpm.toFloat())
             var logHalfBPM = log2(bpm.toFloat() / 2.0f)
             var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
@@ -403,14 +420,14 @@ class MainActivity : ComponentActivity() {
                 logDoubleBPM = log2(bpm.toFloat() * 2.0f)
             }
             // Speed-up ratio computed as step frequency / BPM
-            rat = stepFreq.toFloat() / bpm.toFloat()
+            rat = stepFreq / bpm.toFloat()
         }
         if (stepFreq < 60)
             rat = 1f
 
         // ratio forced into [0.8, 1.2] range
         rat = rat.coerceAtLeast(0.8f)
-        rat = rat.coerceAtMost(1.2f)
+        rat = rat.coerceAtMost(1.25f)
 
         _ratio.update { rat }
     }

@@ -12,13 +12,9 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.icu.text.SimpleDateFormat
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Binder
 import android.os.Build
-import android.os.Bundle
 import android.os.IBinder
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.media3.common.util.Log
@@ -29,7 +25,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.LinkedList
-import android.os.SystemClock
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -261,7 +256,7 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
     private fun startForegroundService() {
 
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
@@ -276,7 +271,7 @@ class SensorService : Service(), SensorEventListener {
         startForeground(1, notification)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
     private fun updateNotification() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
