@@ -101,7 +101,7 @@ fun MusicPlayerNavHost(
         }
 
         composable(route = Destination.songScreen) {
-            SongScreen(
+            PlayScreenDesign(
                 onNavigateUp = { navController.navigateUp() }
             )
         }
