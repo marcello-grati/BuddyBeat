@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.DelicateCoroutinesApi
+import java.util.Dictionary
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -40,7 +41,8 @@ import kotlin.math.min
 class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     companion object {
-        var playlist: Set<MediaItem> = mutableSetOf()
+        //var playlist: MutableMap<String, MediaItem> = mutableMapOf()
+        var playlist : MutableList<String> = mutableListOf()
     }
 
     @Inject
@@ -120,7 +122,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         mediaItems: MutableList<MediaItem>
     ): ListenableFuture<List<MediaItem>> {
         val updatedMediaItems = mediaItems.map { mediaitem -> mediaitem.buildUpon().setUri(mediaitem.requestMetadata.mediaUri).build() }
-        playlist = playlist.plus(updatedMediaItems.last())
+        playlist.add(updatedMediaItems.last().mediaId)
         Log.d("onAddMediaItems", playlist.toString())
         return Futures.immediateFuture(updatedMediaItems)
     }
@@ -175,9 +177,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private val orderSongsRunnable = object : Runnable {
         override fun run() {
+            Log.d("IOOOO", "orderSongsRunnable")
             if (mBound) {
                 val pos = mediaSession?.player?.currentPosition
                 val dur = mediaSession?.player?.duration
+                Log.d("pos", pos.toString())
+                Log.d("dur", dur.toString())
                 if(pos!=null && dur!=null && dur>0) {
                     Log.d("pos", pos.toString())
                     Log.d("dur", dur.toString())
@@ -190,7 +195,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                             val nextSong = l?.removeFirstOrNull()
                             if(nextSong != null) {
                                 val media = buildMediaItem(nextSong)
-                                if (!playlist.contains(media)) {
+                                if (!playlist.contains(media.mediaId)) {
                                     setSongInPlaylist(media)
                                     break
                                 }
@@ -199,8 +204,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                         }
                     }
                 }
-                handler.postDelayed(this, interval*5)
             }
+            handler.postDelayed(this, interval*5)
         }
     }
 
