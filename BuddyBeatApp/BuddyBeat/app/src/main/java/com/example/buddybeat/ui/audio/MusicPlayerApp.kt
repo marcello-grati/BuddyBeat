@@ -30,6 +30,9 @@ fun MusicPlayerApp(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
+    toggleMode : () -> Unit,
+    plus : () -> Unit,
+    minus : () -> Unit,
     text3 : String
 ) {
     val navController = rememberNavController()
@@ -43,7 +46,10 @@ fun MusicPlayerApp(
         prevSong = prevSong,
         incrementSpeed = incrementSpeed,
         decrementSpeed = decrementSpeed,
-        text3 = text3
+        toggleMode = toggleMode,
+        text3 = text3,
+        plus = plus,
+        minus = minus
     )
 }
 
@@ -59,6 +65,9 @@ fun MusicPlayerNavHost(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
+    toggleMode : () -> Unit,
+    plus : () -> Unit,
+    minus : () -> Unit,
     text3 : String
 ) {
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
@@ -131,6 +140,12 @@ fun MusicPlayerNavHost(
                 nextSong = nextSong,
                 prevSong = prevSong,
                 duration = duration,
+                toggleMode = toggleMode,
+                plus = plus,
+                minus = minus,
+                step = stepFreq.toString(),
+                bpm = bpm.toString(),
+                ratio = text3,
             )
         }
     }

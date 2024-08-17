@@ -90,12 +90,18 @@ fun PlayScreenDesign(
     onStart: () -> Unit,
     //next prev
     nextSong: () -> Unit,
-    prevSong: () -> Unit
-
+    prevSong: () -> Unit,
+    toggleMode : () -> Unit,
+    plus : () -> Unit,
+    minus : () -> Unit,
+    step : String,
+    bpm : String,
+    ratio : String,
 ) {
     //var isPlaying by remember { mutableStateOf(false) }
     //var currentTime by remember { mutableStateOf(0f) }
     //val durationInSeconds = durationToSeconds(duration)
+    var text by remember { mutableStateOf("auto") }
 
     /*LaunchedEffect(isPlaying, currentTime) {
         if (isPlaying) {
@@ -190,13 +196,13 @@ fun PlayScreenDesign(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = { minus() }) {
                     Icon(
                         imageVector = Icons.Default.RemoveCircleOutline,
                         contentDescription = "", modifier = Modifier.size(30.dp)
                     )
                 }
-                IconButton(onClick = { }) {
+                IconButton(onClick = { plus() }) {
                     Icon(
                         imageVector = Icons.Default.AddCircleOutline,
                         contentDescription = "", modifier = Modifier.size(30.dp)
@@ -220,11 +226,15 @@ fun PlayScreenDesign(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row {
-                newButton(name = "Step")
-                newButton(name = "bpm")
-                newButton(name = "ratio")
+                newButton(name = step,{})
+                newButton(name = bpm,{})
+                newButton(name = ratio,{})
             }
-            newButton(name = "auto")
+            newButton(name = text,
+                onClick = {
+                    toggleMode()
+                    text = if(text=="auto") "manual" else "auto"
+                })
         }
 
         // Play ROW
@@ -351,10 +361,10 @@ fun CircularSlider(
                             angle = a
                             val newProgress = 1 - (angle / 180f)
                             //if (newProgress >= 0.997f) {
-                              //  appliedAngle = 180f
-                                //onChange?.invoke(0f)
+                            //  appliedAngle = 180f
+                            //onChange?.invoke(0f)
                             //} else {
-                                onChange?.invoke(newProgress)
+                            onChange?.invoke(newProgress)
                             //}
                         } else {
                             nearTheThumbIndicator = false
@@ -369,9 +379,9 @@ fun CircularSlider(
                                 val newProgress = 1 - (angle / 180f)
                                 //if (newProgress >= 0.997f) {
                                 //    appliedAngle = 180f
-                                    //onChange?.invoke(0f)
+                                //onChange?.invoke(0f)
                                 //} else {
-                                    onChange?.invoke(newProgress)
+                                onChange?.invoke(newProgress)
                                 //}
                             }
                         }
@@ -459,15 +469,19 @@ fun formatSecondsToDuration(milliseconds: Long): String {
     return String.format("%02d:%02d", minutes, remainingSeconds)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun newButton(name: String) {
+fun newButton(
+    name: String,
+    onClick : () -> Unit){
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
         modifier = Modifier
             .padding(horizontal = 5.dp)
-            .size(width = 70.dp, height = 50.dp)
+            .size(width = 70.dp, height = 50.dp),
+        onClick = onClick
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(

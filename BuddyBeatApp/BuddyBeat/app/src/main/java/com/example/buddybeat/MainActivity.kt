@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
     private var speedMode = !MANUAL_MODE
     private var manualBpm = DEFAULT_BPM
     
-    fun toggleSpeedMode() {
+    private fun toggleSpeedMode() {
         speedMode = !speedMode
     }
 
@@ -270,7 +270,16 @@ class MainActivity : ComponentActivity() {
                             prevSong = {
                                 prevSong()
                             },
-                            text3 = r.toString()
+                            text3 = r.toString(),
+                            toggleMode = {
+                                toggleSpeedMode()
+                            },
+                            plus = {
+                                increaseManualBpm(1)
+                            },
+                            minus = {
+                                decreaseManualBpm(1)
+                            }
                         )
                     }
 //                    else -> RequiredPermission(state = state) {
