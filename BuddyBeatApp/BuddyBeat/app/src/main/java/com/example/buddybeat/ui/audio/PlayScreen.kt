@@ -20,13 +20,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBackIos
-import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
-import kotlinx.coroutines.delay
+import com.example.buddybeat.ui.CurrentSong
 import java.io.File
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -73,25 +74,38 @@ import kotlin.math.sqrt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayScreenDesign(
-    filePath: String = "",
-    duration: String = "05:00",
-    songName: String = "Feel Good Inc",
-    artist: String = "Gorillaz",
-    onNavigateUp: () -> Unit
-) {
-    var isPlaying by remember { mutableStateOf(false) }
-    var currentTime by remember { mutableStateOf(0f) }
-    val durationInSeconds = durationToSeconds(duration)
+    //filePath: String,
+    //duration: Long,
+    //songName: String,
+    //artist: String,
+    //isPlaying : Boolean,
+    //currentTime : Float,
+    onNavigateUp: () -> Unit,
+    song: CurrentSong,
+    duration: Long,
+    isPlaying: Boolean,
+    progress: Float,
+    onProgress: (Float) -> Unit,
+    //playpause
+    onStart: () -> Unit,
+    //next prev
+    nextSong: () -> Unit,
+    prevSong: () -> Unit
 
-    LaunchedEffect(isPlaying, currentTime) {
+) {
+    //var isPlaying by remember { mutableStateOf(false) }
+    //var currentTime by remember { mutableStateOf(0f) }
+    //val durationInSeconds = durationToSeconds(duration)
+
+    /*LaunchedEffect(isPlaying, currentTime) {
         if (isPlaying) {
-            while (currentTime < durationInSeconds) {
+            while (currentTime < duration) {
                 delay(1000L)
                 currentTime += 1f
             }
             isPlaying = false
         }
-    }
+    }*/
 
     Column(
         modifier = Modifier
@@ -105,7 +119,8 @@ fun PlayScreenDesign(
                 .fillMaxWidth()
         ) {
             AsyncImage(
-                model = File(filePath),
+                //model = File(filePath),
+                model = File(""),
                 placeholder = painterResource(id = R.drawable.scaled),
                 error = painterResource(id = R.drawable.scaled),
                 contentDescription = null,
@@ -122,13 +137,13 @@ fun PlayScreenDesign(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { }) {
+                IconButton(onClick = { onNavigateUp()} ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIos,
                         contentDescription = "",
                     )
                 }
-                IconButton(onClick = { }) {
+                IconButton(onClick = { TODO("Menù song") }) {
                     Icon(
                         imageVector = Icons.Default.Menu,
                         contentDescription = "",
@@ -142,12 +157,12 @@ fun PlayScreenDesign(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = songName,
+                    text = song.title,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.W900
                 )
                 Text(
-                    text = artist,
+                    text = song.artist,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center, color = Color.White, fontSize = 16.sp
                 )
@@ -159,12 +174,13 @@ fun PlayScreenDesign(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .height(350.dp),
-                progress = currentTime / durationInSeconds
-            ) { newProgress ->
-                currentTime = newProgress * durationInSeconds
-                if (currentTime == 0f) {
-                    isPlaying = false
-                }
+                progress = progress
+            ) { //newProgress ->
+                //currentTime = newProgress * duration
+                //if (currentTime == 0f) {
+                //    isPlaying = false
+                //}
+                onProgress(it*100)
             }
             Row(
                 modifier = Modifier
@@ -189,7 +205,7 @@ fun PlayScreenDesign(
             }
         }
         Text(
-            text = formatSecondsToDuration(currentTime.toInt()),
+            text = formatSecondsToDuration((progress*duration).toLong()),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center, color = Color.Gray, fontSize = 19.sp
         )
@@ -237,26 +253,26 @@ fun PlayScreenDesign(
                         .background(Color(0xFF91E4EC), RoundedCornerShape(40.dp)),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { prevSong() }) {
                         Icon(
-                            imageVector = Icons.Default.FastRewind,
+                            imageVector = Icons.Default.SkipPrevious,
                             contentDescription = "",
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { nextSong() }) {
                         Icon(
-                            imageVector = Icons.Default.FastRewind,
+                            imageVector = Icons.Default.SkipNext,
                             contentDescription = "",
                             modifier = Modifier
                                 .size(20.dp)
-                                .rotate(180f)
                         )
                     }
                 }
                 Card(
                     onClick = {
-                        isPlaying = !isPlaying
+                        //isPlaying = !isPlaying
+                              onStart()
                     },
                     shape = CircleShape,
                     modifier = Modifier.size(70.dp),
@@ -306,11 +322,11 @@ fun CircularSlider(
 
     LaunchedEffect(key1 = progress) {
         appliedAngle = 180f * (1 - progress) // Dynamically update the angle based on progress
-        Log.d("CHKPRO", "${appliedAngle} angle and progress : ${progress}")
-        if (progress >= 0.998f) {
-            appliedAngle = 180f
-            onChange?.invoke(0f)
-        }
+        //Log.d("CHKPRO", "${appliedAngle} angle and progress : ${progress}")
+        //if (progress >= 0.998f) {
+        //    appliedAngle = 180f
+            //onChange?.invoke(0f)
+        //}
     }
 
 
@@ -334,12 +350,12 @@ fun CircularSlider(
                             nearTheThumbIndicator = true
                             angle = a
                             val newProgress = 1 - (angle / 180f)
-                            if (newProgress >= 0.997f) {
-                                appliedAngle = 180f
-                                onChange?.invoke(0f)
-                            } else {
+                            //if (newProgress >= 0.997f) {
+                              //  appliedAngle = 180f
+                                //onChange?.invoke(0f)
+                            //} else {
                                 onChange?.invoke(newProgress)
-                            }
+                            //}
                         } else {
                             nearTheThumbIndicator = false
                         }
@@ -351,12 +367,12 @@ fun CircularSlider(
                             if (a in 0f..180f) {
                                 angle = a
                                 val newProgress = 1 - (angle / 180f)
-                                if (newProgress >= 0.997f) {
-                                    appliedAngle = 180f
-                                    onChange?.invoke(0f)
-                                } else {
+                                //if (newProgress >= 0.997f) {
+                                //    appliedAngle = 180f
+                                    //onChange?.invoke(0f)
+                                //} else {
                                     onChange?.invoke(newProgress)
-                                }
+                                //}
                             }
                         }
                     }
@@ -436,7 +452,8 @@ fun durationToSeconds(duration: String): Float {
     return (parts[0].toFloat() * 60) + parts[1].toFloat()
 }
 
-fun formatSecondsToDuration(seconds: Int): String {
+fun formatSecondsToDuration(milliseconds: Long): String {
+    val seconds : Int = milliseconds.toInt() / 1000
     val minutes = seconds / 60
     val remainingSeconds = seconds % 60
     return String.format("%02d:%02d", minutes, remainingSeconds)

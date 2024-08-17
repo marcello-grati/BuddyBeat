@@ -515,7 +515,7 @@ class MainActivity : ComponentActivity() {
     }*/
 
     private fun setSongInPlaylist(media: MediaItem) {
-        Log.d("IOOOO", "media: $media")
+        Log.d("IOOOO", "setting media: ${media.mediaId}")
         //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString())
         controller?.addMediaItem(media)
         //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.getMediaItemAt(controller!!.currentMediaItemIndex).toString())
@@ -584,9 +584,11 @@ class MainActivity : ComponentActivity() {
             val nextSong = l?.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
-                Log.d("playlist", playlist.toString())
+                Log.d("IOOOO","From MainActivity, next song ${media.mediaId}?")
+                Log.d("playlist before adding", playlist.toString())
                 if (!playlist.contains(media.mediaId)) {
-                    Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
+                    Log.d("IOOOO","From MainActivity, it does not contain ${media.mediaId}")
+                    //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
                     Log.d("media", media.toString())
                     Log.d("playlist", playlist.toString())
                     setSongInPlaylist(media)

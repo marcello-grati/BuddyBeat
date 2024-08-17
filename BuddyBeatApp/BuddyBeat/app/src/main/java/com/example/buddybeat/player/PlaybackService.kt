@@ -130,6 +130,13 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
 
+    private fun onAddSong(media : MediaItem){
+        playlist.add(media.mediaId)
+        if(playlist.size > ((audiolist.value?.size?.div(2)) ?: 1))
+            playlist.removeFirstOrNull()
+        Log.d("onAddSong", playlist.toString())
+    }
+
     private val sensorDataRunnable = object : Runnable {
         override fun run() {
             if (mBound) {
@@ -194,7 +201,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                             val nextSong = l?.removeFirstOrNull()
                             if(nextSong != null) {
                                 val media = buildMediaItem(nextSong)
+                                Log.d("IOOOO","From Playback service, next song ${media.mediaId}?")
                                 if (!playlist.contains(media.mediaId)) {
+                                    Log.d("IOOOO","From Playback service, it does not contain ${media.mediaId}")
                                     setSongInPlaylist(media)
                                     break
                                 }
@@ -209,8 +218,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     private fun setSongInPlaylist(media: MediaItem){
-        Log.d("IOOOO", "media: $media")
+        Log.d("IOOOO", "setting media: $media + id : ${media.mediaId}")
         mediaSession?.player!!.addMediaItem(media)
+        onAddSong(media)
         Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
         Log.d("IOOOO", "mediaItemCount: " + mediaSession?.player?.mediaItemCount.toString())
     }
