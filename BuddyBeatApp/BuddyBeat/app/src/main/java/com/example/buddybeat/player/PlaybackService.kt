@@ -1,5 +1,6 @@
 package com.example.buddybeat.player
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -11,25 +12,33 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.CommandButton
+import androidx.media3.session.DefaultMediaNotificationProvider
+import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
 import com.example.buddybeat.MainActivity
+import com.example.buddybeat.R
 import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.DelicateCoroutinesApi
-import java.util.Dictionary
+import dagger.hilt.android.migration.CustomInjection.inject
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -44,6 +53,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         //var playlist: MutableMap<String, MediaItem> = mutableMapOf()
         var playlist : MutableList<String> = mutableListOf()
     }
+
+    @Inject
+    lateinit var customMediaNotificationProvider : CustomMediaNotificationProvider
 
     @Inject
     lateinit var songRepo: AudioRepository
@@ -85,12 +97,14 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         mediaSession = MediaSession.Builder(this, player).setCallback(this).setSessionActivity(PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)).build()
+        mediaSession!!.setCustomLayout(notificationPlayerCustomCommandButtons)
         Intent(this, SensorService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
         audiolist = songRepo.getAllSongs()
         handler.postDelayed(sensorDataRunnable, interval)
         handler.postDelayed(orderSongsRunnable, interval)
+        setMediaNotificationProvider(customMediaNotificationProvider)
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -183,7 +197,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
 
-
     private val orderSongsRunnable = object : Runnable {
         override fun run() {
             if (mBound) {
@@ -192,34 +205,40 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 if(pos!=null && dur!=null && dur>0) {
                     Log.d("pos", pos.toString())
                     Log.d("dur", dur.toString())
-                    if (pos >= dur - min(5000.0, 0.9 * dur)) {
-                        val l = orderSongs()
-                        l?.forEach {
-                            Log.d(it.toString(), it.bpm.toString())
-                        }
-                        while(true){
-                            val nextSong = l?.removeFirstOrNull()
-                            if(nextSong != null) {
-                                val media = buildMediaItem(nextSong)
-                                Log.d("IOOOO","From Playback service, next song ${media.mediaId}?")
-                                if (!playlist.contains(media.mediaId)) {
-                                    Log.d("IOOOO","From Playback service, it does not contain ${media.mediaId}")
-                                    setSongInPlaylist(media)
-                                    break
-                                }
-
-                            }
-                        }
+                    if (pos >= dur - min(5000.0, 0.9 * dur) && pos <= dur) {
+                        nextSong()
                     }
                 }
             }
-            handler.postDelayed(this, interval*5)
+            handler.postDelayed(this, interval*6)
+        }
+    }
+
+    private fun nextSong() {
+        val l = orderSongs()
+        l?.forEach {
+            Log.d(it.toString(), it.bpm.toString())
+        }
+        while(true){
+            val nextSong = l?.removeFirstOrNull()
+            if(nextSong != null) {
+                val media = buildMediaItem(nextSong)
+                Log.d("IOOOO","From Playback service, next song ${media.mediaId}?")
+                if (!playlist.contains(media.mediaId)) {
+                    Log.d("IOOOO","From Playback service, it does not contain ${media.mediaId}")
+                    setSongInPlaylist(media)
+                    //mediaSession?.player?.seekToDefaultPosition(mediaSession?.player!!.currentMediaItemIndex + 1)
+                    break
+                }
+
+            }
         }
     }
 
     private fun setSongInPlaylist(media: MediaItem){
-        Log.d("IOOOO", "setting media: $media + id : ${media.mediaId}")
-        mediaSession?.player!!.addMediaItem(media)
+        Log.d("IOOOO", "setting media: $media + id : ${media.mediaId} + title: ${media.mediaMetadata.title}")
+        Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
+        mediaSession?.player!!.addMediaItem(mediaSession?.player!!.currentMediaItemIndex+1,media)
         onAddSong(media)
         Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
         Log.d("IOOOO", "mediaItemCount: " + mediaSession?.player?.mediaItemCount.toString())
@@ -287,4 +306,136 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
+
+    /*private val notificationPlayerCustomCommandButtons =
+        NotificationPlayerCustomCommandButton.entries.map { command -> command.commandButton }*/
+
+    /*override fun onConnect(
+        session: MediaSession,
+        controller: MediaSession.ControllerInfo
+    ): MediaSession.ConnectionResult {
+        if (session.isMediaNotificationController(controller)) {
+            val sessionCommands =
+                notificationPlayerCustomCommandButtons[0].sessionCommand.let {
+                    val m = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
+                    if(it!=null)
+                        m.add(it)
+                    m.build()
+                }
+            val playerCommands =
+                MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
+                    .remove(COMMAND_SEEK_TO_PREVIOUS)
+                    .remove(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                    .remove(COMMAND_SEEK_TO_NEXT)
+                    .remove(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                    .build()
+            // Custom layout and available commands to configure the legacy/framework session.
+            return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                .setCustomLayout(
+                    notificationPlayerCustomCommandButtons
+                )
+                .setAvailablePlayerCommands(playerCommands)
+                .setAvailableSessionCommands(sessionCommands)
+                .build()
+        }
+        // Default commands with default custom layout for all other controllers.
+        return MediaSession.ConnectionResult.AcceptedResultBuilder(session).build()
+    }*/
+
+    private val notificationPlayerCustomCommandButtons =
+        NotificationPlayerCustomCommandButton.values().map { command -> command.commandButton }
+
+    @SuppressLint("WrongConstant")
+    override fun onConnect(
+        session: MediaSession,
+        controller: MediaSession.ControllerInfo
+    ): MediaSession.ConnectionResult {
+        val connectionResult = super.onConnect(session, controller)
+        val availableSessionCommands = connectionResult.availableSessionCommands.buildUpon()
+
+        /* Registering custom player command buttons for player notification. */
+        notificationPlayerCustomCommandButtons.forEach { commandButton ->
+            commandButton.sessionCommand?.let(availableSessionCommands::add)
+        }
+        val avail = connectionResult.availablePlayerCommands.buildUpon()
+        avail.remove(Player.COMMAND_SEEK_TO_NEXT)
+        avail.remove(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+
+        return MediaSession.ConnectionResult.accept(
+            availableSessionCommands.build(),
+            avail.build()
+        )
+    }
+
+    override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
+        super.onPostConnect(session, controller)
+        if (notificationPlayerCustomCommandButtons.isNotEmpty()) {
+            /* Setting custom player command buttons to mediaLibrarySession for player notification. */
+            mediaSession!!.setCustomLayout(notificationPlayerCustomCommandButtons)
+        }
+    }
+
+    override fun onCustomCommand(
+        session: MediaSession,
+        controller: MediaSession.ControllerInfo,
+        customCommand: SessionCommand,
+        args: Bundle
+    ): ListenableFuture<SessionResult> {
+        /* Handling custom command buttons from player notification. */
+        if (customCommand.customAction == NotificationPlayerCustomCommandButton.NEXT.customAction) {
+            nextSong()
+            mediaSession?.player?.seekToDefaultPosition(mediaSession?.player!!.currentMediaItemIndex + 1)
+        }
+        return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+    }
+}
+
+private const val CUSTOM_COMMAND_NEXT = "NEXT"
+
+enum class NotificationPlayerCustomCommandButton(
+    val customAction: String,
+    val commandButton: CommandButton,
+) {
+    NEXT(
+        customAction = CUSTOM_COMMAND_NEXT,
+        commandButton = CommandButton.Builder()
+            .setDisplayName("Next")
+            .setExtras(Bundle().apply { putInt("COMMAND_KEY_COMPACT_VIEW_INDEX",0)})
+            .setSessionCommand(SessionCommand(CUSTOM_COMMAND_NEXT, Bundle()))
+            .setIconResId(androidx.media3.session.R.drawable.media3_notification_seek_to_next )
+            .build(),
+    );
+}
+
+@UnstableApi
+class CustomMediaNotificationProvider(context: Context) : DefaultMediaNotificationProvider(context) {
+
+    override fun addNotificationActions(
+        mediaSession: MediaSession,
+        mediaButtons: ImmutableList<CommandButton>,
+        builder: NotificationCompat.Builder,
+        actionFactory: MediaNotification.ActionFactory
+    ): IntArray {
+        /* Retrieving notification default play/pause button from mediaButtons list. */
+        val previous = mediaButtons.getOrNull(0)
+        val play = mediaButtons.getOrNull(1)
+        val notificationMediaButtons = if (previous != null && play != null) {
+            /* Overriding received mediaButtons list to ensure required buttons order: [rewind15, play/pause, forward15]. */
+            ImmutableList.builder<CommandButton>().apply {
+                add(previous)
+                add(play)
+                add(NotificationPlayerCustomCommandButton.NEXT.commandButton)
+            }.build()
+        } else {
+            /* Fallback option to handle nullability, in case retrieving default play/pause button fails for some reason (should never happen). */
+            mediaButtons
+
+        }
+        super.addNotificationActions(
+            mediaSession,
+            notificationMediaButtons,
+            builder,
+            actionFactory)
+        return intArrayOf(1,2)
+    }
 }

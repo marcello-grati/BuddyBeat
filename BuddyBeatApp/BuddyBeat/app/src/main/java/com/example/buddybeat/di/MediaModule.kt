@@ -1,11 +1,14 @@
 package com.example.buddybeat.di
 
 import android.content.Context
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.BeatExtractor
 import com.example.buddybeat.DataStoreManager
 import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.SongDatabase
 import com.example.buddybeat.data.repository.AudioRepository
+import com.example.buddybeat.player.CustomMediaNotificationProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,6 +20,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object MediaModule {
+
+    @OptIn(UnstableApi::class) @Provides
+    fun provideCustomMediaNotificationProvider(@ApplicationContext context : Context) : CustomMediaNotificationProvider {
+        return CustomMediaNotificationProvider(context)
+    }
 
     @Provides
     @Singleton

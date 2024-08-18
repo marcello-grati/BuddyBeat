@@ -526,9 +526,10 @@ class MainActivity : ComponentActivity() {
     private fun setSongInPlaylist(media: MediaItem) {
         Log.d("IOOOO", "setting media: ${media.mediaId}")
         //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString())
-        controller?.addMediaItem(media)
+        controller?.addMediaItem(controller!!.currentMediaItemIndex+1, media)
         //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.getMediaItemAt(controller!!.currentMediaItemIndex).toString())
         controller?.seekToDefaultPosition(controller!!.currentMediaItemIndex + 1)
+        //controller?.seekToDefaultPosition(controller!!.mediaItemCount+1)
         Log.d(
             "IOOOO",
             "currentMediaItemIndex + currentMediaItem" + controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString()
