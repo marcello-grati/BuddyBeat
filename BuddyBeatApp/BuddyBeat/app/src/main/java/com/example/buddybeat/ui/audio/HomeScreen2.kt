@@ -133,7 +133,7 @@ fun MainButtons() {
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp),
+                .height(150.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -164,9 +164,9 @@ fun MainButtons() {
                     AsyncImage(
                         model = "",
                         contentDescription = "Now Playing",
-                        placeholder = painterResource(id = R.drawable.img1),
-                        error = painterResource(id = R.drawable.img1),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f,2f)
+                        placeholder = painterResource(id = R.drawable.img2),
+                        error = painterResource(id = R.drawable.img2),
+                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(20f,3f)
                     )
                     Text("RECENTLY PLAYED", color = Color.White, fontSize = 13.sp)
                 }
@@ -187,7 +187,7 @@ fun MainButtons() {
                         contentDescription = "Now Playing",
                         placeholder = painterResource(id = R.drawable.img2),
                         error = painterResource(id = R.drawable.img2),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f,2f)
+                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f,3f)
                     )
                     Text("FAVORITES", color = Color.White, fontSize = 13.sp)
                 }
@@ -212,7 +212,7 @@ fun SongItem(songName: String, artist: String, isPlaying: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Black, RoundedCornerShape(8.dp))
+            .background(Color(0xFFE4E8E6), shape = RoundedCornerShape(8.dp))
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -235,25 +235,25 @@ fun SongItem(songName: String, artist: String, isPlaying: Boolean) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = if (songName.length > 15) "${songName.take(15)}..." else songName,
-                color = Color.White
+                color = Color.Black
             )
             Text(
                 text = if (artist.length > 15) "${artist.take(15)}..." else artist,
-                color = Color.White
+                color = Color.DarkGray
             )
         }
         IconButton(onClick = { /* TODO: Add to favorites */ }) {
             Icon(
                 imageVector = Icons.Default.FavoriteBorder,
                 contentDescription = "Add to favorites",
-                tint = Color.White
+                tint = Color.Black
             )
         }
         IconButton(onClick = { /* TODO: Show more options */ }) {
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "More options",
-                tint = Color.White
+                tint = Color.Black
             )
         }
     }
@@ -265,7 +265,7 @@ fun NowPlaying(songName: String, artist: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(Color(0xFF000000))
             .padding(vertical = 15.dp, horizontal = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -273,7 +273,7 @@ fun NowPlaying(songName: String, artist: String) {
         Row {
             Card(
                 onClick = { /*TODO*/ }, shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF000000)),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFffffff)),
                 modifier = Modifier.size(50.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -290,11 +290,11 @@ fun NowPlaying(songName: String, artist: String) {
             Column {
                 Text(
                     text = if (songName.length > 15) "${songName.take(15)}..." else songName,
-                    color = Color.Black, fontSize = 13.sp
+                    color = Color.White, fontSize = 13.sp
                 )
                 Text(
                     text = if (artist.length > 15) "${artist.take(15)}..." else artist,
-                    color = Color.Gray, fontSize = 13.sp
+                    color = Color.LightGray, fontSize = 13.sp
                 )
             }
         }
@@ -344,13 +344,13 @@ fun NowPlaying(songName: String, artist: String) {
                 onClick = {},
                 shape = CircleShape,
                 modifier = Modifier.size(35.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Black)
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "",
-                        modifier = Modifier.size(30.dp), tint = Color.White
+                        modifier = Modifier.size(30.dp), tint = Color.Black
                     )
                 }
             }
