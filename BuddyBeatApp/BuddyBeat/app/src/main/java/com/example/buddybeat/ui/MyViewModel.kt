@@ -50,7 +50,7 @@ class MyViewModel @Inject constructor(
     private val _stepFreq = MutableStateFlow(0)
     val stepFreq: StateFlow<Int> = _stepFreq.asStateFlow()
 
-    private val _currentSong = MutableStateFlow(CurrentSong("", ""))
+    private val _currentSong = MutableStateFlow(CurrentSong("", "", ""))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
 
     private val _currentId = MutableStateFlow(-1L)
@@ -110,12 +110,14 @@ class MyViewModel @Inject constructor(
         if(song!=null){
             val currentSongTitle = song.mediaMetadata.title.toString()
             val currentSongArtist = song.mediaMetadata.artist.toString()
+            val currentSongUri = song.mediaId
             val currentSongBpm = song.mediaMetadata.extras?.getInt("bpm")
             val currentSongId = song.mediaMetadata.extras?.getLong("id")
             _currentSong.update {
                 it.copy(
                     title = currentSongTitle,
-                    artist = currentSongArtist
+                    artist = currentSongArtist,
+                    uri = currentSongUri
                 )
             }
             if (currentSongId != null)
@@ -198,6 +200,6 @@ class MyViewModel @Inject constructor(
     }
 }
 
-data class CurrentSong(val title : String, val artist: String)
+data class CurrentSong(val title : String, val artist: String, val uri: String)
 
 

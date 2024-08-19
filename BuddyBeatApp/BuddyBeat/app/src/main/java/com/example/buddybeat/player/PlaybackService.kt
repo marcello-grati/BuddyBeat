@@ -2,6 +2,8 @@ package com.example.buddybeat.player
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -29,8 +31,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
-import com.example.buddybeat.MainActivity
-import com.example.buddybeat.R
 import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.migration.CustomInjection.inject
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -94,9 +93,16 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
-        mediaSession = MediaSession.Builder(this, player).setCallback(this).setSessionActivity(PendingIntent.getActivity(
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        intent?.putExtra("DESTINATION", "player")
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT)
+
+        mediaSession = MediaSession.Builder(this, player).setCallback(this).setSessionActivity(pendingIntent)
+            /*.setSessionActivity(PendingIntent.getActivity(
             this, 0,
-            Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)).build()
+            Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))*/
+            .build()
+
         mediaSession!!.setCustomLayout(notificationPlayerCustomCommandButtons)
         Intent(this, SensorService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)

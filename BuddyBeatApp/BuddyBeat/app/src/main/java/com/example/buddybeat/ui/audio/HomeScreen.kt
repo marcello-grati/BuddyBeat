@@ -2,38 +2,65 @@ package com.example.buddybeat.ui.audio
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
-import com.example.buddybeat.ui.components.NowPlaying
 import com.example.buddybeat.ui.components.SongItem
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
-    allSongsClicked : () -> Unit,
+    showPlayer: Boolean,
+    changeShow : () -> Unit,
+    allSongsClicked: () -> Unit,
     audioList: List<Song>,
-    onItemClick : (Int) -> Unit,
-    isPlaying : Boolean,
-    song : CurrentSong,
+    onItemClick: (Int) -> Unit,
+    isPlaying: Boolean,
+    song: CurrentSong,
     onBarClick: () -> Unit,
     prevSong: () -> Unit,
     nextSong: () -> Unit,
@@ -43,9 +70,9 @@ fun HomeScreen(
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
 
-) {
+    ) {
     Scaffold(bottomBar = {
-        if(song.title!="")
+        if (song.title != "")
             HomeBottomBar(
                 song = song,
                 onBarClick = onBarClick,
@@ -57,7 +84,8 @@ fun HomeScreen(
                 prevSong = prevSong,
                 incrementSpeed = incrementSpeed,
                 decrementSpeed = decrementSpeed
-            )})
+            )
+    })
     { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             Column(
@@ -93,6 +121,35 @@ fun HomeScreen(
                     item { Spacer(modifier = Modifier.height(20.dp)) }
                 }
             }
+        }
+    }
+    OnLifecycleEvent { owner, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                if(showPlayer) {
+                    onBarClick()
+                    changeShow()
+                }
+            }
+            else -> { /**/ }
+        }
+    }
+}
+
+@Composable
+fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event:Lifecycle.Event) -> Unit) {
+    val eventHandler = rememberUpdatedState(onEvent)
+    val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
+
+    DisposableEffect(lifecycleOwner.value) {
+        val lifecycle = lifecycleOwner.value.lifecycle
+        val observer = LifecycleEventObserver { owner, event ->
+            eventHandler.value(owner, event)
+        }
+
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
         }
     }
 }
@@ -207,7 +264,7 @@ fun MainButtons(
                         contentDescription = "Now Playing",
                         placeholder = painterResource(id = R.drawable.img2),
                         error = painterResource(id = R.drawable.img2),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f,3f)
+                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f, 3f)
                     )
                     Text("RECENTLY PLAYED", color = Color.White, fontSize = 13.sp)
                 }
@@ -228,7 +285,7 @@ fun MainButtons(
                         contentDescription = "Now Playing",
                         placeholder = painterResource(id = R.drawable.img2),
                         error = painterResource(id = R.drawable.img2),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f,3f)
+                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f, 3f)
                     )
                     Text("FAVORITES", color = Color.White, fontSize = 13.sp)
                 }
@@ -239,7 +296,7 @@ fun MainButtons(
 
 
 @Composable
-fun SongsOfTheWeek(data:String) {
+fun SongsOfTheWeek(data: String) {
     Text(
         data,
         fontWeight = FontWeight.Black,

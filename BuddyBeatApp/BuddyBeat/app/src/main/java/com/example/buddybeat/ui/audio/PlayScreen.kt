@@ -1,8 +1,12 @@
 package com.example.buddybeat.ui.audio
 
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,11 +49,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
@@ -59,10 +63,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
-import java.io.File
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -124,18 +126,45 @@ fun PlayScreenDesign(
                 .fillMaxHeight(0.6f)
                 .fillMaxWidth()
         ) {
-            AsyncImage(
-                //model = File(filePath),
-                model = File(""),
-                placeholder = painterResource(id = R.drawable.scaled),
-                error = painterResource(id = R.drawable.scaled),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxHeight(0.9f)
-                    .padding(horizontal = 70.dp)
-                    .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
-            )
+
+            //Log.d("cover", song.title + song.uri)
+            //val mmr = MediaMetadataRetriever()
+            var art: Bitmap? = BitmapFactory.decodeResource(Resources.getSystem(), R.drawable.bblogo)
+            //val bfo = BitmapFactory.Options()
+
+            //mmr.setDataSource(LocalContext.current, song.uri.toUri())
+            //val rawArt: ByteArray? = mmr.embeddedPicture
+
+            //if (null != rawArt)
+                //art = BitmapFactory.decodeByteArray(rawArt, 0, rawArt.size, bfo)
+            if (art != null) {
+                Image(
+                    bitmap = art.asImageBitmap(),
+                    //model = File(filePath),
+                    //placeholder = painterResource(id = R.drawable.scaled),
+                    //error = painterResource(id = R.drawable.scaled),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight(0.9f)
+                        .padding(horizontal = 70.dp)
+                        .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+                )
+            }
+            else
+                Image(
+                    painter = painterResource(id = R.drawable.scaled),
+                    //model = File(filePath),
+                    //placeholder = painterResource(id = R.drawable.scaled),
+                    //error = painterResource(id = R.drawable.scaled),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight(0.9f)
+                        .padding(horizontal = 70.dp)
+                        .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+                )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

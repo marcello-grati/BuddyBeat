@@ -85,6 +85,8 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MyViewModel by viewModels()
 
+    var showPlayer = false
+
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val controller: MediaController?
         get() =
@@ -201,10 +203,19 @@ class MainActivity : ComponentActivity() {
         handler.postDelayed(sensorDataRunnable, interval)
     }
 
+    private fun changeShow(){
+        showPlayer = false
+    }
+
+
+
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val intent : String? = intent.extras?.getString("DESTINATION")
+        if(intent == "player")
+            showPlayer = true
 
         setContent {
             val permissionsRequested by remember { mutableStateOf(false) }
@@ -248,6 +259,10 @@ class MainActivity : ComponentActivity() {
                         }
                         //PlayScreenDesign()
                         MusicPlayerApp(
+                            showPlayer = showPlayer,
+                            changeShow = {
+                                changeShow()
+                            },
                             viewModel = viewModel,
                             onItemClick = {
                                 setSong(it)
@@ -292,7 +307,7 @@ class MainActivity : ComponentActivity() {
     }
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
+    @OptIn(ExperimentalPermissionsApi::class)
     @Composable
     fun RequiredPermission(state: MultiplePermissionsState) {
         Scaffold {

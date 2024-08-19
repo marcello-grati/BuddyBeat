@@ -22,6 +22,8 @@ object Destination {
 
 @Composable
 fun MusicPlayerApp(
+    showPlayer : Boolean,
+    changeShow : () -> Unit,
     viewModel: MyViewModel,
     onItemClick: (Int) -> Unit,
     prevSong: () -> Unit,
@@ -37,6 +39,8 @@ fun MusicPlayerApp(
 ) {
     val navController = rememberNavController()
     MusicPlayerNavHost(
+        showPlayer = showPlayer,
+        changeShow = changeShow,
         navController = navController,
         viewModel = viewModel,
         onItemClick = onItemClick,
@@ -56,6 +60,8 @@ fun MusicPlayerApp(
 
 @Composable
 fun MusicPlayerNavHost(
+    showPlayer: Boolean,
+    changeShow : () -> Unit,
     navController: NavHostController,
     viewModel: MyViewModel,
     onItemClick: (Int) -> Unit,
@@ -70,6 +76,7 @@ fun MusicPlayerNavHost(
     minus : () -> Unit,
     text3 : String
 ) {
+
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
     val progressLoading by viewModel.progressLoading.collectAsState(initial = 0)
     val audioList by viewModel.audioList.observeAsState(initial = listOf())
@@ -82,9 +89,11 @@ fun MusicPlayerNavHost(
     val bpm by viewModel.currentBpm.collectAsState(0)
 
     NavHost(navController = navController, startDestination = Destination.home) {
-        composable(route = Destination.home){
+        composable(route = Destination.home) {
             HomeScreen(
-                allSongsClicked = {navController.navigate(Destination.playlist)},
+                showPlayer = showPlayer,
+                changeShow = changeShow,
+                allSongsClicked = { navController.navigate(Destination.playlist) },
                 isPlaying = isPlaying,
                 audioList = audioList,
                 onItemClick = {
@@ -137,7 +146,6 @@ fun MusicPlayerNavHost(
                 }
             }
         }
-
         composable(route = Destination.songScreen) {
             PlayScreenDesign(
                 onNavigateUp = { navController.navigateUp() },
@@ -149,7 +157,7 @@ fun MusicPlayerNavHost(
                 //isPlaying = isPlaying,
                 song = currentSong,
                 isPlaying = isPlaying,
-                progress = progress/100,
+                progress = progress / 100,
                 onProgress = onProgress,
                 //playpause
                 onStart = onStart,
@@ -165,5 +173,6 @@ fun MusicPlayerNavHost(
                 ratio = text3,
             )
         }
+
     }
 }
