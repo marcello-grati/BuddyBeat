@@ -1,8 +1,10 @@
 package com.example.buddybeat.ui.audio
 
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.foundation.Canvas
@@ -41,7 +43,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -58,11 +62,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
 import kotlin.math.PI
@@ -126,45 +132,7 @@ fun PlayScreenDesign(
                 .fillMaxHeight(0.6f)
                 .fillMaxWidth()
         ) {
-
-            //Log.d("cover", song.title + song.uri)
-            //val mmr = MediaMetadataRetriever()
-            var art: Bitmap? = BitmapFactory.decodeResource(Resources.getSystem(), R.drawable.bblogo)
-            //val bfo = BitmapFactory.Options()
-
-            //mmr.setDataSource(LocalContext.current, song.uri.toUri())
-            //val rawArt: ByteArray? = mmr.embeddedPicture
-
-            //if (null != rawArt)
-                //art = BitmapFactory.decodeByteArray(rawArt, 0, rawArt.size, bfo)
-            if (art != null) {
-                Image(
-                    bitmap = art.asImageBitmap(),
-                    //model = File(filePath),
-                    //placeholder = painterResource(id = R.drawable.scaled),
-                    //error = painterResource(id = R.drawable.scaled),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxHeight(0.9f)
-                        .padding(horizontal = 70.dp)
-                        .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
-                )
-            }
-            else
-                Image(
-                    painter = painterResource(id = R.drawable.scaled),
-                    //model = File(filePath),
-                    //placeholder = painterResource(id = R.drawable.scaled),
-                    //error = painterResource(id = R.drawable.scaled),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxHeight(0.9f)
-                        .padding(horizontal = 70.dp)
-                        .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
-                )
-
+            CoverPicture(song = song)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -337,6 +305,53 @@ fun PlayScreenDesign(
     }
 }
 
+
+@Composable
+fun CoverPicture(
+    song: CurrentSong
+){
+    var art: Bitmap? = BitmapFactory.decodeResource(Resources.getSystem(), R.drawable.bblogo)
+    var bitmap = art?.asImageBitmap()
+    //Log.d("cover", song.title + song.uri)
+    val mmr = MediaMetadataRetriever()
+    val bfo = BitmapFactory.Options()
+    if(song.uri!="") {
+        mmr.setDataSource(LocalContext.current, song.uri.toUri())
+    }
+    val rawArt: ByteArray? = mmr.embeddedPicture
+    if (null != rawArt)
+        art = BitmapFactory.decodeByteArray(rawArt, 0, rawArt.size, bfo)
+    if (art != null) {
+        bitmap = art.asImageBitmap()
+    }
+    if(bitmap!=null){
+        Image(
+            bitmap = bitmap,
+            //model = File(filePath),
+            //placeholder = painterResource(id = R.drawable.scaled),
+            //error = painterResource(id = R.drawable.scaled),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxHeight(0.9f)
+                .padding(horizontal = 70.dp)
+                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+        )
+    }
+    else
+        Image(
+            painter = painterResource(id = R.drawable.scaled),
+            //model = File(filePath),
+            //placeholder = painterResource(id = R.drawable.scaled),
+            //error = painterResource(id = R.drawable.scaled),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxHeight(0.9f)
+                .padding(horizontal = 70.dp)
+                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+        )
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

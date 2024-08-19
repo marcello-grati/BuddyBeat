@@ -104,8 +104,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             .build()
 
         mediaSession!!.setCustomLayout(notificationPlayerCustomCommandButtons)
-        Intent(this, SensorService::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        Intent(this, SensorService::class.java).also { int ->
+            bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
         audiolist = songRepo.getAllSongs()
         handler.postDelayed(sensorDataRunnable, interval)
