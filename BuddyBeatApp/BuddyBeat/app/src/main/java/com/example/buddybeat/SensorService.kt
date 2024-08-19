@@ -60,13 +60,22 @@ class SensorService : Service(), SensorEventListener {
 
     private var bpm_song = 0
 
-    private var lp_spm = 0.0f
-    private var ALPHA = 0.2f
+    // Step frequency variables
+    private var lastUpdateTime : Int = 0 //new
+    private var penultimateUpdateTime: Int = 0 //new
+    private var deltaBetweenTwoSteps: Int = 0 //new
+    private var stepFreqNow : Int = 0 //new: starting value di frequenza passi
+    private val previousStepFrequency = mutableListOf<Int>()
+    private val currentFrequency = mutableListOf<Int>()
+    private val frequency = mutableListOf<Int>()
+    private var lastF: Int = 0
+
 
     /* variabili da regolare */
     private var unitTime = 60000  //60000 millisecondi = 60 secondi
     private var threshold = 2  //per calcolo steps
     private var deltaTime = 300// 0.5s intervallo di aggiornamento dati
+    private val n = 15 //stabilizzazione valori frequenza
 
     companion object {
         const val CHANNEL_ID = "SensorsChannel"
@@ -103,7 +112,7 @@ class SensorService : Service(), SensorEventListener {
 //    notificationManager.createNotificationChannel(mChannel)
 
     private val DIRECTORY_NAME = "BuddyBeat Logs"
-    data class ValueTimestamp(val timestamp: String, val spm: String, val bpm : String, val lpspm : String)
+    data class ValueTimestamp(val timestamp: String, val spm: String, val spm2: String, val bpm : String)
 
     private val activityLogs = mutableListOf<ValueTimestamp>()
 
@@ -135,7 +144,7 @@ class SensorService : Service(), SensorEventListener {
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                updateActivityLogs(stepFreq.toString(), currentTime, bpm_song.toString(), lp_spm.toInt().toString())
+                updateActivityLogs(stepFreq.toString(), lastF.toString(), currentTime, bpm_song.toString())
                 delay(1000)
             }
         }
@@ -179,6 +188,38 @@ class SensorService : Service(), SensorEventListener {
                     }
                 }
 
+                if (acceleration > threshold) {
+                    // step frequency
+                    if (stepTimes.size >= 2) {
+                        lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
+                        penultimateUpdateTime = stepTimes[stepTimes.size - 2].toInt()
+                        deltaBetweenTwoSteps = lastUpdateTime - penultimateUpdateTime
+                        stepFreqNow = (60000 / deltaBetweenTwoSteps)
+
+                        //definizione due liste: current and previous frequency
+                        currentFrequency.add(stepFreqNow)
+                        if (currentFrequency.size >= 2) {
+                            previousStepFrequency.add(currentFrequency[currentFrequency.size - 2])
+                        }else{
+                            previousStepFrequency.add(0)
+                        }
+
+                        //stabilizzazione frequency steps
+                        val lastNValues = if (currentFrequency.size >= n) {
+                            currentFrequency.takeLast(n)
+                        } else {
+                            currentFrequency
+                        }
+                        val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
+                        val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
+                        val weightedAverage = weightedSum / weights.sum()
+                        frequency.add(weightedAverage.toInt())
+                        lastF = frequency[frequency.size-1]
+
+                    }
+                }
+
+
                 //stepData ="Steps: $steps"
 
                 // Remove times older than one minute
@@ -189,10 +230,8 @@ class SensorService : Service(), SensorEventListener {
                 // Calculate step frequency
                 if (now - startTime < unitTime) {  //60000 millesimi di secondo=1 min
                     stepFrequency = ceil((stepTimes.size.toFloat() / (now - startTime))*60000F)
-                    updateLPSPM(stepFrequency, ALPHA)
                 } else {
                     stepFrequency = ceil((stepTimes.size.toFloat()/(unitTime))*60000F)
-                    updateLPSPM(stepFrequency, ALPHA)
                 }
 
                 lastStepTime = now
@@ -217,7 +256,7 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
     private fun startForegroundService() {
 
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
@@ -232,7 +271,7 @@ class SensorService : Service(), SensorEventListener {
         startForeground(1, notification)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
     private fun updateNotification() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
@@ -258,9 +297,9 @@ class SensorService : Service(), SensorEventListener {
 
         // Convert data to CSV format
         val csvContent = StringBuilder()
-        csvContent.append("Timestamp,SPM,LP_SPM, BPM\n")  // Add header
+        csvContent.append("Timestamp,SPM,BPM\n")  // Add header
         for (entry in data) {
-            csvContent.append("${entry.timestamp},${entry.spm},${entry.lpspm},${entry.bpm}\n")
+            csvContent.append("${entry.timestamp},${entry.spm},${entry.bpm}\n")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -298,20 +337,14 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    private fun updateActivityLogs(value: String, timestamp: String, bpm: String, lpspm: String) {
+    private fun updateActivityLogs(value: String, value2: String, timestamp: String, bpm: String) {
         activityLogs.add(
             ValueTimestamp(
             spm = value,
+            spm2 = value2,
             timestamp = timestamp,
-            bpm = bpm,
-            lpspm = lpspm
-            )
+            bpm = bpm
+        )
         )
     }
-
-    private fun updateLPSPM(input : Float, alpha : Float) {
-        lp_spm = (1 - alpha) * lp_spm + alpha * input
-
-    }
-
 }

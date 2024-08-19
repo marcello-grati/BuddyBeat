@@ -172,6 +172,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val MANUAL_MODE = false
+    private val DEFAULT_BPM = 100
+
+    private var speedMode = !MANUAL_MODE
+    private var manualBpm = DEFAULT_BPM
+    
+    private fun toggleSpeedMode() {
+        speedMode = !speedMode
+    }
+
+    fun setManualBpm(bpm : Int) {
+        manualBpm = bpm
+    }
+    fun increaseManualBpm(amount : Int) {
+        manualBpm += amount
+    }
+    fun decreaseManualBpm(amount : Int) {
+        manualBpm -= amount
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startSensorService() {
         startForegroundService(Intent(this, SensorService::class.java))
@@ -250,7 +270,16 @@ class MainActivity : ComponentActivity() {
                             prevSong = {
                                 prevSong()
                             },
-                            text3 = r.toString()
+                            text3 = r.toString(),
+                            toggleMode = {
+                                toggleSpeedMode()
+                            },
+                            plus = {
+                                increaseManualBpm(1)
+                            },
+                            minus = {
+                                decreaseManualBpm(1)
+                            }
                         )
                     }
 //                    else -> RequiredPermission(state = state) {
@@ -380,13 +409,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateRatio() {
-        val stepFreq = mService.stepFreq
+
+        val stepFreq = when {
+            speedMode == MANUAL_MODE -> manualBpm.toFloat()
+            else -> mService.stepFreq.toFloat()
+        }
         var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
         var rat = 1f
         if (bpm != 0 && bpm != null) {
 
             // We compute the log_2() of step frequency and of double, half and original value of BPM
-            val logStepFreq = log2(stepFreq.toFloat())
+            val logStepFreq = log2(stepFreq)
             var logBpm = log2(bpm.toFloat())
             var logHalfBPM = log2(bpm.toFloat() / 2.0f)
             var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
@@ -403,14 +436,14 @@ class MainActivity : ComponentActivity() {
                 logDoubleBPM = log2(bpm.toFloat() * 2.0f)
             }
             // Speed-up ratio computed as step frequency / BPM
-            rat = stepFreq.toFloat() / bpm.toFloat()
+            rat = stepFreq / bpm.toFloat()
         }
         if (stepFreq < 60)
             rat = 1f
 
         // ratio forced into [0.8, 1.2] range
         rat = rat.coerceAtLeast(0.8f)
-        rat = rat.coerceAtMost(1.2f)
+        rat = rat.coerceAtMost(1.25f)
 
         _ratio.update { rat }
     }
@@ -491,11 +524,12 @@ class MainActivity : ComponentActivity() {
     }*/
 
     private fun setSongInPlaylist(media: MediaItem) {
-        Log.d("IOOOO", "media: $media")
+        Log.d("IOOOO", "setting media: ${media.mediaId}")
         //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString())
-        controller?.addMediaItem(media)
+        controller?.addMediaItem(controller!!.currentMediaItemIndex+1, media)
         //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.getMediaItemAt(controller!!.currentMediaItemIndex).toString())
         controller?.seekToDefaultPosition(controller!!.currentMediaItemIndex + 1)
+        //controller?.seekToDefaultPosition(controller!!.mediaItemCount+1)
         Log.d(
             "IOOOO",
             "currentMediaItemIndex + currentMediaItem" + controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString()
@@ -560,9 +594,11 @@ class MainActivity : ComponentActivity() {
             val nextSong = l?.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
-                Log.d("playlist", playlist.toString())
+                Log.d("IOOOO","From MainActivity, next song ${media.mediaId}?")
+                Log.d("playlist before adding", playlist.toString())
                 if (!playlist.contains(media.mediaId)) {
-                    Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
+                    Log.d("IOOOO","From MainActivity, it does not contain ${media.mediaId}")
+                    //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
                     Log.d("media", media.toString())
                     Log.d("playlist", playlist.toString())
                     setSongInPlaylist(media)
