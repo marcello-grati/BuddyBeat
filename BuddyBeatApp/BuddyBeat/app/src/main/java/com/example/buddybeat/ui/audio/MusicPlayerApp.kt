@@ -83,7 +83,26 @@ fun MusicPlayerNavHost(
 
     NavHost(navController = navController, startDestination = Destination.home) {
         composable(route = Destination.home){
-            HomeScreen(allSongsClicked = {navController.navigate(Destination.playlist)})
+            HomeScreen(
+                allSongsClicked = {navController.navigate(Destination.playlist)},
+                isPlaying = isPlaying,
+                audioList = audioList,
+                onItemClick = {
+                    onItemClick(it)
+                },
+                onBarClick = { navController.navigate(Destination.songScreen) },
+                song = currentSong,
+                progress = progress,
+                onProgress = onProgress,
+                //playpause
+                onStart = onStart,
+                //next prev
+                nextSong = nextSong,
+                prevSong = prevSong,
+                //change spped
+                incrementSpeed = incrementSpeed,
+                decrementSpeed = decrementSpeed,
+            )
         }
         composable(route = Destination.playlist) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -96,7 +115,6 @@ fun MusicPlayerNavHost(
                         // indicator of progress of bpm calculation
                         loading = isLoading,
                         currentProgress = (progressLoading.toFloat().div(count.toFloat())),
-                        modifier = Modifier,
                         //current Song
                         onBarClick = { navController.navigate(Destination.songScreen) },
                         song = currentSong,
@@ -114,9 +132,8 @@ fun MusicPlayerNavHost(
                         //top bar
                         text1 = stepFreq.toString(),
                         text2 = bpm.toString(),
-                        text3 = text3,
-                        onNavigateUp = { navController.navigateUp() }
-                    )
+                        text3 = text3
+                    ) { navController.navigateUp() }
                 }
             }
         }

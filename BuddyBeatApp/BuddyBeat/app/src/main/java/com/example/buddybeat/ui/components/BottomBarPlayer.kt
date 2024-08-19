@@ -1,30 +1,31 @@
 package com.example.buddybeat.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,18 +34,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
 
 @Composable
 fun HomeBottomBar(
-    modifier: Modifier = Modifier,
     song: CurrentSong,
     onBarClick: () -> Unit,
     prevSong: () -> Unit,
@@ -61,7 +61,7 @@ fun HomeBottomBar(
 
     AnimatedVisibility(
         visible = true,
-        modifier = modifier.height(100.dp)
+        //modifier = modifier.height(100.dp)
     ) {
         Box(
             modifier = Modifier
@@ -91,7 +91,7 @@ fun HomeBottomBar(
                     MaterialTheme.colorScheme.background
                 ),
         ) {
-            HomeBottomBarItem(
+            NowPlaying(
                 song = song,
                 onBarClick = onBarClick,
                 progress = progress,
@@ -106,8 +106,151 @@ fun HomeBottomBar(
     }
 }
 
-
 @Composable
+fun NowPlaying(
+    song: CurrentSong,
+    onBarClick: () -> Unit,
+    progress: Float,
+    onProgress: (Float) -> Unit,
+    isPlaying: Boolean,
+    onStart: () -> Unit,
+    onNext: () -> Unit,
+    incrementSpeed: () -> Unit,
+    decrementSpeed: () -> Unit)
+{
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            //add progress TODO
+            /*Slider(
+                value = progress,
+                onValueChange = { onProgress(it) },
+                valueRange = 0f..100f,
+                modifier = Modifier.fillMaxWidth()
+            )*/
+            LinearDeterminateIndicator(currentProgress = progress/100, color = Color.White, trackColor = Color.DarkGray)
+            // add duration TODO
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF000000))
+                .padding(vertical = 15.dp, horizontal = 5.dp)
+                .clickable {
+                    onBarClick()
+                },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row() {
+                Card(
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
+                    modifier = Modifier.size(50.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        AsyncImage(
+                            model = "",
+                            contentDescription = "Now Playing",
+                            placeholder = painterResource(id = R.drawable.musicicon1),
+                            error = painterResource(id = R.drawable.musicicon1),
+                            modifier = Modifier.width(100.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = if (song.title.length > 15) "${song.title.take(15)}..." else song.title,
+                        color = Color.White, fontSize = 13.sp
+                    )
+                    Text(
+                        text = if (song.artist.length > 15) "${song.artist.take(15)}..." else song.artist,
+                        color = Color.LightGray, fontSize = 13.sp
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                IconButton(
+                    onClick = { decrementSpeed() }, modifier = Modifier
+                        .background(
+                            Color.White,
+                            RoundedCornerShape(30.dp)
+                        )
+                        .size(30.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = "Decrease speed",
+                        tint = Color.Black
+                    )
+                }
+                IconButton(
+                    onClick = { incrementSpeed() }, modifier = Modifier
+                        .background(
+                            Color.White,
+                            RoundedCornerShape(30.dp)
+                        )
+                        .size(30.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Increase speed",
+                        tint = Color.Black
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                IconButton(
+                    onClick = { /* TODO: Add to favorites */ }, modifier = Modifier
+
+                        .size(34.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = "Add to favorites",
+                        tint = Color.White
+                    )
+                }
+                IconButton(
+                    onClick = { onStart() },
+                    modifier = Modifier
+                        .background(
+                            Color.White,
+                            RoundedCornerShape(30.dp)
+                        )
+                        .size(30.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause
+                        else Icons.Default.PlayArrow,
+                        contentDescription = "PlayPause",
+                        tint = Color.Black
+                    )
+                }
+                /*Card(
+                        onClick = {},
+                        shape = CircleShape,
+                        modifier = Modifier.size(35.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "",
+                                modifier = Modifier.size(30.dp), tint = Color.Black
+                            )
+                        }
+                    }*/
+            }
+        }
+    }
+}
+
+
+/*@Composable
 fun HomeBottomBarItem(
     song: CurrentSong,
     onBarClick: () -> Unit,
@@ -165,10 +308,10 @@ fun HomeBottomBarItem(
             }
         }
     }
-}
+}*/
 
 
-@Composable
+/*@Composable
 fun MediaPlayerController(
     isAudioPlaying: Boolean,
     onStart: () -> Unit,
@@ -210,9 +353,9 @@ fun MediaPlayerController(
             }
         }
     }
-}
+}*/
 
-@Composable
+/*@Composable
 fun ArtistInfo(
     modifier: Modifier = Modifier,
     title: String,
@@ -248,9 +391,9 @@ fun ArtistInfo(
             )
         }
     }
-}
+}*/
 
-@Composable
+/*@Composable
 fun PlayerIconItem(
     modifier: Modifier = Modifier,
     icon: ImageVector,
@@ -280,4 +423,5 @@ fun PlayerIconItem(
             )
         }
     }
-}
+}*/
+

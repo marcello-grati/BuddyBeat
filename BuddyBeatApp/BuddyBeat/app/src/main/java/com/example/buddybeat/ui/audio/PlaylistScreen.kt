@@ -8,12 +8,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
-import com.example.buddybeat.ui.components.AudioItem
 import com.example.buddybeat.ui.components.FilledCardExample
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.LinearDeterminateIndicator
+import com.example.buddybeat.ui.components.SongItem
 
 @Composable
 fun PlaylistScreen(
@@ -21,7 +22,6 @@ fun PlaylistScreen(
     audioList: List<Song>,
     loading: Boolean,
     currentProgress: Float,
-    modifier: Modifier = Modifier,
     song: CurrentSong,
     onBarClick: () -> Unit,
     prevSong: () -> Unit,
@@ -35,12 +35,27 @@ fun PlaylistScreen(
     text1: String,
     text2: String,
     text3: String,
-    onNavigateUp : () -> Unit
+    onNavigateUp: () -> Unit
 ) {
-    Scaffold {
+    Scaffold (
+        bottomBar = {
+            if(song.title!="")
+                HomeBottomBar(
+                    song = song,
+                    onBarClick = onBarClick,
+                    prevSong = prevSong,
+                    nextSong = nextSong,
+                    progress = progress,
+                    onProgress = onProgress,
+                    isPlaying = isPlaying,
+                    onStart = onStart,
+                    incrementSpeed = incrementSpeed,
+                    decrementSpeed = decrementSpeed
+                )
+    }){
         Column {
             if(!loading)
-                LinearDeterminateIndicator(currentProgress)
+                LinearDeterminateIndicator(currentProgress, Color.Black, Color.White)
             Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
                 FilledCardExample(text1, text2, text3)
             }
@@ -49,30 +64,15 @@ fun PlaylistScreen(
                 modifier = Modifier.weight(1.0f),
             ) {
                 itemsIndexed(audioList) { index, audio ->
-                    AudioItem(
+                    SongItem(
                         audio = audio,
                         onItemClick = {
                             onItemClick(index)
-                        }
+                        },
+                        isPlaying = isPlaying
                     )
                 }
             }
-            if(song.title!="") {
-                HomeBottomBar(
-                    modifier = modifier,
-                    song = song,
-                    onBarClick = onBarClick,
-                    isPlaying = isPlaying,
-                    progress = progress,
-                    onProgress = onProgress,
-                    onStart = onStart,
-                    nextSong = nextSong,
-                    prevSong = prevSong,
-                    incrementSpeed = incrementSpeed,
-                    decrementSpeed = decrementSpeed
-                )
-            }
-
         }
     }
 }
