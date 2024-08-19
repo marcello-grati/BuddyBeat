@@ -70,9 +70,10 @@ fun TopBar() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
-            painter = painterResource(id = R.drawable.lefticonnew),
+            painter = painterResource(id = R.drawable.bblogo),
             contentDescription = "Buddy Beat Logo",
-            modifier = Modifier.size(90.dp)
+            modifier = Modifier
+                .size(width = 120.dp, height = 60.dp),  // Set different width and height
         )
         Card(
             onClick = { /*TODO*/ },
@@ -102,7 +103,8 @@ fun SearchBar() {
             value = "",
             onValueChange = { /* TODO: Handle search query */ },
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(52.dp),
             placeholder = { Text("Search") },
             leadingIcon = {
                 Icon(
@@ -166,7 +168,7 @@ fun MainButtons() {
                         contentDescription = "Now Playing",
                         placeholder = painterResource(id = R.drawable.img2),
                         error = painterResource(id = R.drawable.img2),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(20f,3f)
+                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f,3f)
                     )
                     Text("RECENTLY PLAYED", color = Color.White, fontSize = 13.sp)
                 }
@@ -201,7 +203,7 @@ fun MainButtons() {
 fun SongsOfTheWeek(data:String) {
     Text(
         data,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Black,
         modifier = Modifier.padding(vertical = 16.dp)
     )
 }
@@ -212,22 +214,22 @@ fun SongItem(songName: String, artist: String, isPlaying: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFE4E8E6), shape = RoundedCornerShape(8.dp))
+            .background(Color(0xFFEAEAEA), shape = RoundedCornerShape(8.dp))
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Card(
             onClick = { /*TODO*/ }, shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F2)),
+            colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
             modifier = Modifier.size(45.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 AsyncImage(
                     model = "",
                     contentDescription = "Now Playing",
-                    placeholder = painterResource(id = R.drawable.musicnote),
-                    error = painterResource(id = R.drawable.musicnote),
-                    modifier = Modifier.width(25.dp)
+                    placeholder = painterResource(id = R.drawable.musicicon),
+                    error = painterResource(id = R.drawable.musicicon),
+                    modifier = Modifier.width(45.dp)
                 )
             }
         }
@@ -273,16 +275,16 @@ fun NowPlaying(songName: String, artist: String) {
         Row {
             Card(
                 onClick = { /*TODO*/ }, shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFffffff)),
+                colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
                 modifier = Modifier.size(50.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     AsyncImage(
                         model = "",
                         contentDescription = "Now Playing",
-                        placeholder = painterResource(id = R.drawable.musicnote),
-                        error = painterResource(id = R.drawable.musicnote),
-                        modifier = Modifier.width(25.dp)
+                        placeholder = painterResource(id = R.drawable.musicicon1),
+                        error = painterResource(id = R.drawable.musicicon1),
+                        modifier = Modifier.width(100.dp)
                     )
                 }
             }
