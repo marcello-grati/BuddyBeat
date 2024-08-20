@@ -57,6 +57,7 @@ import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
@@ -564,6 +565,7 @@ class MainActivity : ComponentActivity() {
 
     private fun setSong(index: Int) {
         Log.d("IOOOO", "index clicked: $index")
+        audiolist = viewModel.currentPlaylist
         val song = viewModel.currentPlaylist.value?.get(index)
         Log.d("IOOOO", "Song clicked: " + song.toString())
         if (song != null) {
@@ -612,7 +614,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
-        val list = viewModel.currentPlaylist.value?.toMutableList()
+        val list = audiolist.value?.toMutableList()
         val l = list?.let { viewModel.orderSongs(it) }
         while (true) {
             val nextSong = l?.removeFirstOrNull()

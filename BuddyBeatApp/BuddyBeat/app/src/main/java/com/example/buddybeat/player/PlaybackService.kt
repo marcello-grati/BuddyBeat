@@ -51,6 +51,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     companion object {
         //var playlist: MutableMap<String, MediaItem> = mutableMapOf()
         var playlist : MutableList<String> = mutableListOf()
+        lateinit var audiolist : LiveData<MutableList<Song>>
     }
 
     @Inject
@@ -65,8 +66,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     private var mBound: Boolean = false
 
     var ratio = 1f
-
-    lateinit var audiolist : LiveData<MutableList<Song>>
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
