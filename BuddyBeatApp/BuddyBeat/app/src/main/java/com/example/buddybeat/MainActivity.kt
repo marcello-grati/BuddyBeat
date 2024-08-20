@@ -52,7 +52,9 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.data.ContentResolverHelper
+import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
@@ -315,7 +317,14 @@ class MainActivity : ComponentActivity() {
                 state.launchMultiplePermissionRequest()
                 onDispose {
                     val list = ContentResolverHelper(applicationContext).getAudioData()
-                    viewModel.loadSongs(list)
+                    val allSongsPlaylist = Playlist(title = "All Songs", description = "All songs")
+                    val favorites = Playlist(title = "Favorites", description = "Favorites")
+                    val l = viewModel.insertPlaylist(allSongsPlaylist)
+                    Log.d("PlaylistIdL", l.toString())
+                    viewModel.insertAllSongs(list,l)
+                    val d = viewModel.insertPlaylist(favorites)
+                    viewModel.setPreferenceLong(FAVORITES_KEY, d)
+                    //viewModel.insertAllSongs(l)
                 }
             }
 
@@ -555,7 +564,7 @@ class MainActivity : ComponentActivity() {
 
     private fun setSong(index: Int) {
         Log.d("IOOOO", "index clicked: $index")
-        val song = viewModel.audioList.value?.get(index)
+        val song = viewModel.currentPlaylist.value?.get(index)
         Log.d("IOOOO", "Song clicked: " + song.toString())
         if (song != null) {
             if (song.songId == viewModel.currentId.value) {
@@ -603,7 +612,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
-        val list = viewModel.audioList.value?.toMutableList()
+        val list = viewModel.currentPlaylist.value?.toMutableList()
         val l = list?.let { viewModel.orderSongs(it) }
         while (true) {
             val nextSong = l?.removeFirstOrNull()

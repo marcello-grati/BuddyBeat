@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +45,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
+import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
@@ -57,7 +57,9 @@ fun HomeScreen(
     showPlayer: Boolean,
     changeShow : () -> Unit,
     allSongsClicked: () -> Unit,
+    allSongs : List<Song>,
     audioList: List<Song>,
+    allPlaylist: List<PlaylistWithSongs>,
     onItemClick: (Int) -> Unit,
     isPlaying: Boolean,
     song: CurrentSong,
@@ -69,7 +71,11 @@ fun HomeScreen(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-
+    setVisiblePlaylist : (Long, List<Song>) -> Unit,
+    addToFavorite : (Long) -> Unit,
+    favoriteContainsSong : (Long) -> Boolean,
+    removeFavorite : (Long) -> Unit,
+    currentId : Long
     ) {
     Scaffold(bottomBar = {
         if (song.title != "")
@@ -83,7 +89,14 @@ fun HomeScreen(
                 nextSong = nextSong,
                 prevSong = prevSong,
                 incrementSpeed = incrementSpeed,
-                decrementSpeed = decrementSpeed
+                decrementSpeed = decrementSpeed,
+                favoriteContains = favoriteContainsSong(currentId),
+                addToFavorite = {
+                    addToFavorite(currentId)
+                },
+                removeFavorite = {
+                    removeFavorite(currentId)
+                }
             )
     })
     { paddingValues ->
@@ -96,9 +109,12 @@ fun HomeScreen(
                 SearchBar()
                 SongsOfTheWeek("YOUR PLAYLISTS")
                 MainButtons(
-                    allSongsClicked = { allSongsClicked() }
+                    allSongsClicked = { allSongsClicked() },
+                    allPlaylist = allPlaylist,
+                    setVisiblePlaylist = setVisiblePlaylist,
+                    allSongs = allSongs
                 )
-                SongsOfTheWeek("RECCOMMENDED:")
+                SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
@@ -115,7 +131,10 @@ fun HomeScreen(
                             onItemClick = {
                                 onItemClick(index)
                             },
-                            isPlaying = isPlaying
+                            isPlaying = isPlaying,
+                            addToFavorite = addToFavorite,
+                            favoriteContainsSong = favoriteContainsSong,
+                            removeFavorite = removeFavorite
                         )
                     }
                     item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -219,7 +238,10 @@ fun SearchBar() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainButtons(
-    allSongsClicked: () -> Unit
+    allSongsClicked: () -> Unit,
+    allPlaylist: List<PlaylistWithSongs>,
+    setVisiblePlaylist : (Long, List<Song>) -> Unit,
+    allSongs : List<Song>
 ) {
     Column(
         modifier = Modifier
@@ -227,7 +249,9 @@ fun MainButtons(
             .padding(top = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Card(
-            onClick = { allSongsClicked() },
+            onClick = {
+                setVisiblePlaylist(1L, allSongs)
+                allSongsClicked() },
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -245,7 +269,36 @@ fun MainButtons(
                 Text("ALL SONGS", color = Color.White, fontSize = 13.sp)
             }
         }
-        Row(
+        LazyColumn {
+            itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
+                Card(
+                    onClick = {
+                        setVisiblePlaylist(playlist.playlist.playlistId,
+                            playlist.songs
+                        )
+                        allSongsClicked() },
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        AsyncImage(
+                            model = "",
+                            contentDescription = "Now Playing",
+                            placeholder = painterResource(id = R.drawable.img2),
+                            error = painterResource(id = R.drawable.img2),
+                            contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f, 3f)
+                        )
+                        Text(playlist.playlist.title.uppercase(), color = Color.White, fontSize = 13.sp)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+        /*Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -290,7 +343,7 @@ fun MainButtons(
                     Text("FAVORITES", color = Color.White, fontSize = 13.sp)
                 }
             }
-        }
+        }*/
     }
 }
 

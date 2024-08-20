@@ -19,21 +19,18 @@ interface SongDao {
     fun getBpm(id:Long): Int
     @Query("SELECT COUNT(*) FROM song_table")
     fun getItemCount() : LiveData<Int>
-
     @Query("UPDATE song_table SET bpm = :bpm WHERE songId = :id")
     suspend fun updateBpm(id: Long, bpm: Int)
-
     @Query("SELECT * FROM song_table ORDER BY title ASC")
     fun getAllSongs(): LiveData<MutableList<Song>>
-
     @Query("SELECT * FROM song_table ORDER BY bpm DESC")
     fun getSongsOrdered(): LiveData<MutableList<Song>>
-
     @Query("SELECT * FROM song_table ORDER BY title ASC")
     suspend fun getSongs(): List<Song>
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(song: Song)
 
-    @Query("SELECT songId FROM song_table")
-    suspend fun getAllIds(): List<Long>
+
 
     @Query("SELECT * FROM playlist_table")
     fun getAllPlaylists(): LiveData<MutableList<Playlist>>
@@ -55,8 +52,9 @@ interface SongDao {
     @Query("SELECT songId FROM song_table WHERE uri LIKE :uri")
     suspend fun getIdSong(uri: String): Long
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(song: Song)
+    @Query("SELECT COUNT(*) FROM PlaylistSongCrossRef WHERE playlistId LIKE :idPlaylist AND songId LIKE :idSong")
+    suspend fun containsSong(idPlaylist : Long, idSong : Long) : Int
+
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertSong(song: Song) : Long

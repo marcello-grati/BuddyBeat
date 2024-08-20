@@ -35,6 +35,10 @@ fun PlaylistScreen(
     text1: String,
     text2: String,
     text3: String,
+    addToFavorite : (Long) -> Unit,
+    removeFavorite : (Long) -> Unit,
+    favoriteContainsSong : (Long) -> Boolean,
+    currentId : Long,
     onNavigateUp: () -> Unit
 ) {
     Scaffold (
@@ -50,7 +54,14 @@ fun PlaylistScreen(
                     isPlaying = isPlaying,
                     onStart = onStart,
                     incrementSpeed = incrementSpeed,
-                    decrementSpeed = decrementSpeed
+                    decrementSpeed = decrementSpeed,
+                    favoriteContains = favoriteContainsSong(currentId),
+                    addToFavorite = {
+                        addToFavorite(currentId)
+                    },
+                    removeFavorite = {
+                        removeFavorite(currentId)
+                    }
                 )
     }){
         Column {
@@ -69,7 +80,10 @@ fun PlaylistScreen(
                         onItemClick = {
                             onItemClick(index)
                         },
-                        isPlaying = isPlaying
+                        isPlaying = isPlaying,
+                        addToFavorite = addToFavorite,
+                        removeFavorite = removeFavorite,
+                        favoriteContainsSong = favoriteContainsSong
                     )
                 }
             }

@@ -9,12 +9,20 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import com.example.buddybeat.BeatExtractor
 import com.example.buddybeat.DataStoreManager
+import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.BPM_UPDATED_KEY
+import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
+import com.example.buddybeat.data.models.Playlist
+import com.example.buddybeat.data.models.PlaylistSongCrossRef
+import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +30,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -37,18 +47,23 @@ class MyViewModel @Inject constructor(
 
     val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
     val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
+    val allSongsId = dataStoreManager.getPreferenceLong(ALL_SONGS_KEY).asLiveData(Dispatchers.IO)
+    val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
+
 
     private val _progressLoading = MutableStateFlow(0)
     val progressLoading: StateFlow<Int> = _progressLoading.asStateFlow()
 
-    private val _audioList = songRepo.getAllSongs()
-    val audioList = _audioList
 
     private val _itemCount = songRepo.getCount()
     val itemCount: LiveData<Int> = _itemCount
 
+    //STEP FREQ
+
     private val _stepFreq = MutableStateFlow(0)
     val stepFreq: StateFlow<Int> = _stepFreq.asStateFlow()
+
+    //CURRENT SONG
 
     private val _currentSong = MutableStateFlow(CurrentSong("", "", ""))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
@@ -68,16 +83,97 @@ class MyViewModel @Inject constructor(
     private val _currentBpm = MutableStateFlow(0)
     val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()
 
+    //CURRENT PLAYLIST
 
+    private val _currentPlaylistId = MutableStateFlow(0L)
+    val currentPlaylistId = _currentPlaylistId.asStateFlow()
+
+    private var _currentPlaylist = MutableStateFlow<MutableList<Song>>(mutableListOf())
+    val currentPlaylist = _currentPlaylist.asLiveData()
+
+
+
+    //ALL PLAYLISTS
+    private val _allPlaylist : LiveData<MutableList<PlaylistWithSongs>> = songRepo.getAllPlaylist()
+    val allPlaylist = _allPlaylist
+
+    //ALL SONGS
+    private val _audioList = songRepo.getAllSongs()
+    val allSongs = _audioList
+
+
+    fun containsSong(idPlaylist:Long, idSong:Long): Boolean {
+        val defaultButtonDeferred: Deferred<Boolean> = CoroutineScope(Dispatchers.Default).async {
+            songRepo.containsSong(idPlaylist, idSong)
+        }
+        // do other stuff
+        return runBlocking { defaultButtonDeferred.await() }
+
+    }
+
+    fun removeFromPlaylist(idPlaylist : Long, idSong:Long){
+        //Log.d("favoriteId", favoritesId.value.toString())
+        viewModelScope.launch {
+            val psc = PlaylistSongCrossRef(idPlaylist,idSong)
+            songRepo.delete(psc)
+        }
+    }
+
+    fun addToPlaylist(idPlaylist : Long, idSong:Long){
+        //Log.d("favoriteId", favoritesId.value.toString())
+            viewModelScope.launch {
+                val psc = PlaylistSongCrossRef(idPlaylist,idSong)
+                songRepo.insert(psc)
+            }
+        }
+
+    fun setVisiblePlaylist(id:Long?, list: List<Song>){
+        if (id != null)
+            _currentPlaylistId.update {
+                id
+            }
+        _currentPlaylist.update {
+            list.toMutableList()
+        }
+        Log.d("CurrentPlaylistId", currentPlaylistId.value.toString())
+        Log.d("CurrentPlaylist", currentPlaylist.value.toString())
+    }
     private fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
         viewModelScope.launch {
             dataStoreManager.setPreference(key, value)
         }
     }
 
-    fun loadSongs(list: List<Song>) = viewModelScope.launch {
-        list.forEach {
-            songRepo.insert(it)
+    fun setPreferenceLong(key : Preferences.Key<Long>, value : Long){
+        viewModelScope.launch {
+            dataStoreManager.setPreferenceLong(key, value)
+        }
+    }
+
+    fun addPlaylist(playlist : Playlist) = viewModelScope.launch {
+        songRepo.insert(playlist)
+    }
+
+
+
+    fun insertPlaylist(playlist : Playlist): Long {
+        val defaultButtonDeferred: Deferred<Long> = CoroutineScope(Dispatchers.Default).async {
+            songRepo.insertPlaylist(playlist)
+        }
+        // do other stuff
+        return runBlocking { defaultButtonDeferred.await() }
+    }
+
+    fun insertAllSongs(list: List<Song>, playlistId: Long) {
+        setPreferenceLong(ALL_SONGS_KEY, playlistId)
+        viewModelScope.launch {
+            list.forEach {
+                val id = withContext(Dispatchers.IO) {
+                    songRepo.insertSong(it)
+                }
+                val psc = PlaylistSongCrossRef(playlistId, id)
+                songRepo.insert(psc)
+            }
         }
         setPreference(IS_UPLOADED_KEY, true)
     }

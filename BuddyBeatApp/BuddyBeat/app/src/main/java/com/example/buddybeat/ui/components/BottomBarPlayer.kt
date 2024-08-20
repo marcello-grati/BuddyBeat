@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,7 +56,10 @@ fun HomeBottomBar(
     isPlaying: Boolean,
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit
+    decrementSpeed: () -> Unit,
+    favoriteContains : Boolean,
+    addToFavorite : () -> Unit,
+    removeFavorite : () -> Unit
 ) {
 
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -100,7 +105,10 @@ fun HomeBottomBar(
                 onStart = onStart,
                 onNext = nextSong,
                 incrementSpeed = incrementSpeed,
-                decrementSpeed = decrementSpeed
+                decrementSpeed = decrementSpeed,
+                favoriteContains = favoriteContains,
+                addToFavorite = addToFavorite,
+                removeFavorite = removeFavorite
             )
         }
     }
@@ -116,7 +124,10 @@ fun NowPlaying(
     onStart: () -> Unit,
     onNext: () -> Unit,
     incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit)
+    decrementSpeed: () -> Unit,
+    favoriteContains : Boolean,
+    addToFavorite : () -> Unit,
+    removeFavorite : () -> Unit)
 {
     Column {
         Row(
@@ -203,15 +214,18 @@ fun NowPlaying(
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                IconButton(
-                    onClick = { /* TODO: Add to favorites */ }, modifier = Modifier
-
-                        .size(34.dp)
-                ) {
+                IconButton(modifier = Modifier.size(34.dp),onClick = {
+                    if(!favoriteContains) {
+                        addToFavorite()
+                    }
+                    else{
+                        removeFavorite()
+                    }
+                }) {
                     Icon(
-                        imageVector = Icons.Default.FavoriteBorder,
+                        imageVector = if(favoriteContains) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Add to favorites",
-                        tint = Color.White
+                        tint = Color.White,
                     )
                 }
                 IconButton(
