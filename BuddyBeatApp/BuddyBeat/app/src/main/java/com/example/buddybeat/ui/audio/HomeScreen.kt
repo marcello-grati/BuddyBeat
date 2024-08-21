@@ -219,7 +219,7 @@ fun SearchBar() {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
-        border = BorderStroke(2.dp, Color.Black),
+        border = BorderStroke(3.dp, Color(0xFF0C30AF)),
         shape = RoundedCornerShape(50.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
@@ -233,7 +233,8 @@ fun SearchBar() {
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
+                    contentDescription = "Search",
+                    tint = Color.Blue
                 )
             },
             colors = TextFieldDefaults.textFieldColors(
@@ -299,9 +300,9 @@ fun MainButtons(
                         AsyncImage(
                             model = "",
                             contentDescription = "Now Playing",
-                            placeholder = painterResource(id = R.drawable.img2),
-                            error = painterResource(id = R.drawable.img2),
-                            contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f, 3f)
+                            placeholder = painterResource(id = R.drawable.playlistimg02),
+                            error = painterResource(id = R.drawable.playlistimg02),
+                            contentScale = ContentScale.FillBounds
                         )
                         Text(playlist.playlist.title.uppercase(), color = Color.White, fontSize = 13.sp)
                     }
@@ -525,3 +526,4 @@ fun NowPlaying(songName: String, artist: String) {
 fun show() {
     HomeScreen()
 }*/
+
