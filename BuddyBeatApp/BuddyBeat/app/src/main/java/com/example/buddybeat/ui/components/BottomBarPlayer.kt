@@ -30,8 +30,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +41,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
@@ -57,9 +58,9 @@ fun HomeBottomBar(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    favoriteContains : Boolean,
-    addToFavorite : () -> Unit,
-    removeFavorite : () -> Unit
+    favoriteContains: LiveData<Int>,
+    addToFavorite: () -> Unit,
+    removeFavorite: () -> Unit
 ) {
 
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -125,10 +126,11 @@ fun NowPlaying(
     onNext: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    favoriteContains : Boolean,
-    addToFavorite : () -> Unit,
-    removeFavorite : () -> Unit)
+    favoriteContains: LiveData<Int>,
+    addToFavorite: () -> Unit,
+    removeFavorite: () -> Unit)
 {
+    val img by favoriteContains.observeAsState(initial = 0)
     Column {
         Row(
             modifier = Modifier
@@ -215,7 +217,7 @@ fun NowPlaying(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 IconButton(modifier = Modifier.size(34.dp),onClick = {
-                    if(!favoriteContains) {
+                    if(img==0) {
                         addToFavorite()
                     }
                     else{
@@ -223,7 +225,7 @@ fun NowPlaying(
                     }
                 }) {
                     Icon(
-                        imageVector = if(favoriteContains) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Add to favorites",
                         tint = Color.White,
                     )

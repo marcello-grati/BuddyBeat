@@ -53,10 +53,10 @@ interface SongDao {
     suspend fun getIdSong(uri: String): Long
 
     @Query("SELECT COUNT(*) FROM PlaylistSongCrossRef WHERE playlistId LIKE :idPlaylist AND songId LIKE :idSong")
-    suspend fun containsSong(idPlaylist : Long, idSong : Long) : Int
+    fun containsSong(idPlaylist : Long, idSong : Long) : LiveData<Int>
 
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSong(song: Song) : Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

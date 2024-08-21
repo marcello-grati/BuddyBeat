@@ -1,5 +1,6 @@
 package com.example.buddybeat.ui.audio
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
@@ -58,7 +60,7 @@ import com.example.buddybeat.ui.components.SongItem
 fun HomeScreen(
     showPlayer: Boolean,
     changeShow : () -> Unit,
-    allSongsClicked: () -> Unit,
+    allSongsClicked: (PlaylistWithSongs) -> Unit,
     allSongs : List<Song>,
     audioList: List<Song>,
     allPlaylist: List<PlaylistWithSongs>,
@@ -73,11 +75,10 @@ fun HomeScreen(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    setVisiblePlaylist : (Long, List<Song>) -> Unit,
+    setVisiblePlaylist : (Long, List<Song>, String) -> Unit,
     addToFavorite : (Long) -> Unit,
-    favoriteContainsSong : (Long) -> Boolean,
-    removeFavorite : (Long) -> Unit,
-    currentId : Long
+    favoriteContainsSong : (Long) -> LiveData<Int>,
+    removeFavorite : (Long) -> Unit
     ) {
     Scaffold(bottomBar = {
         if (song.title != "")
@@ -92,14 +93,13 @@ fun HomeScreen(
                 prevSong = prevSong,
                 incrementSpeed = incrementSpeed,
                 decrementSpeed = decrementSpeed,
-                favoriteContains = favoriteContainsSong(currentId),
+                favoriteContains = favoriteContainsSong(song.id),
                 addToFavorite = {
-                    addToFavorite(currentId)
-                },
-                removeFavorite = {
-                    removeFavorite(currentId)
+                    addToFavorite(song.id)
                 }
-            )
+            ) {
+                removeFavorite(song.id)
+            }
     })
     { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
@@ -111,14 +111,16 @@ fun HomeScreen(
                 SearchBar()
                 SongsOfTheWeek("YOUR PLAYLISTS")
                 MainButtons(
-                    allSongsClicked = { allSongsClicked() },
+                    allSongsClicked = {
+                        Log.d("PlaylistMainButton",it.toString())
+                        allSongsClicked(it) },
                     allPlaylist = allPlaylist,
                     setVisiblePlaylist = setVisiblePlaylist,
                     allSongs = allSongs
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     /*items(3) { index ->
                     //SongItem(
@@ -133,13 +135,13 @@ fun HomeScreen(
                             onItemClick = {
                                 onItemClick(index)
                             },
-                            isPlaying = isPlaying,
+                            isPlaying = audio.songId==song.id,
                             addToFavorite = addToFavorite,
                             favoriteContainsSong = favoriteContainsSong,
                             removeFavorite = removeFavorite
                         )
                     }
-                    item { Spacer(modifier = Modifier.height(20.dp)) }
+                    item { Spacer(modifier = Modifier.height(10.dp)) }
                 }
             }
         }
@@ -249,9 +251,9 @@ fun SearchBar() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainButtons(
-    allSongsClicked: () -> Unit,
+    allSongsClicked: (PlaylistWithSongs) -> Unit,
     allPlaylist: List<PlaylistWithSongs>,
-    setVisiblePlaylist : (Long, List<Song>) -> Unit,
+    setVisiblePlaylist : (Long, List<Song>, String) -> Unit,
     allSongs : List<Song>
 ) {
     Column(
@@ -259,10 +261,10 @@ fun MainButtons(
             .fillMaxWidth()
             .padding(top = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Card(
+        /*Card(
             onClick = {
-                setVisiblePlaylist(1L, allSongs)
-                allSongsClicked() },
+                setVisiblePlaylist(1L, allSongs, "ALL SONGS")
+                allSongsClicked(playlist) },
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -279,15 +281,15 @@ fun MainButtons(
                 )
                 Text("ALL SONGS", color = Color.White, fontSize = 13.sp)
             }
-        }
+        }*/
         LazyColumn {
-            itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
+            itemsIndexed(allPlaylist/*.drop(1)*/) { index, playlist ->
                 Card(
                     onClick = {
                         setVisiblePlaylist(playlist.playlist.playlistId,
-                            playlist.songs
+                            playlist.songs, playlist.playlist.title
                         )
-                        allSongsClicked() },
+                        allSongsClicked(playlist) },
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
                         .weight(1f)
