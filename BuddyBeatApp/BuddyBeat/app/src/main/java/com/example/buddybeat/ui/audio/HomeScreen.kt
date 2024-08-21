@@ -16,11 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -188,16 +190,25 @@ fun TopBar() {
             modifier = Modifier
                 .size(width = 120.dp, height = 60.dp),  // Set different width and height
         )
-        Card(
-            onClick = { /*TODO*/ },
-            shape = RoundedCornerShape(50.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.myprofilenow),
-                contentDescription = "Buddy Beat Logo",
-                modifier = Modifier.size(50.dp)
-            )
+        Row (horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically){
+            Card(
+                onClick = { /*TODO*/ },
+                shape = RoundedCornerShape(50.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.myprofilenow),
+                    contentDescription = "Buddy Beat Logo",
+                    modifier = Modifier.size(50.dp)
+                )
+            }
+            IconButton(onClick = { }) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "",
+                )
+            }
         }
     }
 }

@@ -38,63 +38,66 @@ import com.example.buddybeat.data.models.Song
 import kotlin.math.floor
 
 
-/*@Composable
-fun AudioItem(
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun QueueItem(
     audio: Song,
-    onItemClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
-            .clickable {
-                onItemClick()
-            }
+            .padding(6.dp)
     ) {
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFEAEAEA), shape = RoundedCornerShape(8.dp))
+                .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.Center
+            Card(
+                shape = RoundedCornerShape(10.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
+                modifier = Modifier.size(45.dp)
             ) {
-                Spacer(modifier = Modifier.size(4.dp))
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    AsyncImage(
+                        model = "",
+                        contentDescription = "Now Playing",
+                        placeholder = painterResource(id = R.drawable.musicicon),
+                        error = painterResource(id = R.drawable.musicicon),
+                        modifier = Modifier.width(45.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1.2f)) {
                 Text(
-                    text = audio.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    overflow = TextOverflow.Clip,
-                    maxLines = 1
+                    text = if (audio.title.length > 15) "${audio.title.take(15)}..." else audio.title,
+                    color = Color.Black
                 )
-                Spacer(modifier = Modifier.size(4.dp))
                 Text(
-                    text = audio.artist,
-                    style = MaterialTheme.typography.titleLarge,
-                    overflow = TextOverflow.Clip,
-                    maxLines = 1
+                    text = if (audio.artist.length > 15) "${audio.artist.take(15)}..." else audio.artist,
+                    color = Color.DarkGray
                 )
             }
-            Text(
-                text = audio.bpm.toString(),
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.size(12.dp))
-            Text(
-                text = timeStampToDuration(position = audio.duration.toLong())
-            )
-            Spacer(modifier = Modifier.size(8.dp))
+            Column(modifier = Modifier.weight(0.5f)) {
+                Text(text = audio.bpm.toString())
+            }
+            IconButton(onClick = { /* TODO: Show more options */ }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More options",
+                    tint = Color.Black
+                )
+            }
         }
-
     }
-}*/
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongItem(
-    //songName: String,
-    //artist: String,
     isPlaying: Boolean,
     audio: Song,
     onItemClick: () -> Unit,

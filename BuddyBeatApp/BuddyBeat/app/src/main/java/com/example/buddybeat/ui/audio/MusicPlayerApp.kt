@@ -13,11 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.buddybeat.ui.MyViewModel
+import com.example.buddybeat.ui.components.Queue
 
 object Destination {
     const val home = "home"
     const val playlist = "playlist"
     const val songScreen = "songScreen"
+    const val queue = "queue"
 }
 
 @Composable
@@ -79,7 +81,8 @@ fun MusicPlayerNavHost(
 
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
     val progressLoading by viewModel.progressLoading.collectAsState(initial = 0)
-    val audioList by viewModel.currentPlaylist.observeAsState(initial = listOf())
+    val audioList by viewModel.visiblePlaylist.observeAsState(initial = listOf())
+    val audioListId by viewModel.visiblePlaylistId.collectAsState(0L)
     val allSongs by viewModel.allSongs.observeAsState(initial = listOf())
     val allPlaylist by viewModel.allPlaylist.observeAsState(initial = listOf())
     val currentSong by viewModel.currentSong.collectAsState()
@@ -124,10 +127,10 @@ fun MusicPlayerNavHost(
                     viewModel.addToPlaylist(favorites, it)
                 },
                 favoriteContainsSong = {
-                    viewModel.containsSong(favorites,it)
+                    viewModel.containsSong(favorites, it)
                 },
                 removeFavorite = {
-                    viewModel.removeFromPlaylist(favorites,it)
+                    viewModel.removeFromPlaylist(favorites, it)
                 },
                 currentId = currentId
             )
@@ -162,13 +165,13 @@ fun MusicPlayerNavHost(
                         text2 = bpm.toString(),
                         text3 = text3,
                         addToFavorite = {
-                            viewModel.addToPlaylist(favorites,it)
+                            viewModel.addToPlaylist(favorites, it)
                         },
                         favoriteContainsSong = {
-                            viewModel.containsSong(favorites,it)
+                            viewModel.containsSong(favorites, it)
                         },
                         removeFavorite = {
-                            viewModel.removeFromPlaylist(favorites,it)
+                            viewModel.removeFromPlaylist(favorites, it)
                         },
                         currentId = currentId
                     ) { navController.navigateUp() }
@@ -200,8 +203,15 @@ fun MusicPlayerNavHost(
                 step = stepFreq.toString(),
                 bpm = bpm.toString(),
                 ratio = text3,
+                queue = { navController.navigate(Destination.queue) }
             )
         }
-
+        composable(route = Destination.queue) {
+            val queue by viewModel.getQueue().observeAsState(initial = listOf())
+            Queue(
+                audioList = queue,
+                onNavigateUp = { navController.navigateUp() },
+            )
+        }
     }
 }

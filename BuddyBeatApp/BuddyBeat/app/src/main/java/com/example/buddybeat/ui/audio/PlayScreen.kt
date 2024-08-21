@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
+import com.example.buddybeat.ui.components.Queue
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -102,6 +103,7 @@ fun PlayScreenDesign(
     step : String,
     bpm : String,
     ratio : String,
+    queue : () -> Unit
 ) {
     //var isPlaying by remember { mutableStateOf(false) }
     //var currentTime by remember { mutableStateOf(0f) }
@@ -143,7 +145,7 @@ fun PlayScreenDesign(
                         contentDescription = "",
                     )
                 }
-                IconButton(onClick = { TODO("Menù song") }) {
+                IconButton(onClick = {  }) {
                     Icon(
                         imageVector = Icons.Default.Menu,
                         contentDescription = "",
@@ -205,7 +207,8 @@ fun PlayScreenDesign(
             }
         }
         Text(
-            text = formatSecondsToDuration((progress*duration).toLong()),
+            text = if(progress*duration<=duration)
+                formatSecondsToDuration((progress*duration).toLong()) else "00:00",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center, color = Color.Gray, fontSize = 19.sp
         )
@@ -291,7 +294,10 @@ fun PlayScreenDesign(
                     }
                 }
             }
-            IconButton(onClick = { }) {
+            IconButton(onClick = {
+                queue()
+            })
+            {
                 Icon(
                     imageVector = Icons.Default.List,
                     contentDescription = ""
@@ -374,10 +380,10 @@ fun CircularSlider(
     LaunchedEffect(key1 = progress) {
         appliedAngle = 180f * (1 - progress) // Dynamically update the angle based on progress
         //Log.d("CHKPRO", "${appliedAngle} angle and progress : ${progress}")
-        //if (progress >= 0.998f) {
-        //    appliedAngle = 180f
-            //onChange?.invoke(0f)
-        //}
+        /*if (progress > 0.999f) {
+            appliedAngle = 180f
+            onChange?.invoke(0f)
+        }*/
     }
 
 

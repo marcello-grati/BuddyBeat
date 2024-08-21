@@ -18,6 +18,9 @@ import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
+import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.audiolist
+import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -85,11 +88,11 @@ class MyViewModel @Inject constructor(
 
     //CURRENT PLAYLIST
 
-    private val _currentPlaylistId = MutableStateFlow(0L)
-    val currentPlaylistId = _currentPlaylistId.asStateFlow()
+    private val _visiblePlaylistId = MutableStateFlow(0L)
+    val visiblePlaylistId = _visiblePlaylistId.asStateFlow()
 
-    private var _currentPlaylist = MutableStateFlow<MutableList<Song>>(mutableListOf())
-    val currentPlaylist = _currentPlaylist.asLiveData()
+    private var _visiblePlaylist = MutableStateFlow<MutableList<Song>>(mutableListOf())
+    val visiblePlaylist = _visiblePlaylist.asLiveData()
 
 
 
@@ -127,17 +130,19 @@ class MyViewModel @Inject constructor(
             }
         }
 
-    fun setVisiblePlaylist(id:Long?, list: List<Song>){
-        if (id != null)
-            _currentPlaylistId.update {
-                id
-            }
-        _currentPlaylist.update {
+    fun setVisiblePlaylist(id:Long, list: List<Song>){
+        _visiblePlaylistId.update {
+            id
+        }
+        _visiblePlaylist.update {
             list.toMutableList()
         }
-        Log.d("CurrentPlaylistId", currentPlaylistId.value.toString())
-        Log.d("CurrentPlaylist", currentPlaylist.value.toString())
     }
+
+    fun setPlaylist(id:Long?){
+
+    }
+
     private fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
         viewModelScope.launch {
             dataStoreManager.setPreference(key, value)
@@ -252,6 +257,27 @@ class MyViewModel @Inject constructor(
             stepFreq
         }
         //orderSongs()
+    }
+
+    fun getQueue() : LiveData<List<Song>> {
+        var l = audiolist.value?.let { orderSongs(it) }
+        while(true){
+            val nextSong = l?.firstOrNull()
+            if(nextSong != null) {
+                if (!playlist.contains(nextSong.uri)) {
+                    //mediaSession?.player?.seekToDefaultPosition(mediaSession?.player!!.currentMediaItemIndex + 1)
+                    break
+                }
+                else l?.removeFirstOrNull()
+            }
+        }
+        l?.forEach {
+            Log.d(it.toString(), it.bpm.toString())
+        }
+        if(l==null){
+            l = mutableListOf()
+        }
+        return MutableStateFlow(l.toList()).asLiveData()
     }
 
     fun orderSongs(list: MutableList<Song>) : MutableList<Song> {

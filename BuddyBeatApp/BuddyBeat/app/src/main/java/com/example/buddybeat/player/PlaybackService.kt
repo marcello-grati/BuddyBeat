@@ -17,6 +17,7 @@ import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -38,6 +39,8 @@ import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -50,8 +53,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     companion object {
         //var playlist: MutableMap<String, MediaItem> = mutableMapOf()
-        var playlist : MutableList<String> = mutableListOf()
-        lateinit var audiolist : LiveData<MutableList<Song>>
+        var playlist : MutableList<String> = mutableListOf() //already played
+        lateinit var audiolist : LiveData<MutableList<Song>> //list of possible songs
+        var audioListId = MutableStateFlow(0L)
     }
 
     @Inject
