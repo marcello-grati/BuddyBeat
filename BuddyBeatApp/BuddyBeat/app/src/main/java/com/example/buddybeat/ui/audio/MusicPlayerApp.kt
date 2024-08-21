@@ -82,7 +82,6 @@ fun MusicPlayerNavHost(
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
     val progressLoading by viewModel.progressLoading.collectAsState(initial = 0)
     val audioList by viewModel.visiblePlaylist.observeAsState(initial = listOf())
-    val audioListId by viewModel.visiblePlaylistId.collectAsState(0L)
     val allSongs by viewModel.allSongs.observeAsState(initial = listOf())
     val allPlaylist by viewModel.allPlaylist.observeAsState(initial = listOf())
     val currentSong by viewModel.currentSong.collectAsState()

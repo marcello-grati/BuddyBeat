@@ -18,7 +18,6 @@ import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
-import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -137,10 +136,6 @@ class MyViewModel @Inject constructor(
         _visiblePlaylist.update {
             list.toMutableList()
         }
-    }
-
-    fun setPlaylist(id:Long?){
-
     }
 
     private fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){

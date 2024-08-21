@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
-import com.example.buddybeat.ui.components.Queue
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -223,11 +222,11 @@ fun PlayScreenDesign(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row {
-                newButton(name = step,{})
-                newButton(name = bpm,{})
-                newButton(name = ratio,{})
+                NewButton(name = step,{})
+                NewButton(name = bpm,{})
+                NewButton(name = ratio,{})
             }
-            newButton(name = text,
+            NewButton(name = text,
                 onClick = {
                     toggleMode()
                     text = if(text=="auto") "manual" else "auto"
@@ -518,7 +517,7 @@ fun formatSecondsToDuration(milliseconds: Long): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun newButton(
+fun NewButton(
     name: String,
     onClick : () -> Unit){
     Card(
