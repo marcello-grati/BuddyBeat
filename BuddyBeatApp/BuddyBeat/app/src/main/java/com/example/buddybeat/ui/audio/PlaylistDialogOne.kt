@@ -46,8 +46,8 @@ fun DialogOne(handleCloseDialog:()->Unit){
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF4A4A4A),
-                            Color(0xFF2A2A2A)
+                            Color(0xFFF1F1F1),
+                            Color(0xFF95C8EB)
                         )
                     )
                 )
@@ -65,13 +65,13 @@ fun DialogOne(handleCloseDialog:()->Unit){
                         Icon(
                             Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = Color.White
+                            tint = Color.Black
                         )
                     }
                 }
                 Text(
                     "GIVE YOUR PLAYLIST A NAME",
-                    color = Color.White,
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -84,7 +84,7 @@ fun DialogOne(handleCloseDialog:()->Unit){
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    placeholder = { Text("NAME", color = Color.Gray) },
+                    placeholder = { Text("NAME", color = Color.DarkGray) },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 17.sp),
                     colors = TextFieldDefaults.colors(
@@ -92,7 +92,7 @@ fun DialogOne(handleCloseDialog:()->Unit){
                         unfocusedContainerColor = Color.Transparent,
                         disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.Gray,
+                        unfocusedIndicatorColor = Color.DarkGray,
                         cursorColor = Color.White
                     )
                 )
@@ -101,7 +101,7 @@ fun DialogOne(handleCloseDialog:()->Unit){
 
                 Button(
                     onClick = { },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF82B0E6)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000)),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Text("CREATE", color = Color.White)
