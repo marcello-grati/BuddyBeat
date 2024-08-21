@@ -24,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.data.models.Song
@@ -103,13 +105,14 @@ fun SongItem(
     onItemClick: () -> Unit,
     addToFavorite : (Long) -> Unit,
     removeFavorite : (Long) -> Unit,
-    favoriteContainsSong : (Long) -> Boolean
+    favoriteContainsSong : (Long) -> LiveData<Int>
 ) {
-    var img by remember {mutableStateOf(favoriteContainsSong(audio.songId))}
+    val img by favoriteContainsSong(audio.songId).observeAsState(initial = 0)
+    val backgroundColor = if (isPlaying) Color(0xFF82B0E6) else Color(0xFFD6E1E7)
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(6.dp)
+            .padding(0.dp)
             .clickable {
                 onItemClick()
             }
@@ -117,7 +120,7 @@ fun SongItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFEAEAEA), shape = RoundedCornerShape(8.dp))
+                .background(backgroundColor, shape = RoundedCornerShape(8.dp))
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -149,17 +152,15 @@ fun SongItem(
             }
 
             IconButton(onClick = {
-                if(!favoriteContainsSong(audio.songId)) {
-                    img = true
+                if(img==0) {
                     addToFavorite(audio.songId)
                 }
                 else{
-                    img = false
                     removeFavorite(audio.songId)
                 }
             }) {
                 Icon(
-                    imageVector = if(img) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Add to favorites",
                     tint = Color.Black,
                 )

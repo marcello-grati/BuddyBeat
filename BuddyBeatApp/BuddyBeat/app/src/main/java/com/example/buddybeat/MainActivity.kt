@@ -325,6 +325,7 @@ class MainActivity : ComponentActivity() {
                     Log.d("PlaylistIdL", l.toString())
                     viewModel.insertAllSongs(list,l)
                     val d = viewModel.insertPlaylist(favorites)
+                    Log.d("PlaylistIdD", d.toString())
                     viewModel.setPreferenceLong(FAVORITES_KEY, d)
                     //viewModel.insertAllSongs(l)
                 }
@@ -566,14 +567,17 @@ class MainActivity : ComponentActivity() {
 
     private fun setSong(index: Int) {
         Log.d("IOOOO", "index clicked: $index")
-        if(audioListId.value!=viewModel.visiblePlaylistId.value) {
+        if(audioListId.value!=viewModel.currentPlaylist.value.id) {
             audioListId.update {
-                viewModel.visiblePlaylistId.value
+                viewModel.currentPlaylist.value.id
             }
-            audiolist = viewModel.visiblePlaylist
+            audiolist.update{
+                viewModel.currentPlaylist.value.songs.toMutableList()
+            }
+
         }
-        val song = viewModel.visiblePlaylist.value?.get(index)
-        Log.d("IOOOO", "Song clicked: " + song.toString())
+        val song = viewModel.currentPlaylist.value.songs[index]
+        Log.d("IOOOO", "Song clicked: $song")
         if (song != null) {
             if (song.songId == viewModel.currentId.value) {
                 Log.d("IOOOO", "same id: ${song.songId}")

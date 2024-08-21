@@ -52,7 +52,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     companion object {
         //var playlist: MutableMap<String, MediaItem> = mutableMapOf()
         var playlist : MutableList<String> = mutableListOf() //already played
-        lateinit var audiolist : LiveData<MutableList<Song>> //list of possible songs
+        var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
         var audioListId = MutableStateFlow(0L)
     }
 
@@ -108,7 +108,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Intent(this, SensorService::class.java).also { int ->
             bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
-        audiolist = songRepo.getAllSongs()
         handler.postDelayed(sensorDataRunnable, interval)
         handler.postDelayed(orderSongsRunnable, interval)
         setMediaNotificationProvider(customMediaNotificationProvider)

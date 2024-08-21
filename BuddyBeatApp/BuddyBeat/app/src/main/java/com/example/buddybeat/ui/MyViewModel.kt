@@ -67,7 +67,7 @@ class MyViewModel @Inject constructor(
 
     //CURRENT SONG
 
-    private val _currentSong = MutableStateFlow(CurrentSong("", "", ""))
+    private val _currentSong = MutableStateFlow(CurrentSong(0L, "", "", ""))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
 
     private val _currentId = MutableStateFlow(-1L)
@@ -87,12 +87,11 @@ class MyViewModel @Inject constructor(
 
     //CURRENT PLAYLIST
 
-    private val _visiblePlaylistId = MutableStateFlow(0L)
-    val visiblePlaylistId = _visiblePlaylistId.asStateFlow()
+    private val _currentPlaylist = MutableStateFlow(CurrentPlaylist(0L, "", listOf()))
+    val currentPlaylist = _currentPlaylist.asStateFlow()
 
-    private var _visiblePlaylist = MutableStateFlow<MutableList<Song>>(mutableListOf())
-    val visiblePlaylist = _visiblePlaylist.asLiveData()
-
+    private val _currentPlaylistLive = MutableStateFlow(PlaylistWithSongs(Playlist(0L,"",""), mutableListOf()))
+    val currentPlaylistLive = _currentPlaylistLive.asLiveData()
 
 
     //ALL PLAYLISTS
@@ -104,13 +103,17 @@ class MyViewModel @Inject constructor(
     val allSongs = _audioList
 
 
-    fun containsSong(idPlaylist:Long, idSong:Long): Boolean {
-        val defaultButtonDeferred: Deferred<Boolean> = CoroutineScope(Dispatchers.Default).async {
+    /*fun containsSong(idPlaylist:Long, idSong:Long): StateFlow<Boolean> {
+        val defaultButtonDeferred: Deferred<StateFlow<Boolean>> = CoroutineScope(Dispatchers.Default).async {
             songRepo.containsSong(idPlaylist, idSong)
         }
         // do other stuff
         return runBlocking { defaultButtonDeferred.await() }
 
+    }*/
+
+    fun containsSong(idPlaylist: Long, idSong: Long) : LiveData<Int>{
+        return songRepo.containsSong(idPlaylist,idSong)
     }
 
     fun removeFromPlaylist(idPlaylist : Long, idSong:Long){
@@ -129,12 +132,19 @@ class MyViewModel @Inject constructor(
             }
         }
 
-    fun setVisiblePlaylist(id:Long, list: List<Song>){
-        _visiblePlaylistId.update {
-            id
+    fun setVisiblePlaylist(id:Long, list: List<Song>, title: String){
+        _currentPlaylist.update {
+            it.copy(
+                id = id,
+                title = title,
+                songs = list
+            )
         }
-        _visiblePlaylist.update {
-            list.toMutableList()
+    }
+
+    fun setVisiblePlaylistLive(playlist : PlaylistWithSongs){
+        _currentPlaylistLive.update {
+            playlist
         }
     }
 
@@ -164,7 +174,7 @@ class MyViewModel @Inject constructor(
         return runBlocking { defaultButtonDeferred.await() }
     }
 
-    fun insertAllSongs(list: List<Song>, playlistId: Long) {
+    /*fun insertAllSongs(list: List<Song>, playlistId: Long) {
         setPreferenceLong(ALL_SONGS_KEY, playlistId)
         viewModelScope.launch {
             list.forEach {
@@ -172,10 +182,32 @@ class MyViewModel @Inject constructor(
                     songRepo.insertSong(it)
                 }
                 val psc = PlaylistSongCrossRef(playlistId, id)
+                Log.d("setting psc", psc.toString())
                 songRepo.insert(psc)
             }
         }
         setPreference(IS_UPLOADED_KEY, true)
+    }*/
+
+
+    fun insertAllSongs(list: List<Song>, playlistId: Long) {
+        setPreferenceLong(ALL_SONGS_KEY, playlistId)
+        Log.d("insertingAllSongs", list.toString())
+        viewModelScope.launch(Dispatchers.IO) {
+            insertSong(list).collect { value ->
+                val psc = PlaylistSongCrossRef(playlistId, value)
+                Log.d("setting psc", psc.toString())
+                songRepo.insert(psc)
+            }
+        }
+        setPreference(IS_UPLOADED_KEY, true)
+    }
+
+    private fun insertSong(list: List<Song>) : Flow<Long> = flow {
+        for (i in list) {
+            val x = songRepo.insertSong(i)
+            emit(x)
+        }
     }
 
     // functions to update bpm of songs at the beginning
@@ -211,15 +243,12 @@ class MyViewModel @Inject constructor(
             val currentSongId = song.mediaMetadata.extras?.getLong("id")
             _currentSong.update {
                 it.copy(
+                    id = currentSongId!!,
                     title = currentSongTitle,
                     artist = currentSongArtist,
                     uri = currentSongUri
                 )
             }
-            if (currentSongId != null)
-                _currentId.update {
-                    currentSongId
-                }
             if (currentSongBpm != null)
                 _currentBpm.update {
                     currentSongBpm
@@ -317,6 +346,8 @@ class MyViewModel @Inject constructor(
     }
 }
 
-data class CurrentSong(val title : String, val artist: String, val uri: String)
+data class CurrentSong(val id : Long, val title : String, val artist: String, val uri: String)
+
+data class CurrentPlaylist(val id : Long, val title : String, val songs: List<Song>)
 
 

@@ -8,6 +8,8 @@ import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 class AudioRepository @Inject
@@ -30,8 +32,8 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         return database.songDao().getSongs()
     }
 
-    suspend fun containsSong(playlistId:Long, songId:Long) : Boolean{
-        return database.songDao().containsSong(playlistId,songId) > 0
+    fun containsSong(playlistId:Long, songId:Long) : LiveData<Int> {
+        return database.songDao().containsSong(playlistId,songId)
     }
 
     /*fun getSongsFromPlaylist(id:Long): LiveData<MutableList<Song>>{

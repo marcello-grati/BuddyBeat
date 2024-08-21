@@ -1,5 +1,6 @@
 package com.example.buddybeat.ui.audio
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +13,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.buddybeat.data.models.Playlist
+import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.Queue
 
@@ -81,10 +84,11 @@ fun MusicPlayerNavHost(
 
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
     val progressLoading by viewModel.progressLoading.collectAsState(initial = 0)
-    val audioList by viewModel.visiblePlaylist.observeAsState(initial = listOf())
+    //val audioList by viewModel.visiblePlaylist.observeAsState(initial = listOf())
     val allSongs by viewModel.allSongs.observeAsState(initial = listOf())
     val allPlaylist by viewModel.allPlaylist.observeAsState(initial = listOf())
     val currentSong by viewModel.currentSong.collectAsState()
+    val currentPlaylist by viewModel.currentPlaylist.collectAsState()
     val duration by viewModel.duration.collectAsState()
     val count by viewModel.itemCount.observeAsState(initial = 1)
     val isPlaying by viewModel.isPlaying.collectAsState()
@@ -92,7 +96,8 @@ fun MusicPlayerNavHost(
     val stepFreq by viewModel.stepFreq.collectAsState(0)
     val bpm by viewModel.currentBpm.collectAsState(0)
     val favorites by viewModel.favoritesId.observeAsState(initial = 0L)
-    val currentId by viewModel.currentId.collectAsState()
+    val playlistLive by viewModel.currentPlaylistLive.observeAsState(PlaylistWithSongs(Playlist(0L, "",""), mutableListOf()))
+    //val currentId by viewModel.currentId.collectAsState()
 
     NavHost(navController = navController, startDestination = Destination.home) {
         composable(route = Destination.home) {
@@ -100,9 +105,11 @@ fun MusicPlayerNavHost(
                 showPlayer = showPlayer,
                 changeShow = changeShow,
                 allSongs = allSongs,
-                allSongsClicked = { navController.navigate(Destination.playlist) },
+                allSongsClicked = {
+                    viewModel.setVisiblePlaylistLive(it)
+                    navController.navigate(Destination.playlist) },
                 isPlaying = isPlaying,
-                audioList = audioList,
+                audioList = currentPlaylist.songs,
                 allPlaylist = allPlaylist,
                 onItemClick = {
                     onItemClick(it)
@@ -119,8 +126,8 @@ fun MusicPlayerNavHost(
                 //change spped
                 incrementSpeed = incrementSpeed,
                 decrementSpeed = decrementSpeed,
-                setVisiblePlaylist = { id, songs ->
-                    viewModel.setVisiblePlaylist(id, songs)
+                setVisiblePlaylist = { id, songs , title->
+                    viewModel.setVisiblePlaylist(id, songs, title)
                 },
                 addToFavorite = {
                     viewModel.addToPlaylist(favorites, it)
@@ -130,15 +137,14 @@ fun MusicPlayerNavHost(
                 },
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
-                },
-                currentId = currentId
+                }
             )
         }
         composable(route = Destination.playlist) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column {
                     PlaylistScreen(
-                        audioList = audioList,
+                        currentPlaylist = currentPlaylist,
                         onItemClick = {
                             onItemClick(it)
                         },
@@ -172,7 +178,7 @@ fun MusicPlayerNavHost(
                         removeFavorite = {
                             viewModel.removeFromPlaylist(favorites, it)
                         },
-                        currentId = currentId
+                        playlistLive = playlistLive
                     ) { navController.navigateUp() }
                 }
             }
