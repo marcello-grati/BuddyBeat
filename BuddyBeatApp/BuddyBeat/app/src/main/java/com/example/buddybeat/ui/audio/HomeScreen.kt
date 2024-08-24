@@ -2,21 +2,28 @@ package com.example.buddybeat.ui.audio
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -31,6 +38,10 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,8 +71,7 @@ import com.example.buddybeat.ui.components.SongItem
 fun HomeScreen(
     showPlayer: Boolean,
     changeShow : () -> Unit,
-    allSongsClicked: (PlaylistWithSongs) -> Unit,
-    allSongs : List<Song>,
+    playlistClicked: (PlaylistWithSongs) -> Unit,
     audioList: List<Song>,
     allPlaylist: List<PlaylistWithSongs>,
     onItemClick: (Int) -> Unit,
@@ -75,11 +85,17 @@ fun HomeScreen(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    setVisiblePlaylist : (Long, List<Song>, String) -> Unit,
     addToFavorite : (Long) -> Unit,
     favoriteContainsSong : (Long) -> LiveData<Int>,
-    removeFavorite : (Long) -> Unit
+    removeFavorite : (Long) -> Unit,
+    shouldShowDialogTwo : MutableState<Boolean>,
+    shouldShowDialogOne : MutableState<Boolean>,
+    shouldShowDialogThree: MutableState<Boolean>,
+    songClicked : MutableState<Long>,
+    addToQueue : (Song) -> Unit,
     ) {
+
+
     Scaffold(bottomBar = {
         if (song.title != "")
             HomeBottomBar(
@@ -105,18 +121,20 @@ fun HomeScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 15.dp),
+                    .padding(horizontal = 15.dp).fillMaxHeight()
             ) {
                 TopBar()
                 SearchBar()
-                SongsOfTheWeek("YOUR PLAYLISTS")
+                Row(  modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
+                    SongsOfTheWeek("YOUR PLAYLISTS")
+                    IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(30.dp)) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add playlist")
+                    }
+                }
                 MainButtons(
-                    allSongsClicked = {
-                        Log.d("PlaylistMainButton",it.toString())
-                        allSongsClicked(it) },
+                    playlistClicked = {
+                        playlistClicked(it) },
                     allPlaylist = allPlaylist,
-                    setVisiblePlaylist = setVisiblePlaylist,
-                    allSongs = allSongs
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
@@ -138,7 +156,11 @@ fun HomeScreen(
                             isPlaying = audio.songId==song.id,
                             addToFavorite = addToFavorite,
                             favoriteContainsSong = favoriteContainsSong,
-                            removeFavorite = removeFavorite
+                            removeFavorite = removeFavorite,
+                            shouldShowDialogTwo = shouldShowDialogTwo,
+                            songClicked = songClicked,
+                            shouldShowDialogThree = shouldShowDialogThree,
+                            addToQueue = addToQueue
                         )
                     }
                     item { Spacer(modifier = Modifier.height(10.dp)) }
@@ -249,69 +271,129 @@ fun SearchBar() {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MainButtons(
-    allSongsClicked: (PlaylistWithSongs) -> Unit,
+    playlistClicked: (PlaylistWithSongs) -> Unit,
     allPlaylist: List<PlaylistWithSongs>,
-    setVisiblePlaylist : (Long, List<Song>, String) -> Unit,
-    allSongs : List<Song>
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth().height(280.dp)
             .padding(top = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        /*Card(
-            onClick = {
-                setVisiblePlaylist(1L, allSongs, "ALL SONGS")
-                allSongsClicked(playlist) },
+        Card(
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp),
+                .height(100.dp)
+                .combinedClickable (
+                    onClick = {
+                        playlistClicked(allPlaylist.first())
+                    }
+                ),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 AsyncImage(
                     model = "",
-                    contentDescription = "Now Playing",
-                    placeholder = painterResource(id = R.drawable.img3),
-                    error = painterResource(id = R.drawable.img3),
-                    contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxWidth()
+                    contentDescription = "All Songs",
+                    placeholder = painterResource(id = R.drawable.playlistimg01),
+                    error = painterResource(id = R.drawable.playlistimg01),
+                    contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Text("ALL SONGS", color = Color.White, fontSize = 13.sp)
+                Text("ALL SONGS", color = Color.White, fontSize = 13.sp) }
             }
-        }*/
-        LazyColumn {
-            itemsIndexed(allPlaylist/*.drop(1)*/) { index, playlist ->
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
                 Card(
-                    onClick = {
-                        setVisiblePlaylist(playlist.playlist.playlistId,
-                            playlist.songs, playlist.playlist.title
-                        )
-                        allSongsClicked(playlist) },
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
-                        .weight(1f)
+                        //.weight(1f)
                         .fillMaxWidth()
-                        .height(100.dp),
+                        .height(80.dp)
+                        //.padding(5.dp)
+                        .combinedClickable(
+                            onClick = {
+                                playlistClicked(playlist)
+                            },
+                            onLongClick = {
+                                /*TODO Show menu to rename playlist and delete playlist*/
+                            }
+                        ),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         AsyncImage(
                             model = "",
                             contentDescription = "Now Playing",
                             placeholder = painterResource(id = R.drawable.playlistimg02),
                             error = painterResource(id = R.drawable.playlistimg02),
-                            contentScale = ContentScale.FillBounds
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                        Text(playlist.playlist.title.uppercase(), color = Color.White, fontSize = 13.sp)
+                        Text(
+                            playlist.playlist.title.uppercase(),
+                            color = Color.White,
+                            fontSize = 13.sp
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
+
+        /*LazyColumn {
+            itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
+                Card(
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .combinedClickable(
+                                onClick = {
+                                    setVisiblePlaylist(
+                                        playlist.playlist.playlistId,
+                                        playlist.songs, playlist.playlist.title
+                                    )
+                                    allSongsClicked(playlist)
+                                },
+                                onLongClick = {
+                                    /*TODO Show menu to rename playlist and delete playlist*/
+                                }
+                            ),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = "",
+                                contentDescription = "Now Playing",
+                                placeholder = painterResource(id = R.drawable.playlistimg02),
+                                error = painterResource(id = R.drawable.playlistimg02),
+                                contentScale = ContentScale.FillBounds,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Text(
+                                playlist.playlist.title.uppercase(),
+                                color = Color.White,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }*/
         /*Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween

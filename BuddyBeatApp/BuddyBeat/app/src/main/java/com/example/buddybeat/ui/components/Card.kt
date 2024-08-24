@@ -1,5 +1,6 @@
 package com.example.buddybeat.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
@@ -91,8 +92,13 @@ fun FilledCardExample(
 @Composable
 fun Queue(
     audioList: List<Song>,
+    removeFromQueue : (Song) -> Unit,
+    showQueue : (Boolean) -> Unit,
     onNavigateUp : () -> Unit
 ){
+    BackHandler(enabled = true) {
+        onNavigateUp()
+    }
     Scaffold (topBar = {
         IconButton(onClick = { onNavigateUp()} ) {
             Icon(
@@ -117,7 +123,9 @@ fun Queue(
             ) {
                 itemsIndexed(audioList) { index, audio ->
                     QueueItem(
-                        audio = audio
+                        audio = audio,
+                        removeFromQueue = removeFromQueue,
+                        showQueue = showQueue
                     )
                 }
             }

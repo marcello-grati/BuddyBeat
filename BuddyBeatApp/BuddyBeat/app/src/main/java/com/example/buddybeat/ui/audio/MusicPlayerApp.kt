@@ -1,6 +1,7 @@
 package com.example.buddybeat.ui.audio
 
 import android.util.Log
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,6 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -15,8 +19,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
+import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.Queue
+import kotlin.system.exitProcess
 
 object Destination {
     const val home = "home"
@@ -40,7 +46,8 @@ fun MusicPlayerApp(
     toggleMode : () -> Unit,
     plus : () -> Unit,
     minus : () -> Unit,
-    text3 : String
+    text3 : String,
+    addToQueue : (Song) -> Unit
 ) {
     val navController = rememberNavController()
     MusicPlayerNavHost(
@@ -58,7 +65,8 @@ fun MusicPlayerApp(
         toggleMode = toggleMode,
         text3 = text3,
         plus = plus,
-        minus = minus
+        minus = minus,
+        addToQueue = addToQueue
     )
 }
 
@@ -79,16 +87,14 @@ fun MusicPlayerNavHost(
     toggleMode : () -> Unit,
     plus : () -> Unit,
     minus : () -> Unit,
-    text3 : String
+    text3 : String,
+    addToQueue : (Song) -> Unit
 ) {
 
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
     val progressLoading by viewModel.progressLoading.collectAsState(initial = 0)
-    //val audioList by viewModel.visiblePlaylist.observeAsState(initial = listOf())
-    val allSongs by viewModel.allSongs.observeAsState(initial = listOf())
     val allPlaylist by viewModel.allPlaylist.observeAsState(initial = listOf())
     val currentSong by viewModel.currentSong.collectAsState()
-    val currentPlaylist by viewModel.currentPlaylist.collectAsState()
     val duration by viewModel.duration.collectAsState()
     val count by viewModel.itemCount.observeAsState(initial = 1)
     val isPlaying by viewModel.isPlaying.collectAsState()
@@ -96,20 +102,46 @@ fun MusicPlayerNavHost(
     val stepFreq by viewModel.stepFreq.collectAsState(0)
     val bpm by viewModel.currentBpm.collectAsState(0)
     val favorites by viewModel.favoritesId.observeAsState(initial = 0L)
-    val playlistLive by viewModel.currentPlaylistLive.observeAsState(PlaylistWithSongs(Playlist(0L, "",""), mutableListOf()))
-    //val currentId by viewModel.currentId.collectAsState()
+    val currentId = remember { mutableLongStateOf(0L) }
+
+    val shouldShowDialogOne = remember { mutableStateOf(false) }
+    val shouldShowDialogTwo = remember { mutableStateOf(false)}
+    val shouldShowDialogThree = remember { mutableStateOf(false)}
+    val songClicked = remember { mutableLongStateOf(-1L) }
+
+    if (shouldShowDialogOne.value) {
+        DialogOne(shouldShowDialog = shouldShowDialogOne,
+            insertPlaylist = {viewModel.insertPlaylist(Playlist(title=it, description=it))})
+    }
+
+    if (shouldShowDialogTwo.value) {
+        Log.d("idsong", songClicked.longValue.toString())
+        DialogTwo(shouldShowDialogTwo = shouldShowDialogTwo, shouldShowDialogOne = shouldShowDialogOne,
+            allPlaylist = allPlaylist,
+            insertPlaylist = {
+            viewModel.addToPlaylist(it, songClicked.longValue)
+        })
+    }
+
+    if(shouldShowDialogThree.value){
+        DialogThree(shouldShowDialogThree = shouldShowDialogThree, removeSong = {
+            viewModel.removeFromPlaylist(currentId.longValue, songClicked.longValue)
+        } )
+    }
+
+
 
     NavHost(navController = navController, startDestination = Destination.home) {
         composable(route = Destination.home) {
             HomeScreen(
                 showPlayer = showPlayer,
                 changeShow = changeShow,
-                allSongs = allSongs,
-                allSongsClicked = {
-                    viewModel.setVisiblePlaylistLive(it)
+                playlistClicked = {
+                    viewModel.setVisiblePlaylist(it)
+                    currentId.longValue = it.playlist.playlistId
                     navController.navigate(Destination.playlist) },
                 isPlaying = isPlaying,
-                audioList = currentPlaylist.songs,
+                audioList = listOf(),
                 allPlaylist = allPlaylist,
                 onItemClick = {
                     onItemClick(it)
@@ -123,12 +155,9 @@ fun MusicPlayerNavHost(
                 //next prev
                 nextSong = nextSong,
                 prevSong = prevSong,
-                //change spped
+                //change speed
                 incrementSpeed = incrementSpeed,
                 decrementSpeed = decrementSpeed,
-                setVisiblePlaylist = { id, songs , title->
-                    viewModel.setVisiblePlaylist(id, songs, title)
-                },
                 addToFavorite = {
                     viewModel.addToPlaylist(favorites, it)
                 },
@@ -137,14 +166,18 @@ fun MusicPlayerNavHost(
                 },
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
-                }
+                },
+                shouldShowDialogTwo = shouldShowDialogTwo,
+                shouldShowDialogOne = shouldShowDialogOne,
+                songClicked = songClicked,
+                shouldShowDialogThree = shouldShowDialogThree,
+                addToQueue = addToQueue
             )
         }
         composable(route = Destination.playlist) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column {
                     PlaylistScreen(
-                        currentPlaylist = currentPlaylist,
                         onItemClick = {
                             onItemClick(it)
                         },
@@ -178,7 +211,12 @@ fun MusicPlayerNavHost(
                         removeFavorite = {
                             viewModel.removeFromPlaylist(favorites, it)
                         },
-                        playlistLive = playlistLive
+                        shouldShowDialogTwo = shouldShowDialogTwo,
+                        songClicked = songClicked,
+                        shouldShowDialogThree = shouldShowDialogThree,
+                        allPlaylist = allPlaylist,
+                        currentId = currentId.longValue,
+                        addToQueue = addToQueue
                     ) { navController.navigateUp() }
                 }
             }
@@ -186,12 +224,6 @@ fun MusicPlayerNavHost(
         composable(route = Destination.songScreen) {
             PlayScreenDesign(
                 onNavigateUp = { navController.navigateUp() },
-                //filePath = "",
-                //songName = currentSong.title,
-                //artist = currentSong.artist,
-                //duration = duration,
-                //currentTime = progress,
-                //isPlaying = isPlaying,
                 song = currentSong,
                 isPlaying = isPlaying,
                 progress = progress / 100,
@@ -208,14 +240,23 @@ fun MusicPlayerNavHost(
                 step = stepFreq.toString(),
                 bpm = bpm.toString(),
                 ratio = text3,
-                queue = { navController.navigate(Destination.queue) }
+                queue = {
+                    viewModel.showQueue(true)
+                    navController.navigate(Destination.queue) }
             )
         }
         composable(route = Destination.queue) {
-            val queue by viewModel.getQueue().observeAsState(initial = listOf())
+            val queue by viewModel.queueList.observeAsState(initial = listOf())
             Queue(
                 audioList = queue,
-                onNavigateUp = { navController.navigateUp() },
+                removeFromQueue = {
+                    viewModel.removeFromQueue(it) },
+                onNavigateUp = {
+                    viewModel.showQueue(false)
+                    navController.navigateUp() },
+                showQueue = {
+                    viewModel.showQueue(it)
+                }
             )
         }
     }

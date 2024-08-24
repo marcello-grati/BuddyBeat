@@ -60,6 +60,7 @@ import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
+import com.example.buddybeat.player.PlaybackService.Companion.queue
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
@@ -298,6 +299,9 @@ class MainActivity : ComponentActivity() {
                             },
                             minus = {
                                 decreaseManualBpm(1)
+                            },
+                            addToQueue = {
+                                addToQueue(it)
                             }
                         )
                     }
@@ -309,6 +313,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun addToQueue(song: Song) {
+        queue.add(song)
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalPermissionsApi::class)
@@ -567,16 +576,16 @@ class MainActivity : ComponentActivity() {
 
     private fun setSong(index: Int) {
         Log.d("IOOOO", "index clicked: $index")
-        if(audioListId.value!=viewModel.currentPlaylist.value.id) {
+        if(audioListId.value!=viewModel.currentPlaylistId.value) {
             audioListId.update {
-                viewModel.currentPlaylist.value.id
+                viewModel.currentPlaylistId.value
             }
             audiolist.update{
                 viewModel.currentPlaylist.value.songs.toMutableList()
             }
 
         }
-        val song = viewModel.currentPlaylist.value.songs[index]
+        val song = viewModel.currentPlaylist.value.songs.sortedBy{it.title}[index]
         Log.d("IOOOO", "Song clicked: $song")
         if (song != null) {
             if (song.songId == viewModel.currentId.value) {
@@ -624,6 +633,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
+        val queueNext = queue.removeFirstOrNull()
+        if(queueNext!=null){
+            val media = buildMediaItem(queueNext)
+            setSongInPlaylist(media)
+            return
+        }
         val list = audiolist.value?.toMutableList()
         val l = list?.let { viewModel.orderSongs(it) }
         while (true) {

@@ -1,6 +1,5 @@
 package com.example.buddybeat.ui.audio
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +35,7 @@ import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.data.models.PlaylistWithSongs
-import com.example.buddybeat.ui.CurrentPlaylist
+import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.FilledCardExample
 import com.example.buddybeat.ui.components.HomeBottomBar
@@ -44,7 +44,6 @@ import com.example.buddybeat.ui.components.SongItem
 
 @Composable
 fun PlaylistScreen(
-    currentPlaylist: CurrentPlaylist,
     onItemClick: (Int) -> Unit,
     loading: Boolean,
     currentProgress: Float,
@@ -61,12 +60,18 @@ fun PlaylistScreen(
     text1: String,
     text2: String,
     text3: String,
-    addToFavorite : (Long) -> Unit,
-    removeFavorite : (Long) -> Unit,
-    favoriteContainsSong : (Long) -> LiveData<Int>,
-    playlistLive : PlaylistWithSongs,
-    onNavigateUp: () -> Unit
-) {
+    addToFavorite: (Long) -> Unit,
+    removeFavorite: (Long) -> Unit,
+    favoriteContainsSong: (Long) -> LiveData<Int>,
+    shouldShowDialogTwo: MutableState<Boolean>,
+    shouldShowDialogThree: MutableState<Boolean>,
+    songClicked: MutableState<Long>,
+    allPlaylist: List<PlaylistWithSongs>,
+    currentId: Long,
+    addToQueue : (Song) -> Unit,
+    onNavigateUp: () -> Unit,
+
+    ) {
     Scaffold (
         bottomBar = {
             if(song.title.isNotEmpty())
@@ -122,21 +127,29 @@ fun PlaylistScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
-                    TopSection(currentPlaylist.title) {
-                        // Handle the click action if necessary
+                    allPlaylist.find { it.playlist.playlistId==currentId }?.playlist?.let { it1 ->
+                        TopSection(it1.title) {
+                            // Handle the click action if necessary
+                        }
                     }
                 }
-                itemsIndexed(playlistLive.songs) { index, audio ->
-                    SongItem(
-                        audio = audio,
-                        onItemClick = {
-                            onItemClick(index)
-                        },
-                        isPlaying = audio.songId==song.id,
-                        addToFavorite = addToFavorite,
-                        removeFavorite = removeFavorite,
-                        favoriteContainsSong = favoriteContainsSong
-                    )
+                allPlaylist.find { it.playlist.playlistId==currentId }?.let { it1 ->
+                    itemsIndexed(/*playlistLive.songs.sortedBy { it.title }*/ it1.songs.sortedBy { it.title }) { index, audio ->
+                        SongItem(
+                            audio = audio,
+                            onItemClick = {
+                                onItemClick(index)
+                            },
+                            isPlaying = audio.songId==song.id,
+                            addToFavorite = addToFavorite,
+                            removeFavorite = removeFavorite,
+                            favoriteContainsSong = favoriteContainsSong,
+                            shouldShowDialogTwo = shouldShowDialogTwo,
+                            songClicked = songClicked,
+                            shouldShowDialogThree = shouldShowDialogThree,
+                            addToQueue = addToQueue
+                        )
+                    }
                 }
                 item{
                     Spacer(modifier = Modifier.height(5.dp))

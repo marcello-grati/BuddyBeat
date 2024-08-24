@@ -18,11 +18,14 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -40,10 +43,11 @@ import com.example.buddybeat.data.models.Song
 import kotlin.math.floor
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QueueItem(
     audio: Song,
+    removeFromQueue : (Song) -> Unit,
+    showQueue : (Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -86,18 +90,35 @@ fun QueueItem(
             Column(modifier = Modifier.weight(0.5f)) {
                 Text(text = audio.bpm.toString())
             }
-            IconButton(onClick = { /* TODO: Show more options */ }) {
+            var expanded by remember { mutableStateOf(false) }
+            IconButton(onClick = {
+                expanded = !expanded
+                showQueue(!expanded)
+            }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More options",
                     tint = Color.Black
                 )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded=false
+                        showQueue(true)},
+                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                ){
+                    DropdownMenuItem(
+                        text = { Text("Remove From Queue") },
+                        onClick = {
+                            removeFromQueue(audio)
+                            expanded=false
+                        }
+                    )
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongItem(
     isPlaying: Boolean,
@@ -105,7 +126,11 @@ fun SongItem(
     onItemClick: () -> Unit,
     addToFavorite : (Long) -> Unit,
     removeFavorite : (Long) -> Unit,
-    favoriteContainsSong : (Long) -> LiveData<Int>
+    favoriteContainsSong : (Long) -> LiveData<Int>,
+    shouldShowDialogTwo : MutableState<Boolean>,
+    shouldShowDialogThree : MutableState<Boolean>,
+    songClicked : MutableState<Long>,
+    addToQueue : (Song) -> Unit
 ) {
     val img by favoriteContainsSong(audio.songId).observeAsState(initial = 0)
     val backgroundColor = if (isPlaying) Color(0xFF82B0E6) else Color(0xFFD6E1E7)
@@ -165,17 +190,45 @@ fun SongItem(
                     tint = Color.Black,
                 )
             }
-            IconButton(onClick = { /* TODO: Show more options */ }) {
+            var expanded by remember { mutableStateOf(false) }
+            IconButton(onClick = {expanded = !expanded}) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "More options",
                     tint = Color.Black
                 )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded=false },
+                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                ){
+                    DropdownMenuItem(
+                        text = { Text("Add To Playlist") },
+                        onClick = { shouldShowDialogTwo.value = true
+                            expanded=false
+                            songClicked.value = audio.songId},
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Add To Queue") },
+                        onClick = {
+                            addToQueue(audio)
+                            songClicked.value = audio.songId
+                            expanded=false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Remove From Playlist") },
+                        onClick = {
+                            shouldShowDialogThree.value = true
+                            expanded=false
+                            songClicked.value = audio.songId}
+                    )
+                }
             }
+
         }
     }
 }
-
 private fun timeStampToDuration(position: Long): String {
     val totalSecond = floor(position / 1E3).toInt()
     val minutes = totalSecond / 60

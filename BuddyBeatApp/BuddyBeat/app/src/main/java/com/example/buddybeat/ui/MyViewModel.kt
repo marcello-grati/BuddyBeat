@@ -20,6 +20,7 @@ import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
+import com.example.buddybeat.player.PlaybackService.Companion.queue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -33,7 +34,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -87,11 +87,8 @@ class MyViewModel @Inject constructor(
 
     //CURRENT PLAYLIST
 
-    private val _currentPlaylist = MutableStateFlow(CurrentPlaylist(0L, "", listOf()))
-    val currentPlaylist = _currentPlaylist.asStateFlow()
-
-    private val _currentPlaylistLive = MutableStateFlow(PlaylistWithSongs(Playlist(0L,"",""), mutableListOf()))
-    val currentPlaylistLive = _currentPlaylistLive.asLiveData()
+    val currentPlaylist = MutableStateFlow(PlaylistWithSongs(Playlist(title="", description = ""), mutableListOf()))
+    val currentPlaylistId = MutableStateFlow(0L)
 
 
     //ALL PLAYLISTS
@@ -102,15 +99,13 @@ class MyViewModel @Inject constructor(
     private val _audioList = songRepo.getAllSongs()
     val allSongs = _audioList
 
+    //QUEUE
+    private val _queueList = MutableStateFlow<MutableList<Song>>(mutableListOf())
+    val queueList = _queueList.asLiveData()
 
-    /*fun containsSong(idPlaylist:Long, idSong:Long): StateFlow<Boolean> {
-        val defaultButtonDeferred: Deferred<StateFlow<Boolean>> = CoroutineScope(Dispatchers.Default).async {
-            songRepo.containsSong(idPlaylist, idSong)
-        }
-        // do other stuff
-        return runBlocking { defaultButtonDeferred.await() }
+    private val _showQueue = MutableStateFlow(false)
+    val showQueue: StateFlow<Boolean> = _showQueue.asStateFlow()
 
-    }*/
 
     fun containsSong(idPlaylist: Long, idSong: Long) : LiveData<Int>{
         return songRepo.containsSong(idPlaylist,idSong)
@@ -130,22 +125,11 @@ class MyViewModel @Inject constructor(
                 val psc = PlaylistSongCrossRef(idPlaylist,idSong)
                 songRepo.insert(psc)
             }
-        }
-
-    fun setVisiblePlaylist(id:Long, list: List<Song>, title: String){
-        _currentPlaylist.update {
-            it.copy(
-                id = id,
-                title = title,
-                songs = list
-            )
-        }
     }
 
-    fun setVisiblePlaylistLive(playlist : PlaylistWithSongs){
-        _currentPlaylistLive.update {
-            playlist
-        }
+    fun setVisiblePlaylist(playlist : PlaylistWithSongs){
+        currentPlaylistId.value = playlist.playlist.playlistId
+        currentPlaylist.value = playlist
     }
 
     private fun setPreference(key : Preferences.Key<Boolean>, value : Boolean){
@@ -173,22 +157,6 @@ class MyViewModel @Inject constructor(
         // do other stuff
         return runBlocking { defaultButtonDeferred.await() }
     }
-
-    /*fun insertAllSongs(list: List<Song>, playlistId: Long) {
-        setPreferenceLong(ALL_SONGS_KEY, playlistId)
-        viewModelScope.launch {
-            list.forEach {
-                val id = withContext(Dispatchers.IO) {
-                    songRepo.insertSong(it)
-                }
-                val psc = PlaylistSongCrossRef(playlistId, id)
-                Log.d("setting psc", psc.toString())
-                songRepo.insert(psc)
-            }
-        }
-        setPreference(IS_UPLOADED_KEY, true)
-    }*/
-
 
     fun insertAllSongs(list: List<Song>, playlistId: Long) {
         setPreferenceLong(ALL_SONGS_KEY, playlistId)
@@ -232,7 +200,6 @@ class MyViewModel @Inject constructor(
         }
         setPreference(BPM_UPDATED_KEY, true)
     }
-
 
     fun changeSong(song: MediaItem?) {
         if(song!=null){
@@ -280,28 +247,36 @@ class MyViewModel @Inject constructor(
         _stepFreq.update{
             stepFreq
         }
-        //orderSongs()
+        if(showQueue.value)
+            getQueue()
     }
 
-    fun getQueue() : LiveData<List<Song>> {
-        var l = audiolist.value?.let { orderSongs(it) }
+    fun showQueue(value : Boolean){
+        _showQueue.update {
+            value
+        }
+    }
+
+    private fun getQueue() {
+        val queue = queue.toList()
+        val l = orderSongs(audiolist.value)
         while(true){
-            val nextSong = l?.firstOrNull()
+            val nextSong = l.firstOrNull()
             if(nextSong != null) {
                 if (!playlist.contains(nextSong.uri)) {
                     //mediaSession?.player?.seekToDefaultPosition(mediaSession?.player!!.currentMediaItemIndex + 1)
                     break
                 }
-                else l?.removeFirstOrNull()
+                else l.removeFirstOrNull()
             }
         }
-        l?.forEach {
+        l.forEach {
             Log.d(it.toString(), it.bpm.toString())
         }
-        if(l==null){
-            l = mutableListOf()
+        l.addAll(0,queue)
+        _queueList.update {
+            l
         }
-        return MutableStateFlow(l.toList()).asLiveData()
     }
 
     fun orderSongs(list: MutableList<Song>) : MutableList<Song> {
@@ -344,10 +319,15 @@ class MyViewModel @Inject constructor(
         }
         return l
     }
+
+    fun removeFromQueue(song: Song) {
+        queue.remove(song)
+        audiolist.value.remove(song)
+        getQueue()
+    }
 }
 
 data class CurrentSong(val id : Long, val title : String, val artist: String, val uri: String)
 
-data class CurrentPlaylist(val id : Long, val title : String, val songs: List<Song>)
 
 

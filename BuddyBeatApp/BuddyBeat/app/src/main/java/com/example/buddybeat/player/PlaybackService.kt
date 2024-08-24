@@ -54,6 +54,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         var playlist : MutableList<String> = mutableListOf() //already played
         var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
         var audioListId = MutableStateFlow(0L)
+        var queue : MutableList<Song> = mutableListOf()
     }
 
     @Inject
@@ -221,6 +222,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     private fun nextSong() {
+        val queueNext = queue.removeFirstOrNull()
+        if(queueNext!=null){
+            val media = buildMediaItem(queueNext)
+            setSongInPlaylist(media)
+            return
+        }
         val l = orderSongs()
         l?.forEach {
             Log.d(it.toString(), it.bpm.toString())

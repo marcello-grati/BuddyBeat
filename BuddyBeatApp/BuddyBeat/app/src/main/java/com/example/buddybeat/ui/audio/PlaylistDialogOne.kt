@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,75 +37,77 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun DialogOne(handleCloseDialog:()->Unit){
+fun DialogOne(shouldShowDialog : MutableState<Boolean>, insertPlaylist : (String) -> Unit) {
     var name by remember { mutableStateOf("") }
-
-    Dialog(onDismissRequest = { handleCloseDialog() }) {
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF1F1F1),
-                            Color(0xFF95C8EB)
+    if (shouldShowDialog.value) {
+        Dialog(onDismissRequest = { shouldShowDialog.value = false  }) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFFF1F1F1),
+                                Color(0xFF95C8EB)
+                            )
                         )
                     )
-                )
-                .padding(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(16.dp)
             ) {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    IconButton(
-                        onClick = { handleCloseDialog() },
-                        modifier = Modifier.align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = Color.Black
-                        )
-                    }
-                }
-                Text(
-                    "GIVE YOUR PLAYLIST A NAME",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp), textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-
-                TextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    placeholder = { Text("NAME", color = Color.DarkGray) },
-                    singleLine = true,
-                    textStyle = TextStyle(color = Color.White, fontSize = 17.sp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.White,
-                        unfocusedIndicatorColor = Color.DarkGray,
-                        cursorColor = Color.White
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = { },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000)),
-                    shape = RoundedCornerShape(20.dp)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("CREATE", color = Color.White)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        IconButton(
+                            onClick = { shouldShowDialog.value = false  },
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = Color.Black
+                            )
+                        }
+                    }
+                    Text(
+                        "GIVE YOUR PLAYLIST A NAME",
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 20.dp), textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+
+                    TextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        placeholder = { Text("NAME", color = Color.DarkGray) },
+                        singleLine = true,
+                        textStyle = TextStyle(color = Color.White, fontSize = 17.sp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.DarkGray,
+                            cursorColor = Color.White
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = { shouldShowDialog.value = false
+                                  insertPlaylist(name)},
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000)),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text("CREATE", color = Color.White)
+                    }
                 }
             }
         }
@@ -114,5 +117,5 @@ fun DialogOne(handleCloseDialog:()->Unit){
 @Preview(showBackground = true)
 @Composable
 fun PreviewDialogOne() {
-    DialogOne(handleCloseDialog = {})
+    DialogOne(remember{mutableStateOf(true)},{})
 }
