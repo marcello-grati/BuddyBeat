@@ -16,7 +16,6 @@ import android.util.Log
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.LiveData
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -144,7 +143,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     ): ListenableFuture<List<MediaItem>> {
         val updatedMediaItems = mediaItems.map { mediaitem -> mediaitem.buildUpon().setUri(mediaitem.requestMetadata.mediaUri).build() }
         playlist.add(updatedMediaItems.last().mediaId)
-        if(playlist.size > ((audiolist.value?.size?.div(2)) ?: 1))
+        if(playlist.size > ((audiolist.value.size.div(2))))
             playlist.removeFirstOrNull()
         Log.d("onAddMediaItems", playlist.toString())
         return Futures.immediateFuture(updatedMediaItems)
@@ -153,7 +152,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private fun onAddSong(media : MediaItem){
         playlist.add(media.mediaId)
-        if(playlist.size > ((audiolist.value?.size?.div(2)) ?: 1))
+        if(playlist.size > (audiolist.value.size.div(2)))
             playlist.removeFirstOrNull()
         Log.d("onAddSong", playlist.toString())
     }
@@ -229,11 +228,11 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             return
         }
         val l = orderSongs()
-        l?.forEach {
+        l.forEach {
             Log.d(it.toString(), it.bpm.toString())
         }
         while(true){
-            val nextSong = l?.removeFirstOrNull()
+            val nextSong = l.removeFirstOrNull()
             if(nextSong != null) {
                 val media = buildMediaItem(nextSong)
                 Log.d("IOOOO","From Playback service, next song ${media.mediaId}?")
@@ -256,7 +255,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
         Log.d("IOOOO", "mediaItemCount: " + mediaSession?.player?.mediaItemCount.toString())
     }
-    fun orderSongs(): MutableList<Song>? {
+    fun orderSongs(): MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered from PlayBackService")
         val myCustomComparator = Comparator<Song> { a, b ->
@@ -290,8 +289,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             }
 
         }
-        val list = audiolist.value?.toMutableList()
-        return list?.sortedWith(myCustomComparator)?.toMutableList()
+        val list = audiolist.value.toMutableList()
+        return list.sortedWith(myCustomComparator).toMutableList()
     }
 
     private fun buildMediaItem(audio: Song): MediaItem {

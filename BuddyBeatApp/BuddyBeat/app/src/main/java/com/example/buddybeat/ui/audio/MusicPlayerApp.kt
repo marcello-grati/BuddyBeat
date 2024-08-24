@@ -1,7 +1,6 @@
 package com.example.buddybeat.ui.audio
 
 import android.util.Log
-import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,11 +17,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.buddybeat.data.models.Playlist
-import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.Queue
-import kotlin.system.exitProcess
 
 object Destination {
     const val home = "home"

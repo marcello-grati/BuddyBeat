@@ -587,16 +587,14 @@ class MainActivity : ComponentActivity() {
         }
         val song = viewModel.currentPlaylist.value.songs.sortedBy{it.title}[index]
         Log.d("IOOOO", "Song clicked: $song")
-        if (song != null) {
-            if (song.songId == viewModel.currentId.value) {
-                Log.d("IOOOO", "same id: ${song.songId}")
-                playPause()
-            } else {
-                Log.d("IOOOO", "not same id, new id: ${song.songId}")
-                val media = buildMediaItem(song)
-                setSongInPlaylist(media)
-                playPause()
-            }
+        if (song.songId == viewModel.currentId.value) {
+            Log.d("IOOOO", "same id: ${song.songId}")
+            playPause()
+        } else {
+            Log.d("IOOOO", "not same id, new id: ${song.songId}")
+            val media = buildMediaItem(song)
+            setSongInPlaylist(media)
+            playPause()
         }
     }
 
@@ -639,10 +637,10 @@ class MainActivity : ComponentActivity() {
             setSongInPlaylist(media)
             return
         }
-        val list = audiolist.value?.toMutableList()
-        val l = list?.let { viewModel.orderSongs(it) }
+        val list = audiolist.value.toMutableList()
+        val l = list.let { viewModel.orderSongs(it) }
         while (true) {
-            val nextSong = l?.removeFirstOrNull()
+            val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
                 Log.d("IOOOO","From MainActivity, next song ${media.mediaId}?")
