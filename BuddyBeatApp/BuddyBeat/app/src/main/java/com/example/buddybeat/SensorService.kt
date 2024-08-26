@@ -147,7 +147,7 @@ class SensorService : Service(), SensorEventListener {
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                updateActivityLogs(stepFreq.toString(), newStepFrequency.toString(), currentTime, bpm_song.toString())
+                updateActivityLogs(oldStepFrequency.toString(), newStepFrequency.toString(), currentTime, bpm_song.toString())
                 delay(1000)
             }
         }
