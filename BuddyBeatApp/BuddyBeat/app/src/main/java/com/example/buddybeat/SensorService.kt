@@ -53,7 +53,10 @@ class SensorService : Service(), SensorEventListener {
     private var currentAcceleration: Float = SensorManager.GRAVITY_EARTH
     private var steps: Int = 0
     private var lastStepTime: Long = 0
-    private var stepFrequency: Float = 0f
+    private var alpha: Float = 0.5f
+    private var inputFreq: Float = 0f
+    private var outputFreq: Float = 0f
+    private var oldStepFrequency: Int = 0
 
     private val stepTimes = LinkedList<Long>()
     private var startTime: Long = 0
@@ -68,7 +71,7 @@ class SensorService : Service(), SensorEventListener {
     private val previousStepFrequency = mutableListOf<Int>()
     private val currentFrequency = mutableListOf<Int>()
     private val frequency = mutableListOf<Int>()
-    private var lastF: Int = 0
+    private var newStepFrequency: Int = 0
 
 
     /* variabili da regolare */
@@ -98,7 +101,7 @@ class SensorService : Service(), SensorEventListener {
     }
 
     val stepFreq: Int
-        get() = stepFrequency.toInt()
+        get() = newStepFrequency
 
     // Create the NotificationChannel.
 //    val name = "sensor_channel"
@@ -144,7 +147,7 @@ class SensorService : Service(), SensorEventListener {
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
                 updateNotification()
                 val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                updateActivityLogs(stepFreq.toString(), lastF.toString(), currentTime, bpm_song.toString())
+                updateActivityLogs(stepFreq.toString(), newStepFrequency.toString(), currentTime, bpm_song.toString())
                 delay(1000)
             }
         }
@@ -214,7 +217,7 @@ class SensorService : Service(), SensorEventListener {
                         val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
                         val weightedAverage = weightedSum / weights.sum()
                         frequency.add(weightedAverage.toInt())
-                        lastF = frequency[frequency.size-1]
+                        newStepFrequency = frequency[frequency.size-1]
 
                     }
                 }
@@ -229,10 +232,13 @@ class SensorService : Service(), SensorEventListener {
 
                 // Calculate step frequency
                 if (now - startTime < unitTime) {  //60000 millesimi di secondo=1 min
-                    stepFrequency = ceil((stepTimes.size.toFloat() / (now - startTime))*60000F)
+                    inputFreq = ceil((stepTimes.size.toFloat() / (now - startTime))*60000F)
                 } else {
-                    stepFrequency = ceil((stepTimes.size.toFloat()/(unitTime))*60000F)
+                    inputFreq = ceil((stepTimes.size.toFloat()/(unitTime))*60000F)
                 }
+
+                outputFreq = alpha * outputFreq + (1 - alpha) * inputFreq
+                oldStepFrequency = outputFreq.toInt()
 
                 lastStepTime = now
                 //stepFreq = "Frequency: $stepFrequency step/min"
@@ -261,7 +267,7 @@ class SensorService : Service(), SensorEventListener {
 
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
-            .setContentText("Steps: $steps\nStep Frequency: $stepFrequency")
+            .setContentText("Steps: $steps\nStep Frequency: $newStepFrequency")
             .setSmallIcon(R.drawable.ic_play)
             .setContentIntent(PendingIntent.getActivity(
                 this, 0,
@@ -275,7 +281,7 @@ class SensorService : Service(), SensorEventListener {
     private fun updateNotification() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
-            .setContentText("Steps: $steps\nStep Frequency: $stepFrequency")
+            .setContentText("Steps: $steps\nStep Frequency: $newStepFrequency")
             .setSmallIcon(R.drawable.ic_play)
             .setContentIntent(PendingIntent.getActivity(
                 this, 0,
