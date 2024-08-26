@@ -184,9 +184,9 @@ class MainActivity : ComponentActivity() {
         speedMode = (speedMode + 1) % 3
     }
 
-    fun setManualBpm(bpm : Int) {
-        manualBpm = bpm
-    }
+//    fun setManualBpm(bpm : Int) {
+//        manualBpm = bpm
+//    }
     fun increaseManualBpm() {
         manualBpm += BPM_STEP
     }

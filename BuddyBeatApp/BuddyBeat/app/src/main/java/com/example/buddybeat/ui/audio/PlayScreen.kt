@@ -65,7 +65,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.R
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
