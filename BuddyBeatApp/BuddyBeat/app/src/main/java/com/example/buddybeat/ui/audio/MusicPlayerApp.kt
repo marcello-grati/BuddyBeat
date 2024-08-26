@@ -3,9 +3,18 @@ package com.example.buddybeat.ui.audio
 import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlaylistRemove
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,6 +79,7 @@ fun MusicPlayerApp(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerNavHost(
     showPlayer: Boolean,
@@ -106,7 +116,11 @@ fun MusicPlayerNavHost(
     val shouldShowDialogOne = remember { mutableStateOf(false) }
     val shouldShowDialogTwo = remember { mutableStateOf(false) }
     val shouldShowDialogThree = remember { mutableStateOf(false) }
+    val shouldShowDialogFour = remember { mutableStateOf(false) }
+    val shouldShowDialogFive = remember { mutableStateOf(false) }
+    val showBottomSheet = remember { mutableStateOf(false) }
     val songClicked = remember { mutableLongStateOf(-1L) }
+    val playlistLongClicked = remember { mutableStateOf(Playlist(title="", description = "")) }
 
     if (shouldShowDialogOne.value) {
         DialogOne(shouldShowDialog = shouldShowDialogOne,
@@ -129,6 +143,45 @@ fun MusicPlayerNavHost(
         })
     }
 
+    if (shouldShowDialogFour.value) {
+        DialogFour(shouldShowDialogFour = shouldShowDialogFour, removePlaylist = {
+            viewModel.removePlaylist(playlistLongClicked.value)
+            showBottomSheet.value = false
+        })
+    }
+
+    if (shouldShowDialogFive.value) {
+        DialogFive(shouldShowDialogFive = shouldShowDialogFive, updatePlaylist = {
+            viewModel.updatePlaylist(it, playlistLongClicked.value.playlistId)
+            showBottomSheet.value = false
+        }, title = playlistLongClicked.value.title)
+    }
+
+    if (showBottomSheet.value) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet.value = false
+            }
+        ) {
+            ListItem(
+                headlineContent = { Text("Rename playlist") },
+                leadingContent = { Icon(Icons.Default.Edit, null) },
+                modifier = Modifier.clickable {
+                    shouldShowDialogFive.value= true
+                    showBottomSheet.value = false
+                }
+            )
+            ListItem(
+                headlineContent = { Text("Delete Playlist") },
+                leadingContent = { Icon(Icons.Default.PlaylistRemove, null) },
+                modifier = Modifier.clickable {
+                    shouldShowDialogFour.value= true
+                    showBottomSheet.value = false
+                }
+            )
+        }
+    }
+
 
 
     NavHost(navController = navController, startDestination = Destination.home) {
@@ -139,6 +192,7 @@ fun MusicPlayerNavHost(
                 playlistClicked = {
                     viewModel.setVisiblePlaylist(it)
                     currentId.longValue = it.playlist.playlistId
+                    playlistLongClicked.value = it.playlist
                     navController.navigate(Destination.playlist)
                 },
                 isPlaying = isPlaying,
@@ -172,7 +226,9 @@ fun MusicPlayerNavHost(
                 shouldShowDialogOne = shouldShowDialogOne,
                 songClicked = songClicked,
                 shouldShowDialogThree = shouldShowDialogThree,
-                addToQueue = addToQueue
+                addToQueue = addToQueue,
+                showBottomSheet = showBottomSheet,
+                playlistLongClicked = playlistLongClicked
             )
         }
         composable(route = Destination.playlist) {
@@ -217,7 +273,9 @@ fun MusicPlayerNavHost(
                         shouldShowDialogThree = shouldShowDialogThree,
                         allPlaylist = allPlaylist,
                         currentId = currentId.longValue,
-                        addToQueue = addToQueue
+                        addToQueue = addToQueue,
+                        shouldShowDialogFive = shouldShowDialogFive,
+                        shouldShowDialogFour = shouldShowDialogFour
                     ) { navController.navigateUp() }
                 }
             }

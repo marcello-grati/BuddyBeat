@@ -328,8 +328,8 @@ class MainActivity : ComponentActivity() {
                 state.launchMultiplePermissionRequest()
                 onDispose {
                     val list = ContentResolverHelper(applicationContext).getAudioData()
-                    val allSongsPlaylist = Playlist(title = "All Songs", description = "All songs")
-                    val favorites = Playlist(title = "Favorites", description = "Favorites")
+                    val allSongsPlaylist = Playlist(title = "ALL SONGS", description = "All songs")
+                    val favorites = Playlist(title = "FAVORITES", description = "Favorites")
                     val l = viewModel.insertPlaylist(allSongsPlaylist)
                     Log.d("PlaylistIdL", l.toString())
                     viewModel.insertAllSongs(list,l)
