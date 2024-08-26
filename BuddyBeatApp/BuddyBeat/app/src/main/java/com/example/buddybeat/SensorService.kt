@@ -112,7 +112,7 @@ class SensorService : Service(), SensorEventListener {
 //    notificationManager.createNotificationChannel(mChannel)
 
     private val DIRECTORY_NAME = "BuddyBeat Logs"
-    data class ValueTimestamp(val timestamp: String, val spm: String, val spm2: String, val bpm : String)
+    data class ValueTimestamp(val timestamp: String, val oldSPM: String, val newSPM: String, val BPM : String)
 
     private val activityLogs = mutableListOf<ValueTimestamp>()
 
@@ -297,9 +297,9 @@ class SensorService : Service(), SensorEventListener {
 
         // Convert data to CSV format
         val csvContent = StringBuilder()
-        csvContent.append("Timestamp,SPM,BPM\n")  // Add header
+        csvContent.append("Timestamp,oldSPM,newSPM,BPM\n")  // Add header
         for (entry in data) {
-            csvContent.append("${entry.timestamp},${entry.spm},${entry.bpm}\n")
+            csvContent.append("${entry.timestamp},${entry.oldSPM},${entry.newSPM},${entry.BPM}\n")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -340,11 +340,11 @@ class SensorService : Service(), SensorEventListener {
     private fun updateActivityLogs(value: String, value2: String, timestamp: String, bpm: String) {
         activityLogs.add(
             ValueTimestamp(
-            spm = value,
-            spm2 = value2,
-            timestamp = timestamp,
-            bpm = bpm
-        )
+                timestamp = timestamp,
+                oldSPM = value,
+                newSPM = value2,
+                BPM = bpm
+            )
         )
     }
 }
