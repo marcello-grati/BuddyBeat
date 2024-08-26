@@ -185,6 +185,7 @@ class MainActivity : ComponentActivity() {
     private val OFF_MODE = 2
 
     private val DEFAULT_BPM = 100
+    private val ALPHA = 0.2f
 
     private var speedMode = AUTO_MODE
     private var manualBpm = DEFAULT_BPM
@@ -458,7 +459,9 @@ class MainActivity : ComponentActivity() {
                 else -> throw Exception("Invalid speed mode")
             }
             var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
-            var rat = 1f
+            var inRatio = 1f
+            var outRatio = _ratio.value
+
             if (bpm != 0 && bpm != null) {
 
                 // We compute the log_2() of step frequency and of double, half and original value of BPM
@@ -479,16 +482,18 @@ class MainActivity : ComponentActivity() {
                     logDoubleBPM = log2(bpm.toFloat() * 2.0f)
                 }
                 // Speed-up ratio computed as step frequency / BPM
-                rat = stepFreq / bpm.toFloat()
+                inRatio = stepFreq / bpm.toFloat()
             }
             if (stepFreq < 60)
-                rat = 1f
+                inRatio = 1f
 
             // ratio forced into [0.8, 1.2] range
-            rat = rat.coerceAtLeast(0.8f)
-            rat = rat.coerceAtMost(1.25f)
+            inRatio = inRatio.coerceAtLeast(0.8f)
+            inRatio = inRatio.coerceAtMost(1.25f)
 
-            _ratio.update { rat }
+            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+
+            _ratio.update { outRatio }
         } else {
             _ratio.update { 1f }
         }
