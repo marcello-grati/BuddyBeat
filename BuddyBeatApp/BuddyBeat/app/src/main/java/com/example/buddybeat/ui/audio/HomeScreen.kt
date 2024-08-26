@@ -42,7 +42,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,12 +57,14 @@ import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
+import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.SongItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
@@ -88,9 +92,9 @@ fun HomeScreen(
     shouldShowDialogThree: MutableState<Boolean>,
     songClicked : MutableState<Long>,
     addToQueue : (Song) -> Unit,
+    showBottomSheet : MutableState<Boolean>,
+    playlistLongClicked: MutableState<Playlist>
     ) {
-
-
     Scaffold(bottomBar = {
         if (song.title != "")
             HomeBottomBar(
@@ -130,6 +134,8 @@ fun HomeScreen(
                     playlistClicked = {
                         playlistClicked(it) },
                     allPlaylist = allPlaylist,
+                    showBottomSheet = showBottomSheet,
+                    playlistLongClicked = playlistLongClicked
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
@@ -162,6 +168,7 @@ fun HomeScreen(
                 }
             }
         }
+
     }
     OnLifecycleEvent { owner, event ->
         when (event) {
@@ -266,11 +273,13 @@ fun SearchBar() {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainButtons(
     playlistClicked: (PlaylistWithSongs) -> Unit,
     allPlaylist: List<PlaylistWithSongs>,
+    showBottomSheet: MutableState<Boolean>,
+    playlistLongClicked : MutableState<Playlist>
 ) {
     Column(
         modifier = Modifier
@@ -300,6 +309,7 @@ fun MainButtons(
                 )
                 Text("ALL SONGS", color = Color.White, fontSize = 13.sp) }
             }
+        val haptics = LocalHapticFeedback.current
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -318,7 +328,9 @@ fun MainButtons(
                                 playlistClicked(playlist)
                             },
                             onLongClick = {
-                                /*TODO Show menu to rename playlist and delete playlist*/
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showBottomSheet.value = true
+                                playlistLongClicked.value = playlist.playlist
                             }
                         ),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -336,7 +348,7 @@ fun MainButtons(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
-                            playlist.playlist.title.uppercase(),
+                            playlist.playlist.title,
                             color = Color.White,
                             fontSize = 13.sp
                         )
@@ -344,6 +356,7 @@ fun MainButtons(
                 }
             }
         }
+
 
         /*LazyColumn {
             itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
@@ -437,6 +450,8 @@ fun MainButtons(
         }*/
     }
 }
+
+
 
 
 @Composable
