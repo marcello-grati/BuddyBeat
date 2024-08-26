@@ -57,6 +57,7 @@ import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
 import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
@@ -186,11 +187,11 @@ class MainActivity : ComponentActivity() {
     fun setManualBpm(bpm : Int) {
         manualBpm = bpm
     }
-    fun increaseManualBpm(amount : Int) {
-        manualBpm += amount
+    fun increaseManualBpm() {
+        manualBpm += BPM_STEP
     }
-    fun decreaseManualBpm(amount : Int) {
-        manualBpm -= amount
+    fun decreaseManualBpm() {
+        manualBpm -= BPM_STEP
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -289,10 +290,10 @@ class MainActivity : ComponentActivity() {
                                 toggleSpeedMode()
                             },
                             plus = {
-                                increaseManualBpm(1)
+                                increaseManualBpm()
                             },
                             minus = {
-                                decreaseManualBpm(1)
+                                decreaseManualBpm()
                             },
                             addToQueue = {
                                 addToQueue(it)

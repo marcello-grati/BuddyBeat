@@ -55,12 +55,13 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
         var audioListId = MutableStateFlow(0L)
         var queue : MutableList<Song> = mutableListOf()
+
         val AUTO_MODE = 0
         val MANUAL_MODE = 1
         val OFF_MODE = 2
-
         val DEFAULT_BPM = 100
         val ALPHA = 0.2f
+        val BPM_STEP = 2
 
         var speedMode = AUTO_MODE
         var manualBpm = DEFAULT_BPM
