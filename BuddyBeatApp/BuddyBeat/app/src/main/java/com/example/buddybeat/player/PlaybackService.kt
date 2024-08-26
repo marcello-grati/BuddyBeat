@@ -65,7 +65,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
         var speedMode = AUTO_MODE
         var manualBpm = DEFAULT_BPM
-        var ratio = 1f
     }
 
     @Inject
@@ -120,8 +119,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Intent(this, SensorService::class.java).also { int ->
             bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
-        handler.postDelayed(sensorDataRunnable, 60000)
-        handler.postDelayed(orderSongsRunnable, 60000)
+        handler.postDelayed(sensorDataRunnable, 30000)
+        handler.postDelayed(orderSongsRunnable, 30000)
         setMediaNotificationProvider(customMediaNotificationProvider)
     }
 
@@ -218,16 +217,19 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
         if (speedMode != OFF_MODE) {
 
-            val stepFreq = when (speedMode) {
-                AUTO_MODE -> mService.stepFreq.toFloat()
-                MANUAL_MODE -> manualBpm.toFloat()
-                else -> throw Exception("Invalid speed mode")
-            }
             var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
-            var inRatio = 1f
-            var outRatio = ratio
 
-            if (bpm != 0 && bpm != null) {
+            if (bpm != 0 && bpm != null && bpm != -1) {
+
+                val stepFreq = when (speedMode) {
+                    AUTO_MODE -> mService.stepFreq.toFloat()
+                    MANUAL_MODE -> manualBpm.toFloat()
+                    else -> throw Exception("Invalid speed mode")
+                }
+
+                var inRatio = 1f
+                var outRatio = ratio
+
 
                 // We compute the log_2() of step frequency and of double, half and original value of BPM
                 val logStepFreq = log2(stepFreq)
@@ -248,17 +250,18 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 }
                 // Speed-up ratio computed as step frequency / BPM
                 inRatio = stepFreq / bpm.toFloat()
+
+                if (stepFreq < 60)
+                    inRatio = 1f
+
+                // ratio forced into [0.8, 1.2] range
+                inRatio = inRatio.coerceAtLeast(0.8f)
+                inRatio = inRatio.coerceAtMost(1.25f)
+
+                outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+
+                ratio = outRatio
             }
-            if (stepFreq < 60)
-                inRatio = 1f
-
-            // ratio forced into [0.8, 1.2] range
-            inRatio = inRatio.coerceAtLeast(0.8f)
-            inRatio = inRatio.coerceAtMost(1.25f)
-
-            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
-
-            ratio = outRatio
         } else {
             ratio = 1f
         }

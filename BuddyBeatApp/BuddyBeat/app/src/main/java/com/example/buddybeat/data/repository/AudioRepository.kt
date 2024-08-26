@@ -33,10 +33,6 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         return database.songDao().getSongs()
     }
 
-    fun getAllIds() : LiveData<List<Long>>{
-        return database.songDao().getAllIds()
-    }
-
     fun containsSong(playlistId:Long, songId:Long) : LiveData<Int> {
         return database.songDao().containsSong(playlistId,songId)
     }

@@ -52,10 +52,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
-import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
-import com.example.buddybeat.data.ContentResolverHelper
-import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
@@ -65,7 +61,6 @@ import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
-import com.example.buddybeat.player.PlaybackService.Companion.ratio
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
@@ -84,8 +79,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.math.log2
 
 
 @UnstableApi

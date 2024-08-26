@@ -29,6 +29,8 @@ import kotlin.math.ceil
 import kotlin.math.sqrt
 
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import java.io.File
 import java.io.FileOutputStream
@@ -40,7 +42,7 @@ import java.util.Locale
 class SensorService : Service(), SensorEventListener {
     // Override callback methods here
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    //private val scope = CoroutineScope(Dispatchers.Default)
 
     private lateinit var sensorManager: SensorManager
     private var gyroSensor: Sensor? = null
@@ -125,6 +127,10 @@ class SensorService : Service(), SensorEventListener {
         startForegroundService()
         return START_STICKY
     }
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val interval: Long = 1000
+
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class) override fun onCreate() {
         super.onCreate()
@@ -140,16 +146,26 @@ class SensorService : Service(), SensorEventListener {
         val intent = Intent(this, SensorService::class.java)
         startService(intent)
         startTime = System.currentTimeMillis()
-        scope.launch {
+        handler.postDelayed(writeLogs, interval)
+        /*scope.launch {
             while (true) {
                 //Log.d("Service", this@SensorService.toString())
                 //Log.d("SensorService", "Step Count: $steps")
                 //Log.d("SensorService", "Step Cadence: $stepFrequency")
-                updateNotification()
-                val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-                updateActivityLogs(oldStepFrequency.toString(), newStepFrequency.toString(), currentTime, bpm_song.toString())
-                delay(1000)
+
+
+
             }
+        }*/
+    }
+
+    private val writeLogs = object : Runnable {
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun run() {
+            val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            updateActivityLogs(oldStepFrequency.toString(), newStepFrequency.toString(), currentTime, bpm_song.toString())
+            handler.postDelayed(this, interval)
+            updateNotification()
         }
     }
 
@@ -157,9 +173,9 @@ class SensorService : Service(), SensorEventListener {
 
         Log.d("SensorService", "Distruggo il service")
         // writeToFile("BuddyBeat Logs", "Hello, this is a test!")
-
         writeToCsvFile(activityLogs)
-        scope.cancel()
+        //scope.cancel()
+        handler.looper.quit()
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
         super.onDestroy()
