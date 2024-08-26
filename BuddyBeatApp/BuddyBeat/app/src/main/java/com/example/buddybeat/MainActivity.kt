@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
             )
             controller?.currentMediaItem?.let { viewModel.changeSong(it) }
             controller?.let { viewModel.updateDuration(it.duration) }
-            controller?.mediaMetadata?.extras?.getInt("bpm")?.let { mService.updateBpm(it) }
+            controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { mService.updateBpm(it) }
         }
     }
 
@@ -262,7 +262,7 @@ class MainActivity : ComponentActivity() {
                             },
                             viewModel = viewModel,
                             onItemClick = {
-                                setSong(it)
+                                //setSong(it)
                             },
                             nextSong = {
                                 nextSong()
@@ -294,6 +294,15 @@ class MainActivity : ComponentActivity() {
                             },
                             addToQueue = {
                                 addToQueue(it)
+                            },
+                            playPause = {
+                                playPause()
+                            },
+                            buildMediaItem = {
+                                buildMediaItem(it)
+                            },
+                            setSongInPlaylist = {
+                                setSongInPlaylist(it)
                             }
                         )
                     }
@@ -578,18 +587,19 @@ class MainActivity : ComponentActivity() {
         Log.d("IOOOO", "mediaItemCount: " + controller?.mediaItemCount.toString())
     }
 
-    private fun setSong(index: Int) {
+    /*private fun setSong(index: Int) {
         Log.d("IOOOO", "index clicked: $index")
         if(audioListId.value!=viewModel.currentPlaylistId.value) {
             audioListId.update {
                 viewModel.currentPlaylistId.value
             }
             audiolist.update{
-                viewModel.currentPlaylist.value.songs.toMutableList()
+                viewModel.allPlaylist.value?.find { it.playlist.playlistId == viewModel.currentPlaylistId.value }?.songs
+                    ?: mutableListOf()
             }
-
         }
-        val song = viewModel.currentPlaylist.value.songs.sortedBy{it.title}[index]
+        val song = viewModel.allPlaylist.value?.find { it.playlist.playlistId == viewModel.currentPlaylistId.value }?.songs?.sortedBy{it.title}
+            ?.get(index)
         Log.d("IOOOO", "Song clicked: $song")
         if (song.songId == viewModel.currentId.value) {
             Log.d("IOOOO", "same id: ${song.songId}")
@@ -600,9 +610,10 @@ class MainActivity : ComponentActivity() {
             setSongInPlaylist(media)
             playPause()
         }
-    }
+    }*/
 
     private fun buildMediaItem(audio: Song): MediaItem {
+        Log.d("IOOOO bpm" , audio.bpm.toString())
         return MediaItem.Builder()
             .setMediaId(audio.uri)
             .setRequestMetadata(

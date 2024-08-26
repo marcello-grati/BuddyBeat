@@ -175,7 +175,6 @@ class SensorService : Service(), SensorEventListener {
         // writeToFile("BuddyBeat Logs", "Hello, this is a test!")
         writeToCsvFile(activityLogs)
         //scope.cancel()
-        handler.looper.quit()
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
         super.onDestroy()

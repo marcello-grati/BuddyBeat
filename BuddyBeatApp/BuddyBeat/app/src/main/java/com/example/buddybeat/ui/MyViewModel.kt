@@ -87,8 +87,7 @@ class MyViewModel @Inject constructor(
 
     //CURRENT PLAYLIST
 
-    val currentPlaylist =
-        MutableStateFlow(PlaylistWithSongs(Playlist(title = "", description = ""), mutableListOf()))
+    //val currentPlaylist = MutableStateFlow(PlaylistWithSongs(Playlist(title = "", description = ""), mutableListOf()))
     val currentPlaylistId = MutableStateFlow(0L)
 
 
@@ -133,7 +132,7 @@ class MyViewModel @Inject constructor(
 
     fun setVisiblePlaylist(playlist: PlaylistWithSongs) {
         currentPlaylistId.value = playlist.playlist.playlistId
-        currentPlaylist.value = playlist
+        //currentPlaylist.value = playlist
     }
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {

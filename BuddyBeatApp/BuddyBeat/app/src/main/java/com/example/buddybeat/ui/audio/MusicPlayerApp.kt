@@ -24,14 +24,18 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.media3.common.MediaItem
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
+import com.example.buddybeat.player.PlaybackService.Companion.audioListId
+import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.Queue
+import kotlinx.coroutines.flow.update
 
 object Destination {
     const val home = "home"
@@ -56,7 +60,10 @@ fun MusicPlayerApp(
     plus: () -> Unit,
     minus: () -> Unit,
     text3: String,
-    addToQueue: (Song) -> Unit
+    addToQueue: (Song) -> Unit,
+    playPause : () -> Unit,
+    buildMediaItem: (Song) -> MediaItem,
+    setSongInPlaylist : (MediaItem) -> Unit
 ) {
     val navController = rememberNavController()
     MusicPlayerNavHost(
@@ -75,7 +82,10 @@ fun MusicPlayerApp(
         text3 = text3,
         plus = plus,
         minus = minus,
-        addToQueue = addToQueue
+        addToQueue = addToQueue,
+        playPause = playPause,
+        buildMediaItem = buildMediaItem,
+        setSongInPlaylist = setSongInPlaylist
     )
 }
 
@@ -98,7 +108,10 @@ fun MusicPlayerNavHost(
     plus: () -> Unit,
     minus: () -> Unit,
     text3: String,
-    addToQueue: (Song) -> Unit
+    addToQueue: (Song) -> Unit,
+    playPause : () -> Unit,
+    buildMediaItem: (Song) -> MediaItem,
+    setSongInPlaylist : (MediaItem) -> Unit
 ) {
 
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
@@ -243,8 +256,28 @@ fun MusicPlayerNavHost(
             Box(modifier = Modifier.fillMaxSize()) {
                 Column {
                     PlaylistScreen(
-                        onItemClick = {
-                            onItemClick(it)
+                        onItemClick = { index ->
+                            Log.d("IOOOO", "index clicked: $index")
+                                if(audioListId.value!=currentId.longValue) {
+                                    audioListId.update {
+                                        currentId.longValue
+                                    }
+                                    audiolist.update{
+                                        allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
+                                            ?: mutableListOf()
+                                    }
+                                }
+                                val song = allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs!!.sortedBy{it.title}[index]
+                                Log.d("IOOOO", "Song clicked: $song")
+                                if (song.songId == viewModel.currentId.value) {
+                                    Log.d("IOOOO", "same id: ${song.songId}")
+                                    playPause()
+                                } else {
+                                    Log.d("IOOOO", "not same id, new id: ${song.songId}")
+                                    val media = buildMediaItem(song)
+                                    setSongInPlaylist(media)
+                                    playPause()
+                                }
                         },
                         // indicator of progress of bpm calculation
                         loading = isLoading,
