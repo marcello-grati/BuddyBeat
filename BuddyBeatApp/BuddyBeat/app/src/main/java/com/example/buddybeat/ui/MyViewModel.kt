@@ -268,16 +268,7 @@ class MyViewModel @Inject constructor(
     private fun getQueue() {
         val queue = queue.toList()
         val l = orderSongs(audiolist.value)
-        while(true){
-            val nextSong = l.firstOrNull()
-            if(nextSong != null) {
-                if (!playlist.contains(nextSong.uri)) {
-                    //mediaSession?.player?.seekToDefaultPosition(mediaSession?.player!!.currentMediaItemIndex + 1)
-                    break
-                }
-                else l.removeFirstOrNull()
-            }
-        }
+        l.removeAll{playlist.contains(it.uri)}
         l.forEach {
             Log.d(it.toString(), it.bpm.toString())
         }
@@ -287,7 +278,7 @@ class MyViewModel @Inject constructor(
         }
     }
 
-    fun orderSongs(list: MutableList<Song>) : MutableList<Song> {
+     fun orderSongs(list: MutableList<Song>) : MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered")
         val myCustomComparator =  Comparator<Song> { a, b ->

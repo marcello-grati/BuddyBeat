@@ -110,7 +110,10 @@ fun MusicPlayerNavHost(
     val progress by viewModel.progress.collectAsState()
     val stepFreq by viewModel.stepFreq.collectAsState(0)
     val bpm by viewModel.currentBpm.collectAsState(0)
+
     val favorites by viewModel.favoritesId.observeAsState(initial = 0L)
+    val allSongs by viewModel.allSongsId.observeAsState(initial = 0L)
+
     val currentId = remember { mutableLongStateOf(0L) }
 
     val shouldShowDialogOne = remember { mutableStateOf(false) }
@@ -275,7 +278,9 @@ fun MusicPlayerNavHost(
                         currentId = currentId.longValue,
                         addToQueue = addToQueue,
                         shouldShowDialogFive = shouldShowDialogFive,
-                        shouldShowDialogFour = shouldShowDialogFour
+                        shouldShowDialogFour = shouldShowDialogFour,
+                        allSongsId = allSongs,
+                        favoritesId = favorites
                     ) { navController.navigateUp() }
                 }
             }

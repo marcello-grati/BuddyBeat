@@ -1,7 +1,8 @@
 package com.example.buddybeat.ui.audio
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.LinearDeterminateIndicator
 import com.example.buddybeat.ui.components.SongItem
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PlaylistScreen(
     onItemClick: (Int) -> Unit,
@@ -76,10 +78,12 @@ fun PlaylistScreen(
     allPlaylist: List<PlaylistWithSongs>,
     currentId: Long,
     addToQueue: (Song) -> Unit,
-    shouldShowDialogFive : MutableState<Boolean>,
+    shouldShowDialogFive: MutableState<Boolean>,
     shouldShowDialogFour: MutableState<Boolean>,
+    allSongsId: Long,
+    favoritesId: Long,
     onNavigateUp: () -> Unit
-    ) {
+) {
     Scaffold(
         bottomBar = {
             if (song.title.isNotEmpty())
@@ -118,31 +122,35 @@ fun PlaylistScreen(
                         contentDescription = "",
                     )
                 }
-                var expanded by remember { mutableStateOf(false) }
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "",
-                    )
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFFB9C1CA)),
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Rename Playlist") },
-                            onClick = {
-                                shouldShowDialogFive.value= true
-                                expanded = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Delete Playlist") },
-                            onClick = {
-                                shouldShowDialogFour.value= true
-                                expanded = false
+                allPlaylist.find { it.playlist.playlistId == currentId }?.playlist?.let { it1 ->
+                    if (it1.playlistId != allSongsId && it1.playlistId != favoritesId) {
+                        var expanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { expanded = !expanded }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "",
+                            )
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.background(Color(0xFFB9C1CA)),
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Rename Playlist") },
+                                    onClick = {
+                                        shouldShowDialogFive.value = true
+                                        expanded = false
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Delete Playlist") },
+                                    onClick = {
+                                        shouldShowDialogFour.value = true
+                                        expanded = false
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }
@@ -157,9 +165,15 @@ fun PlaylistScreen(
             ) {
                 item {
                     allPlaylist.find { it.playlist.playlistId == currentId }?.playlist?.let { it1 ->
-                        TopSection(it1.title) {
-                            // Handle the click action if necessary
-                        }
+                        val modifier =
+                            if (it1.playlistId != allSongsId && it1.playlistId != favoritesId)
+                                Modifier.combinedClickable(
+                                    onClick = { },
+                                    onLongClick = {
+                                        shouldShowDialogFive.value = true
+                                    }
+                                ) else Modifier
+                        TopSection(modifier, it1.title)
                     }
                 }
                 allPlaylist.find { it.playlist.playlistId == currentId }?.let { it1 ->
@@ -185,33 +199,33 @@ fun PlaylistScreen(
                 }
             }
             /*LazyColumn(
-                contentPadding = it,
-                modifier = Modifier.weight(1.0f),
-            ) {
-                itemsIndexed(audioList) { index, audio ->
-                    SongItem(
-                        audio = audio,
-                        onItemClick = {
-                            onItemClick(index)
-                        },
-                        isPlaying = isPlaying,
-                        addToFavorite = addToFavorite,
-                        removeFavorite = removeFavorite,
-                        favoriteContainsSong = favoriteContainsSong
-                    )
-                }
+            contentPadding = it,
+            modifier = Modifier.weight(1.0f),
+        ) {
+            itemsIndexed(audioList) { index, audio ->
+                SongItem(
+                    audio = audio,
+                    onItemClick = {
+                        onItemClick(index)
+                    },
+                    isPlaying = isPlaying,
+                    addToFavorite = addToFavorite,
+                    removeFavorite = removeFavorite,
+                    favoriteContainsSong = favoriteContainsSong
+                )
             }
-        }*/
+        }
+    }*/
         }
     }
 }
 
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TopSection(
+    modifier: Modifier,
     title: String,
     resource: Int = R.drawable.mainimage,
-    onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -224,22 +238,19 @@ fun TopSection(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .height(300.dp)
+                .height(250.dp)
                 .padding(horizontal = 50.dp)
                 .clip(RoundedCornerShape(bottomStart = 130.dp, bottomEnd = 130.dp))
         )
         Text(
             text = title,
-            modifier = Modifier
-                .padding(bottom = 100.dp)
-                .align(Alignment.BottomCenter)
-                .clickable {
-                    onClick()
-                },
+            modifier = modifier
+                //.padding(bottom = 100.dp)
+                .align(Alignment.Center),
             textAlign = TextAlign.Center,
             color = Color.White,
             fontSize = 20.sp,
-            fontWeight = FontWeight.W900
+            fontWeight = FontWeight.W900,
         )
     }
 }
