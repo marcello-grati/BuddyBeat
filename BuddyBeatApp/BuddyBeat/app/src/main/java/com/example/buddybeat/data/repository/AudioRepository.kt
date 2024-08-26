@@ -18,6 +18,9 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
     private val allSongs: LiveData<MutableList<Song>> = database.songDao().getAllSongs()
     private val allPlaylists : LiveData<MutableList<PlaylistWithSongs>> = database.songDao().getPlaylistsWithSongs()
 
+    fun getData() : List<Song>{
+        return contentResolverHelper.getAudioData()
+    }
     fun getAllSongs() : LiveData<MutableList<Song>> {
         return allSongs
     }
@@ -28,6 +31,10 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
 
     suspend fun getSongs() : List<Song> {
         return database.songDao().getSongs()
+    }
+
+    fun getAllIds() : LiveData<List<Long>>{
+        return database.songDao().getAllIds()
     }
 
     fun containsSong(playlistId:Long, songId:Long) : LiveData<Int> {
@@ -63,8 +70,8 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
     }
 
     @WorkerThread
-    suspend fun insert(song: Song) {
-        database.songDao().insert(song)
+    suspend fun insert(song: Song) : Long {
+        return database.songDao().insert(song)
     }
 
     @WorkerThread
@@ -90,6 +97,11 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
     @WorkerThread
     suspend fun delete(psc : PlaylistSongCrossRef) {
         database.songDao().delete(psc)
+    }
+
+    @WorkerThread
+    suspend fun delete(song : Song) {
+        database.songDao().delete(song)
     }
 
 

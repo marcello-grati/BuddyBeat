@@ -29,7 +29,7 @@ constructor(@ApplicationContext val context: Context) {
 
 
     @WorkerThread
-    fun getAudioData(): List<Song> {
+    fun getAudioData(): MutableList<Song> {
         return getCursorData()
     }
 
@@ -70,10 +70,10 @@ constructor(@ApplicationContext val context: Context) {
                             id
                         )
 
-                        audioList += Song(
+                        audioList.add(Song(
                             title = title, artist = artist, duration = duration,
                             uri = uri.toString(), description = "$title $artist"
-                        )
+                        ))
 
                     }
                 }

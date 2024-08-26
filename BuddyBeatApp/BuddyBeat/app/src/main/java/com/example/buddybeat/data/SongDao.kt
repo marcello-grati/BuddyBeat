@@ -27,10 +27,10 @@ interface SongDao {
     fun getSongsOrdered(): LiveData<MutableList<Song>>
     @Query("SELECT * FROM song_table ORDER BY title ASC")
     suspend fun getSongs(): List<Song>
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(song: Song)
 
 
+    @Query("SELECT songId FROM song_table")
+    fun getAllIds():LiveData<List<Long>>
 
     @Query("SELECT * FROM playlist_table")
     fun getAllPlaylists(): LiveData<MutableList<Playlist>>
@@ -58,6 +58,10 @@ interface SongDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSong(song: Song) : Long
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(song: Song) : Long
+
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(ref: PlaylistSongCrossRef)

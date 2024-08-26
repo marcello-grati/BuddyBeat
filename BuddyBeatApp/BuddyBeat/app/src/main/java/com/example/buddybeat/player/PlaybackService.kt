@@ -54,6 +54,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
         var audioListId = MutableStateFlow(0L)
         var queue : MutableList<Song> = mutableListOf()
+        var ratio = 1f
     }
 
     @Inject
@@ -66,8 +67,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private lateinit var mService: SensorService
     private var mBound: Boolean = false
-
-    var ratio = 1f
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -108,8 +107,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Intent(this, SensorService::class.java).also { int ->
             bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
-        handler.postDelayed(sensorDataRunnable, interval)
-        handler.postDelayed(orderSongsRunnable, interval)
+        handler.postDelayed(sensorDataRunnable, 60000)
+        handler.postDelayed(orderSongsRunnable, 60000)
         setMediaNotificationProvider(customMediaNotificationProvider)
     }
 
@@ -167,6 +166,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     private fun updateSpeedSong() {
+
         val stepFreq = mService.stepFreq
         Log.d("StepCadence from PlaybackService", stepFreq.toString())
         var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")

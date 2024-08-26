@@ -231,7 +231,11 @@ fun MusicPlayerNavHost(
                 shouldShowDialogThree = shouldShowDialogThree,
                 addToQueue = addToQueue,
                 showBottomSheet = showBottomSheet,
-                playlistLongClicked = playlistLongClicked
+                playlistLongClicked = playlistLongClicked,
+                updateSongs = {
+                    viewModel.updateSongs()
+                },
+                allSongsId = allSongs
             )
         }
         composable(route = Destination.playlist) {

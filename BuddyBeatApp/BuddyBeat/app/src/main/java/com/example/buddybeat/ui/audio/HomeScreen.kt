@@ -3,6 +3,7 @@ package com.example.buddybeat.ui.audio
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,10 +47,12 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,7 +78,6 @@ import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.SongItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
@@ -102,7 +106,9 @@ fun HomeScreen(
     songClicked : MutableState<Long>,
     addToQueue : (Song) -> Unit,
     showBottomSheet : MutableState<Boolean>,
-    playlistLongClicked: MutableState<Playlist>
+    playlistLongClicked: MutableState<Playlist>,
+    updateSongs: () -> Unit,
+    allSongsId : Long
     ) {
     Scaffold(bottomBar = {
         if (song.title != "")
@@ -131,7 +137,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .padding(horizontal = 15.dp).fillMaxHeight()
             ) {
-                TopBar()
+                TopBar(updateSongs = updateSongs)
                 SearchBar()
                 Row(  modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
                     SongsOfTheWeek("YOUR PLAYLISTS")
@@ -144,7 +150,8 @@ fun HomeScreen(
                         playlistClicked(it) },
                     allPlaylist = allPlaylist,
                     showBottomSheet = showBottomSheet,
-                    playlistLongClicked = playlistLongClicked
+                    playlistLongClicked = playlistLongClicked,
+                    allSongsId = allSongsId
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
@@ -212,7 +219,9 @@ fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event:Lifecycle.Event) -> 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar() {
+fun TopBar(
+    updateSongs : () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth(),
@@ -238,11 +247,25 @@ fun TopBar() {
                     modifier = Modifier.size(50.dp)
                 )
             }
-            IconButton(onClick = { }) {
+            var expanded by remember { mutableStateOf(false) }
+            IconButton(onClick = { expanded = !expanded }) {
                 Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = "",
                 )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Update songs") },
+                        onClick = {
+                            expanded = false
+                            updateSongs()
+                        },
+                    )
+                }
             }
         }
     }
@@ -288,7 +311,8 @@ fun MainButtons(
     playlistClicked: (PlaylistWithSongs) -> Unit,
     allPlaylist: List<PlaylistWithSongs>,
     showBottomSheet: MutableState<Boolean>,
-    playlistLongClicked : MutableState<Playlist>
+    playlistLongClicked : MutableState<Playlist>,
+    allSongsId : Long
 ) {
     Column(
         modifier = Modifier
@@ -302,7 +326,8 @@ fun MainButtons(
                 .height(100.dp)
                 .combinedClickable (
                     onClick = {
-                        playlistClicked(allPlaylist.first())
+                        allPlaylist.find{it.playlist.playlistId==allSongsId}
+                            ?.let { playlistClicked(it) }
                     }
                 ),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -316,7 +341,10 @@ fun MainButtons(
                     contentScale = ContentScale.FillBounds,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text("ALL SONGS", color = Color.White, fontSize = 13.sp) }
+                allPlaylist.find{
+                    it.playlist.playlistId == allSongsId
+                }?.playlist?.title?.let { Text(it, color = Color.White, fontSize = 13.sp) }
+            }
             }
         val haptics = LocalHapticFeedback.current
         LazyVerticalGrid(
@@ -324,7 +352,7 @@ fun MainButtons(
             verticalArrangement = Arrangement.spacedBy(5.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
+            itemsIndexed(allPlaylist.dropWhile { it.playlist.playlistId == allSongsId }) { index, playlist ->
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier

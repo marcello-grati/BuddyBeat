@@ -52,6 +52,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.models.Playlist
@@ -61,6 +62,7 @@ import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
+import com.example.buddybeat.player.PlaybackService.Companion.ratio
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
@@ -332,15 +334,17 @@ class MainActivity : ComponentActivity() {
             DisposableEffect(state) {
                 state.launchMultiplePermissionRequest()
                 onDispose {
-                    val list = ContentResolverHelper(applicationContext).getAudioData()
+                    /*val list = ContentResolverHelper(applicationContext).getAudioData()
                     val allSongsPlaylist = Playlist(title = "ALL SONGS", description = "All songs")
                     val favorites = Playlist(title = "FAVORITES", description = "Favorites")
                     val l = viewModel.insertPlaylist(allSongsPlaylist)
                     Log.d("PlaylistIdL", l.toString())
+                    viewModel.setPreferenceLong(ALL_SONGS_KEY, l)
                     viewModel.insertAllSongs(list,l)
                     val d = viewModel.insertPlaylist(favorites)
                     Log.d("PlaylistIdD", d.toString())
-                    viewModel.setPreferenceLong(FAVORITES_KEY, d)
+                    viewModel.setPreferenceLong(FAVORITES_KEY, d)*/
+                    viewModel.insertAllSongs()
                     //viewModel.insertAllSongs(l)
                 }
             }
@@ -445,7 +449,8 @@ class MainActivity : ComponentActivity() {
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(mService.stepFreq)
-            updateRatio()
+            //updateRatio()
+            _ratio.update { PlaybackService.ratio }
         }
     }
 

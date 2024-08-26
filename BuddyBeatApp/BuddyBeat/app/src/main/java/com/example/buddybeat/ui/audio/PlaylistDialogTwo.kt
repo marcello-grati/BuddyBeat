@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.buddybeat.data.models.PlaylistWithSongs
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogTwo(
     shouldShowDialogTwo: MutableState<Boolean>,
