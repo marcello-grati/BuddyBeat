@@ -38,6 +38,14 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         return database.songDao().getSongsFromPlaylist(id)
     }
 
+    suspend fun delete(playlist: Playlist){
+        return database.songDao().delete(playlist)
+    }
+
+    suspend fun updatePlaylist(title:String, id:Long){
+        return database.songDao().update(title, id)
+    }
+
     fun getSongsOrdered() : LiveData<MutableList<Song>> {
         return database.songDao().getSongsOrdered()
     }

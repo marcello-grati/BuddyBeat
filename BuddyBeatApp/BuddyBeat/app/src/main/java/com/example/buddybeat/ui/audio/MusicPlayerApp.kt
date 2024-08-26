@@ -1,9 +1,20 @@
 package com.example.buddybeat.ui.audio
 
 import android.util.Log
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlaylistRemove
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,8 +41,8 @@ object Destination {
 
 @Composable
 fun MusicPlayerApp(
-    showPlayer : Boolean,
-    changeShow : () -> Unit,
+    showPlayer: Boolean,
+    changeShow: () -> Unit,
     viewModel: MyViewModel,
     onItemClick: (Int) -> Unit,
     prevSong: () -> Unit,
@@ -40,11 +51,11 @@ fun MusicPlayerApp(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    toggleMode : () -> Unit,
-    plus : () -> Unit,
-    minus : () -> Unit,
-    text3 : String,
-    addToQueue : (Song) -> Unit
+    toggleMode: () -> Unit,
+    plus: () -> Unit,
+    minus: () -> Unit,
+    text3: String,
+    addToQueue: (Song) -> Unit
 ) {
     val navController = rememberNavController()
     MusicPlayerNavHost(
@@ -68,10 +79,11 @@ fun MusicPlayerApp(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerNavHost(
     showPlayer: Boolean,
-    changeShow : () -> Unit,
+    changeShow: () -> Unit,
     navController: NavHostController,
     viewModel: MyViewModel,
     onItemClick: (Int) -> Unit,
@@ -81,11 +93,11 @@ fun MusicPlayerNavHost(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    toggleMode : () -> Unit,
-    plus : () -> Unit,
-    minus : () -> Unit,
-    text3 : String,
-    addToQueue : (Song) -> Unit
+    toggleMode: () -> Unit,
+    plus: () -> Unit,
+    minus: () -> Unit,
+    text3: String,
+    addToQueue: (Song) -> Unit
 ) {
 
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
@@ -102,28 +114,72 @@ fun MusicPlayerNavHost(
     val currentId = remember { mutableLongStateOf(0L) }
 
     val shouldShowDialogOne = remember { mutableStateOf(false) }
-    val shouldShowDialogTwo = remember { mutableStateOf(false)}
-    val shouldShowDialogThree = remember { mutableStateOf(false)}
+    val shouldShowDialogTwo = remember { mutableStateOf(false) }
+    val shouldShowDialogThree = remember { mutableStateOf(false) }
+    val shouldShowDialogFour = remember { mutableStateOf(false) }
+    val shouldShowDialogFive = remember { mutableStateOf(false) }
+    val showBottomSheet = remember { mutableStateOf(false) }
     val songClicked = remember { mutableLongStateOf(-1L) }
+    val playlistLongClicked = remember { mutableStateOf(Playlist(title="", description = "")) }
 
     if (shouldShowDialogOne.value) {
         DialogOne(shouldShowDialog = shouldShowDialogOne,
-            insertPlaylist = {viewModel.insertPlaylist(Playlist(title=it, description=it))})
+            insertPlaylist = { viewModel.insertPlaylist(Playlist(title = it, description = it)) })
     }
 
     if (shouldShowDialogTwo.value) {
         Log.d("idsong", songClicked.longValue.toString())
-        DialogTwo(shouldShowDialogTwo = shouldShowDialogTwo, shouldShowDialogOne = shouldShowDialogOne,
+        DialogTwo(shouldShowDialogTwo = shouldShowDialogTwo,
+            shouldShowDialogOne = shouldShowDialogOne,
             allPlaylist = allPlaylist,
             insertPlaylist = {
-            viewModel.addToPlaylist(it, songClicked.longValue)
+                viewModel.addToPlaylist(it, songClicked.longValue)
+            })
+    }
+
+    if (shouldShowDialogThree.value) {
+        DialogThree(shouldShowDialogThree = shouldShowDialogThree, removeSong = {
+            viewModel.removeFromPlaylist(currentId.longValue, songClicked.longValue)
         })
     }
 
-    if(shouldShowDialogThree.value){
-        DialogThree(shouldShowDialogThree = shouldShowDialogThree, removeSong = {
-            viewModel.removeFromPlaylist(currentId.longValue, songClicked.longValue)
-        } )
+    if (shouldShowDialogFour.value) {
+        DialogFour(shouldShowDialogFour = shouldShowDialogFour, removePlaylist = {
+            viewModel.removePlaylist(playlistLongClicked.value)
+            showBottomSheet.value = false
+        })
+    }
+
+    if (shouldShowDialogFive.value) {
+        DialogFive(shouldShowDialogFive = shouldShowDialogFive, updatePlaylist = {
+            viewModel.updatePlaylist(it, playlistLongClicked.value.playlistId)
+            showBottomSheet.value = false
+        }, title = playlistLongClicked.value.title)
+    }
+
+    if (showBottomSheet.value) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                showBottomSheet.value = false
+            }
+        ) {
+            ListItem(
+                headlineContent = { Text("Rename playlist") },
+                leadingContent = { Icon(Icons.Default.Edit, null) },
+                modifier = Modifier.clickable {
+                    shouldShowDialogFive.value= true
+                    showBottomSheet.value = false
+                }
+            )
+            ListItem(
+                headlineContent = { Text("Delete Playlist") },
+                leadingContent = { Icon(Icons.Default.PlaylistRemove, null) },
+                modifier = Modifier.clickable {
+                    shouldShowDialogFour.value= true
+                    showBottomSheet.value = false
+                }
+            )
+        }
     }
 
 
@@ -136,7 +192,9 @@ fun MusicPlayerNavHost(
                 playlistClicked = {
                     viewModel.setVisiblePlaylist(it)
                     currentId.longValue = it.playlist.playlistId
-                    navController.navigate(Destination.playlist) },
+                    playlistLongClicked.value = it.playlist
+                    navController.navigate(Destination.playlist)
+                },
                 isPlaying = isPlaying,
                 audioList = listOf(),
                 allPlaylist = allPlaylist,
@@ -168,7 +226,9 @@ fun MusicPlayerNavHost(
                 shouldShowDialogOne = shouldShowDialogOne,
                 songClicked = songClicked,
                 shouldShowDialogThree = shouldShowDialogThree,
-                addToQueue = addToQueue
+                addToQueue = addToQueue,
+                showBottomSheet = showBottomSheet,
+                playlistLongClicked = playlistLongClicked
             )
         }
         composable(route = Destination.playlist) {
@@ -213,7 +273,9 @@ fun MusicPlayerNavHost(
                         shouldShowDialogThree = shouldShowDialogThree,
                         allPlaylist = allPlaylist,
                         currentId = currentId.longValue,
-                        addToQueue = addToQueue
+                        addToQueue = addToQueue,
+                        shouldShowDialogFive = shouldShowDialogFive,
+                        shouldShowDialogFour = shouldShowDialogFour
                     ) { navController.navigateUp() }
                 }
             }
@@ -239,18 +301,33 @@ fun MusicPlayerNavHost(
                 ratio = text3,
                 queue = {
                     viewModel.showQueue(true)
-                    navController.navigate(Destination.queue) }
+                    navController.navigate(Destination.queue)
+                }
             )
         }
-        composable(route = Destination.queue) {
+        composable(route = Destination.queue,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(1000)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(1000)
+                )
+            }) {
             val queue by viewModel.queueList.observeAsState(initial = listOf())
             Queue(
                 audioList = queue,
                 removeFromQueue = {
-                    viewModel.removeFromQueue(it) },
+                    viewModel.removeFromQueue(it)
+                },
                 onNavigateUp = {
                     viewModel.showQueue(false)
-                    navController.navigateUp() },
+                    navController.navigateUp()
+                },
                 showQueue = {
                     viewModel.showQueue(it)
                 }

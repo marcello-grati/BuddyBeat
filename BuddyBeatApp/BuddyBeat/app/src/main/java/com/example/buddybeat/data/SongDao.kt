@@ -77,6 +77,9 @@ interface SongDao {
     @Delete
     suspend fun delete(ref: PlaylistSongCrossRef)
 
+    @Query("UPDATE playlist_table SET title=:title WHERE playlistId = :id")
+    suspend fun update(title: String, id: Long)
+
     /*
     * TODO : add useful queries
     */

@@ -3,6 +3,7 @@ package com.example.buddybeat.ui.audio
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,14 +24,19 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlaylistRemove
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -38,11 +44,16 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,12 +66,14 @@ import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
+import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.SongItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
@@ -88,9 +101,9 @@ fun HomeScreen(
     shouldShowDialogThree: MutableState<Boolean>,
     songClicked : MutableState<Long>,
     addToQueue : (Song) -> Unit,
+    showBottomSheet : MutableState<Boolean>,
+    playlistLongClicked: MutableState<Playlist>
     ) {
-
-
     Scaffold(bottomBar = {
         if (song.title != "")
             HomeBottomBar(
@@ -130,6 +143,8 @@ fun HomeScreen(
                     playlistClicked = {
                         playlistClicked(it) },
                     allPlaylist = allPlaylist,
+                    showBottomSheet = showBottomSheet,
+                    playlistLongClicked = playlistLongClicked
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
@@ -162,6 +177,7 @@ fun HomeScreen(
                 }
             }
         }
+
     }
     OnLifecycleEvent { owner, event ->
         when (event) {
@@ -266,11 +282,13 @@ fun SearchBar() {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainButtons(
     playlistClicked: (PlaylistWithSongs) -> Unit,
     allPlaylist: List<PlaylistWithSongs>,
+    showBottomSheet: MutableState<Boolean>,
+    playlistLongClicked : MutableState<Playlist>
 ) {
     Column(
         modifier = Modifier
@@ -300,6 +318,7 @@ fun MainButtons(
                 )
                 Text("ALL SONGS", color = Color.White, fontSize = 13.sp) }
             }
+        val haptics = LocalHapticFeedback.current
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(5.dp),
@@ -318,7 +337,9 @@ fun MainButtons(
                                 playlistClicked(playlist)
                             },
                             onLongClick = {
-                                /*TODO Show menu to rename playlist and delete playlist*/
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showBottomSheet.value = true
+                                playlistLongClicked.value = playlist.playlist
                             }
                         ),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -336,7 +357,7 @@ fun MainButtons(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
-                            playlist.playlist.title.uppercase(),
+                            playlist.playlist.title,
                             color = Color.White,
                             fontSize = 13.sp
                         )
@@ -344,6 +365,7 @@ fun MainButtons(
                 }
             }
         }
+
 
         /*LazyColumn {
             itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
@@ -437,6 +459,8 @@ fun MainButtons(
         }*/
     }
 }
+
+
 
 
 @Composable

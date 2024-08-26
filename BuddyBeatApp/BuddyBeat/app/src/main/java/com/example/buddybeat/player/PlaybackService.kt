@@ -171,7 +171,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Log.d("StepCadence from PlaybackService", stepFreq.toString())
         var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
         var rat = 1f
-        if (bpm != 0 && bpm != null) {
+        if (bpm != 0 && bpm != null && bpm!=-1) {
 
             // We compute the log_2() of step frequency and of double, half and original value of BPM
             val logStepFreq = log2(stepFreq.toFloat())

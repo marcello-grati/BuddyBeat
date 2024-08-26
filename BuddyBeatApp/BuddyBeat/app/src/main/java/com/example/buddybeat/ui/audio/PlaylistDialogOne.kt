@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -39,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun DialogOne(shouldShowDialog : MutableState<Boolean>, insertPlaylist : (String) -> Unit) {
     var name by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
     if (shouldShowDialog.value) {
         Dialog(onDismissRequest = { shouldShowDialog.value = false  }) {
             Box(
@@ -85,18 +89,22 @@ fun DialogOne(shouldShowDialog : MutableState<Boolean>, insertPlaylist : (String
                     TextField(
                         value = name,
                         onValueChange = { name = it },
-                        placeholder = { Text("NAME", color = Color.DarkGray) },
+                        placeholder = { Text("Playlist title", color = Color.DarkGray) },
                         singleLine = true,
-                        textStyle = TextStyle(color = Color.White, fontSize = 17.sp),
+                        modifier = Modifier.focusRequester(focusRequester),
+                        textStyle = TextStyle(color = Color.DarkGray, fontSize = 17.sp),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             disabledContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.White,
+                            focusedIndicatorColor = Color.Black,
                             unfocusedIndicatorColor = Color.DarkGray,
-                            cursorColor = Color.White
+                            cursorColor = Color.Black
                         )
                     )
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 

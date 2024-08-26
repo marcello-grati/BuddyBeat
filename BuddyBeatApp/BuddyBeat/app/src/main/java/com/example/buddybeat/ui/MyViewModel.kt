@@ -148,6 +148,14 @@ class MyViewModel @Inject constructor(
         songRepo.insert(playlist)
     }
 
+    fun removePlaylist(playlist : Playlist) = viewModelScope.launch {
+        songRepo.delete(playlist)
+    }
+
+    fun updatePlaylist(title : String, id:Long) = viewModelScope.launch {
+        songRepo.updatePlaylist(title, id)
+    }
+
 
 
     fun insertPlaylist(playlist : Playlist): Long {
