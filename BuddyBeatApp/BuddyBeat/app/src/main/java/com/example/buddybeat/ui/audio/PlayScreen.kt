@@ -240,13 +240,14 @@ fun PlayScreenDesign(
             NewButton(name = text,
                 onClick = {
                     toggleMode()
-                    // toggleSpeedMode()
+
                     text = when (speedMode) {
                         AUTO_MODE -> "auto"
                         MANUAL_MODE -> "manual"
                         OFF_MODE -> "off"
                         else -> "error"
                     }
+                    Log.d("Button", "Toggled to $text")
                 })
         }
 
@@ -556,9 +557,9 @@ fun NewButton(
 
 //@androidx.annotation.OptIn(UnstableApi::class)
 //private fun toggleSpeedMode() {
-//    PlaybackService.speedMode = (PlaybackService.speedMode++) % 2
+//    PlaybackService.speedMode = (PlaybackService.speedMode + 1) % 3
 //}
-//
+
 //@androidx.annotation.OptIn(UnstableApi::class)
 //fun setManualBpm(bpm : Int) {
 //    PlaybackService.manualBpm = bpm

@@ -181,7 +181,7 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun toggleSpeedMode() {
-        speedMode = (speedMode++) % 2
+        speedMode = (speedMode + 1) % 3
     }
 
     fun setManualBpm(bpm : Int) {
