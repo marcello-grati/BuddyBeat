@@ -1,5 +1,6 @@
 package com.example.buddybeat.ui.audio
 
+import PlayScreenDesign
 import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween

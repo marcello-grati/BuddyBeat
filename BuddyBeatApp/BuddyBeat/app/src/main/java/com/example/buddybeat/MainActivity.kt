@@ -58,10 +58,13 @@ import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
 import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
+import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
+import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.player.PlaybackService.Companion.ratio
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
@@ -180,30 +183,19 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
-    private val AUTO_MODE = 0
-    private val MANUAL_MODE = 1
-    private val OFF_MODE = 2
-
-    private val DEFAULT_BPM = 100
-    private val ALPHA = 0.2f
-
-    private var speedMode = AUTO_MODE
-    private var manualBpm = DEFAULT_BPM
     
     private fun toggleSpeedMode() {
-        speedMode = (speedMode++) % 2
+        speedMode = (speedMode + 1) % 3
     }
 
-    fun setManualBpm(bpm : Int) {
-        manualBpm = bpm
+//    fun setManualBpm(bpm : Int) {
+//        manualBpm = bpm
+//    }
+    fun increaseManualBpm() {
+        manualBpm += BPM_STEP
     }
-    fun increaseManualBpm(amount : Int) {
-        manualBpm += amount
-    }
-    fun decreaseManualBpm(amount : Int) {
-        manualBpm -= amount
+    fun decreaseManualBpm() {
+        manualBpm -= BPM_STEP
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -302,10 +294,10 @@ class MainActivity : ComponentActivity() {
                                 toggleSpeedMode()
                             },
                             plus = {
-                                increaseManualBpm(1)
+                                increaseManualBpm()
                             },
                             minus = {
-                                decreaseManualBpm(1)
+                                decreaseManualBpm()
                             },
                             addToQueue = {
                                 addToQueue(it)
@@ -449,60 +441,59 @@ class MainActivity : ComponentActivity() {
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(mService.stepFreq)
-            //updateRatio()
-            _ratio.update { PlaybackService.ratio }
+            _ratio.update { controller?.playbackParameters?.speed!! }
         }
     }
 
-    private fun updateRatio() {
-
-        if (speedMode != OFF_MODE) {
-
-            val stepFreq = when (speedMode) {
-                AUTO_MODE -> mService.stepFreq.toFloat()
-                MANUAL_MODE -> manualBpm.toFloat()
-                else -> throw Exception("Invalid speed mode")
-            }
-            var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
-            var inRatio = 1f
-            var outRatio = _ratio.value
-
-            if (bpm != 0 && bpm != null) {
-
-                // We compute the log_2() of step frequency and of double, half and original value of BPM
-                val logStepFreq = log2(stepFreq)
-                var logBpm = log2(bpm.toFloat())
-                var logHalfBPM = log2(bpm.toFloat() / 2.0f)
-                var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-
-                // We update BPM if one of its multiples has a smaller distance value
-                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
-                    bpm /= 2
-                    logBpm = logHalfBPM
-                    logHalfBPM = log2(bpm.toFloat() / 2.0f)
-                }
-                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
-                    bpm *= 2
-                    logBpm = logDoubleBPM
-                    logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-                }
-                // Speed-up ratio computed as step frequency / BPM
-                inRatio = stepFreq / bpm.toFloat()
-            }
-            if (stepFreq < 60)
-                inRatio = 1f
-
-            // ratio forced into [0.8, 1.2] range
-            inRatio = inRatio.coerceAtLeast(0.8f)
-            inRatio = inRatio.coerceAtMost(1.25f)
-
-            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
-
-            _ratio.update { outRatio }
-        } else {
-            _ratio.update { 1f }
-        }
-    }
+//    private fun updateRatio() {
+//
+//        if (speedMode != OFF_MODE) {
+//
+//            val stepFreq = when (speedMode) {
+//                AUTO_MODE -> mService.stepFreq.toFloat()
+//                MANUAL_MODE -> manualBpm.toFloat()
+//                else -> throw Exception("Invalid speed mode")
+//            }
+//            var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
+//            var inRatio = 1f
+//            var outRatio = _ratio.value
+//
+//            if (bpm != 0 && bpm != null) {
+//
+//                // We compute the log_2() of step frequency and of double, half and original value of BPM
+//                val logStepFreq = log2(stepFreq)
+//                var logBpm = log2(bpm.toFloat())
+//                var logHalfBPM = log2(bpm.toFloat() / 2.0f)
+//                var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+//
+//                // We update BPM if one of its multiples has a smaller distance value
+//                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+//                    bpm /= 2
+//                    logBpm = logHalfBPM
+//                    logHalfBPM = log2(bpm.toFloat() / 2.0f)
+//                }
+//                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+//                    bpm *= 2
+//                    logBpm = logDoubleBPM
+//                    logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+//                }
+//                // Speed-up ratio computed as step frequency / BPM
+//                inRatio = stepFreq / bpm.toFloat()
+//            }
+//            if (stepFreq < 60)
+//                inRatio = 1f
+//
+//            // ratio forced into [0.8, 1.2] range
+//            inRatio = inRatio.coerceAtLeast(0.8f)
+//            inRatio = inRatio.coerceAtMost(1.25f)
+//
+//            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+//
+//            _ratio.update { outRatio }
+//        } else {
+//            _ratio.update { 1f }
+//        }
+//    }
 
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onStart() {

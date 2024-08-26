@@ -1,4 +1,3 @@
-package com.example.buddybeat.ui.audio
 
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -67,6 +66,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.buddybeat.R
+import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.CurrentSong
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -191,13 +195,19 @@ fun PlayScreenDesign(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { minus() }) {
+                IconButton(onClick = {
+                    minus()
+                    // decreaseManualBpm()
+                }) {
                     Icon(
                         imageVector = Icons.Default.RemoveCircleOutline,
                         contentDescription = "", modifier = Modifier.size(30.dp)
                     )
                 }
-                IconButton(onClick = { plus() }) {
+                IconButton(onClick = {
+                    plus()
+                    // increaseManualBpm()
+                }) {
                     Icon(
                         imageVector = Icons.Default.AddCircleOutline,
                         contentDescription = "", modifier = Modifier.size(30.dp)
@@ -229,7 +239,14 @@ fun PlayScreenDesign(
             NewButton(name = text,
                 onClick = {
                     toggleMode()
-                    text = if(text=="auto") "manual" else "auto"
+
+                    text = when (speedMode) {
+                        AUTO_MODE -> "auto"
+                        MANUAL_MODE -> "manual"
+                        OFF_MODE -> "off"
+                        else -> "error"
+                    }
+                    Log.d("Button", "Toggled to $text")
                 })
         }
 
@@ -536,4 +553,22 @@ fun NewButton(
         }
     }
 }
+
+//@androidx.annotation.OptIn(UnstableApi::class)
+//private fun toggleSpeedMode() {
+//    PlaybackService.speedMode = (PlaybackService.speedMode + 1) % 3
+//}
+
+//@androidx.annotation.OptIn(UnstableApi::class)
+//fun setManualBpm(bpm : Int) {
+//    PlaybackService.manualBpm = bpm
+//}
+//@androidx.annotation.OptIn(UnstableApi::class)
+//fun increaseManualBpm() {
+//    PlaybackService.manualBpm += PlaybackService.BPM_STEP
+//}
+//@androidx.annotation.OptIn(UnstableApi::class)
+//fun decreaseManualBpm() {
+//    PlaybackService.manualBpm -= PlaybackService.BPM_STEP
+//}
 

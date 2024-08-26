@@ -38,6 +38,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -54,6 +55,16 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
         var audioListId = MutableStateFlow(0L)
         var queue : MutableList<Song> = mutableListOf()
+
+        val AUTO_MODE = 0
+        val MANUAL_MODE = 1
+        val OFF_MODE = 2
+        val DEFAULT_BPM = 100
+        val ALPHA = 0.2f
+        val BPM_STEP = 2
+
+        var speedMode = AUTO_MODE
+        var manualBpm = DEFAULT_BPM
         var ratio = 1f
     }
 
@@ -67,6 +78,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private lateinit var mService: SensorService
     private var mBound: Boolean = false
+
+    var ratio = 1f
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -165,40 +178,90 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
     }
 
+//    private fun updateSpeedSong() {
+//        val stepFreq = mService.stepFreq
+//        Log.d("StepCadence from PlaybackService", stepFreq.toString())
+//        var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
+//        var rat = 1f
+//        if (bpm != 0 && bpm != null && bpm!=-1) {
+//
+//            // We compute the log_2() of step frequency and of double, half and original value of BPM
+//            val logStepFreq = log2(stepFreq.toFloat())
+//            val logBpm = log2(bpm.toFloat())
+//            val logHalfBPM = log2(bpm.toFloat() / 2.0f)
+//            val logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+//
+//            // We update BPM if one of its multiples has a smaller distance value
+//            if (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+//                bpm /= 2
+//            } else if (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+//                bpm *= 2
+//            }
+//            // Speed-up ratio computed as step frequency / BPM
+//            rat = stepFreq.toFloat() / bpm.toFloat()
+//        }
+//        if (stepFreq < 60)
+//            rat = 1f
+//
+//        // ratio forced into [0.8, 1.2] range
+//        rat = rat.coerceAtLeast(0.8f)
+//        rat = rat.coerceAtMost(1.2f)
+//
+//        ratio = rat
+//
+//        Log.d("RATIO_3", ratio.toString())
+//
+//        mediaSession?.player?.setPlaybackSpeed(ratio)
+//    }
+
     private fun updateSpeedSong() {
 
-        val stepFreq = mService.stepFreq
-        Log.d("StepCadence from PlaybackService", stepFreq.toString())
-        var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
-        var rat = 1f
-        if (bpm != 0 && bpm != null && bpm!=-1) {
+        if (speedMode != OFF_MODE) {
 
-            // We compute the log_2() of step frequency and of double, half and original value of BPM
-            val logStepFreq = log2(stepFreq.toFloat())
-            val logBpm = log2(bpm.toFloat())
-            val logHalfBPM = log2(bpm.toFloat() / 2.0f)
-            val logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-
-            // We update BPM if one of its multiples has a smaller distance value
-            if (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
-                bpm /= 2
-            } else if (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
-                bpm *= 2
+            val stepFreq = when (speedMode) {
+                AUTO_MODE -> mService.stepFreq.toFloat()
+                MANUAL_MODE -> manualBpm.toFloat()
+                else -> throw Exception("Invalid speed mode")
             }
-            // Speed-up ratio computed as step frequency / BPM
-            rat = stepFreq.toFloat() / bpm.toFloat()
+            var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
+            var inRatio = 1f
+            var outRatio = ratio
+
+            if (bpm != 0 && bpm != null) {
+
+                // We compute the log_2() of step frequency and of double, half and original value of BPM
+                val logStepFreq = log2(stepFreq)
+                var logBpm = log2(bpm.toFloat())
+                var logHalfBPM = log2(bpm.toFloat() / 2.0f)
+                var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+
+                // We update BPM if one of its multiples has a smaller distance value
+                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+                    bpm /= 2
+                    logBpm = logHalfBPM
+                    logHalfBPM = log2(bpm.toFloat() / 2.0f)
+                }
+                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+                    bpm *= 2
+                    logBpm = logDoubleBPM
+                    logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+                }
+                // Speed-up ratio computed as step frequency / BPM
+                inRatio = stepFreq / bpm.toFloat()
+            }
+            if (stepFreq < 60)
+                inRatio = 1f
+
+            // ratio forced into [0.8, 1.2] range
+            inRatio = inRatio.coerceAtLeast(0.8f)
+            inRatio = inRatio.coerceAtMost(1.25f)
+
+            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+
+            ratio = outRatio
+        } else {
+            ratio = 1f
         }
-        if (stepFreq < 60)
-            rat = 1f
-
-        // ratio forced into [0.8, 1.2] range
-        rat = rat.coerceAtLeast(0.8f)
-        rat = rat.coerceAtMost(1.2f)
-
-        ratio = rat
-
-        Log.d("RATIO_3", ratio.toString())
-
         mediaSession?.player?.setPlaybackSpeed(ratio)
     }
 
