@@ -179,14 +179,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val MANUAL_MODE = false
+
+    private val AUTO_MODE = 0
+    private val MANUAL_MODE = 1
+    private val OFF_MODE = 2
+
     private val DEFAULT_BPM = 100
 
-    private var speedMode = !MANUAL_MODE
+    private var speedMode = AUTO_MODE
     private var manualBpm = DEFAULT_BPM
     
     private fun toggleSpeedMode() {
-        speedMode = !speedMode
+        speedMode = (speedMode++) % 2
     }
 
     fun setManualBpm(bpm : Int) {
@@ -446,42 +450,48 @@ class MainActivity : ComponentActivity() {
 
     private fun updateRatio() {
 
-        val stepFreq = when {
-            speedMode == MANUAL_MODE -> manualBpm.toFloat()
-            else -> mService.stepFreq.toFloat()
-        }
-        var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
-        var rat = 1f
-        if (bpm != 0 && bpm != null) {
+        if (speedMode != OFF_MODE) {
 
-            // We compute the log_2() of step frequency and of double, half and original value of BPM
-            val logStepFreq = log2(stepFreq)
-            var logBpm = log2(bpm.toFloat())
-            var logHalfBPM = log2(bpm.toFloat() / 2.0f)
-            var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-
-            // We update BPM if one of its multiples has a smaller distance value
-            while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
-                bpm /= 2
-                logBpm = logHalfBPM
-                logHalfBPM = log2(bpm.toFloat() / 2.0f)
+            val stepFreq = when (speedMode) {
+                AUTO_MODE -> mService.stepFreq.toFloat()
+                MANUAL_MODE -> manualBpm.toFloat()
+                else -> throw Exception("Invalid speed mode")
             }
-            while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
-                bpm *= 2
-                logBpm = logDoubleBPM
-                logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+            var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
+            var rat = 1f
+            if (bpm != 0 && bpm != null) {
+
+                // We compute the log_2() of step frequency and of double, half and original value of BPM
+                val logStepFreq = log2(stepFreq)
+                var logBpm = log2(bpm.toFloat())
+                var logHalfBPM = log2(bpm.toFloat() / 2.0f)
+                var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+
+                // We update BPM if one of its multiples has a smaller distance value
+                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+                    bpm /= 2
+                    logBpm = logHalfBPM
+                    logHalfBPM = log2(bpm.toFloat() / 2.0f)
+                }
+                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+                    bpm *= 2
+                    logBpm = logDoubleBPM
+                    logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+                }
+                // Speed-up ratio computed as step frequency / BPM
+                rat = stepFreq / bpm.toFloat()
             }
-            // Speed-up ratio computed as step frequency / BPM
-            rat = stepFreq / bpm.toFloat()
+            if (stepFreq < 60)
+                rat = 1f
+
+            // ratio forced into [0.8, 1.2] range
+            rat = rat.coerceAtLeast(0.8f)
+            rat = rat.coerceAtMost(1.25f)
+
+            _ratio.update { rat }
+        } else {
+            _ratio.update { 1f }
         }
-        if (stepFreq < 60)
-            rat = 1f
-
-        // ratio forced into [0.8, 1.2] range
-        rat = rat.coerceAtLeast(0.8f)
-        rat = rat.coerceAtMost(1.25f)
-
-        _ratio.update { rat }
     }
 
     @androidx.annotation.OptIn(UnstableApi::class)
