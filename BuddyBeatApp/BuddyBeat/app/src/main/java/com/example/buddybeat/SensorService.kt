@@ -69,7 +69,7 @@ class SensorService : Service(), SensorEventListener {
     private var lastUpdateTime : Int = 0 //new
     private var penultimateUpdateTime: Int = 0 //new
     private var deltaBetweenTwoSteps: Int = 0 //new
-    private var stepFreqNow : Int = 0 //new: starting value di frequenza passi
+    private var stepFreqNow : Int = 0 //new: starting value of frequency steps
     private val previousStepFrequency = mutableListOf<Int>()
     private val currentFrequency = mutableListOf<Int>()
     private val frequency = mutableListOf<Int>()
@@ -77,10 +77,10 @@ class SensorService : Service(), SensorEventListener {
 
 
     /* variabili da regolare */
-    private var unitTime = 60000  //60000 millisecondi = 60 secondi
-    private var threshold = 2  //per calcolo steps
-    private var deltaTime = 300// 0.5s intervallo di aggiornamento dati
-    private val n = 15 //stabilizzazione valori frequenza
+    private var unitTime = 60000  //60000 millisecond = 60 second
+    private var threshold = 2  //for step calculus
+    private var deltaTime = 300// 0.5s interval of data refresh
+    private val n = 15 //stabilization of frequenc values
 
     companion object {
         const val CHANNEL_ID = "SensorsChannel"
@@ -131,6 +131,7 @@ class SensorService : Service(), SensorEventListener {
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
 
+    /* access of data from sensors */
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(UnstableApi::class) override fun onCreate() {
         super.onCreate()
@@ -180,6 +181,7 @@ class SensorService : Service(), SensorEventListener {
         super.onDestroy()
     }
 
+    /* Calculation of steps and frequency of steps from sensor data */
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor == gyroSensor) {
@@ -194,10 +196,11 @@ class SensorService : Service(), SensorEventListener {
                 currentAcceleration = sqrt((x * x + y * y + z * z))
                 val delta = currentAcceleration - lastAcceleration
 
-                /* filtro passa basso rispetto a delta */
+                /* low pass filter respect to delta */
                 acceleration = acceleration * 0.9f + delta
                 val now = System.currentTimeMillis()
 
+                /* step calculus */
                 if (acceleration > threshold) {
                     if ((now - lastUpdate) > deltaTime) {
                         lastUpdate = now
@@ -206,6 +209,7 @@ class SensorService : Service(), SensorEventListener {
                     }
                 }
 
+                /* step frequency calculus based on difference between two steps */
                 if (acceleration > threshold) {
                     // step frequency
                     if (stepTimes.size >= 2) {
@@ -214,7 +218,7 @@ class SensorService : Service(), SensorEventListener {
                         deltaBetweenTwoSteps = lastUpdateTime - penultimateUpdateTime
                         stepFreqNow = (60000 / deltaBetweenTwoSteps)
 
-                        //definizione due liste: current and previous frequency
+                        //definition of two lists: current and previous frequency
                         currentFrequency.add(stepFreqNow)
                         if (currentFrequency.size >= 2) {
                             previousStepFrequency.add(currentFrequency[currentFrequency.size - 2])
@@ -222,7 +226,7 @@ class SensorService : Service(), SensorEventListener {
                             previousStepFrequency.add(0)
                         }
 
-                        //stabilizzazione frequency steps
+                        //stabilization of frequency steps
                         val lastNValues = if (currentFrequency.size >= n) {
                             currentFrequency.takeLast(n)
                         } else {
@@ -236,9 +240,10 @@ class SensorService : Service(), SensorEventListener {
 
                     }
                 }
-
-
                 //stepData ="Steps: $steps"
+
+
+                /* step frequency calculus based on the last UnitTime */
 
                 // Remove times older than one minute
                 while ((stepTimes.firstOrNull() ?: Long.MAX_VALUE) < now - unitTime) {
@@ -246,7 +251,7 @@ class SensorService : Service(), SensorEventListener {
                 }
 
                 // Calculate step frequency
-                if (now - startTime < unitTime) {  //60000 millesimi di secondo=1 min
+                if (now - startTime < unitTime) {  //60000 millisecond = 60 second = 1 min
                     inputFreq = ceil((stepTimes.size.toFloat() / (now - startTime))*60000F)
                 } else {
                     inputFreq = ceil((stepTimes.size.toFloat()/(unitTime))*60000F)
