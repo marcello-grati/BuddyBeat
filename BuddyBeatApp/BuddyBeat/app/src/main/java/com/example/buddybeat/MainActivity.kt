@@ -443,7 +443,7 @@ class MainActivity : ComponentActivity() {
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(mService.stepFreq)
-            _ratio.update { controller?.playbackParameters?.speed!! }
+            _ratio.update { controller?.playbackParameters?.speed ?: 1f }
         }
     }
 
