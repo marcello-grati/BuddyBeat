@@ -62,6 +62,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -150,8 +151,8 @@ fun PlayScreenDesign(
                 }
                 IconButton(onClick = {  }) {
                     Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "",
+                        painter = painterResource(id = R.drawable.help),
+                        contentDescription = null,
                     )
                 }
             }
@@ -187,33 +188,7 @@ fun PlayScreenDesign(
                 //}
                 onProgress(it*100)
             }
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = {
-                    minus()
-                    // decreaseManualBpm()
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.RemoveCircleOutline,
-                        contentDescription = "", modifier = Modifier.size(30.dp)
-                    )
-                }
-                IconButton(onClick = {
-                    plus()
-                    // increaseManualBpm()
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.AddCircleOutline,
-                        contentDescription = "", modifier = Modifier.size(30.dp)
-                    )
-                }
-            }
+
         }
         Text(
             text = if(progress*duration<=duration)
@@ -229,15 +204,41 @@ fun PlayScreenDesign(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 25.dp, start = 7.dp, end = 7.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween, // Distribute items across the row
+            verticalAlignment = Alignment.CenterVertically // Align items vertically centered
         ) {
-            Row {
-                NewButton(name = step,{})
-                NewButton(name = bpm,{})
-                NewButton(name = ratio,{})
+            // Left side - BPM button
+            NewButton(name = bpm, onClick = {})
+
+            // Center - Plus and Minus buttons
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {
+                    minus()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.RemoveCircleOutline,
+                        contentDescription = "",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+                IconButton(onClick = {
+                    plus()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircleOutline,
+                        contentDescription = "",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
             }
-            NewButton(name = text,
-                onClick = {
+
+            // Right side - Manual and Auto buttons
+            Row {
+                NewButton(name = "manual", onClick = {})
+                NewButton(name = text, onClick = {
                     toggleMode()
 
                     text = when (speedMode) {
@@ -248,6 +249,7 @@ fun PlayScreenDesign(
                     }
                     Log.d("Button", "Toggled to $text")
                 })
+            }
         }
 
         // Play ROW
@@ -259,22 +261,20 @@ fun PlayScreenDesign(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { }) {
-                Icon(
-                    imageVector = Icons.Default.Shuffle,
-                    contentDescription = ""
-                )
-            }
+
             Box(
                 modifier = Modifier
-                    .width(150.dp)
+                    .fillMaxWidth()
                     .fillMaxHeight(), contentAlignment = Alignment.Center
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF91E4EC), RoundedCornerShape(40.dp)),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .width(150.dp)
+                        .background(Color(0xFFB1B2FF), RoundedCornerShape(40.dp)),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+
+
                 ) {
                     IconButton(onClick = { prevSong() }) {
                         Icon(
@@ -571,4 +571,33 @@ fun NewButton(
 //fun decreaseManualBpm() {
 //    PlaybackService.manualBpm -= PlaybackService.BPM_STEP
 //}
+
+/*@Preview(showBackground = true)
+@Composable
+fun PlayScreenDesignPreview() {
+    PlayScreenDesign(
+        onNavigateUp = {},
+        song = CurrentSong(
+            id= 1L,
+            title = "Sample Song Title",
+            artist = "Sample Artist",
+            uri = "" // Empty URI for preview purposes
+        ),
+        duration = 300000L,
+        isPlaying = false,
+        progress = 0.5f,
+        onProgress = {},
+        onStart = {},
+        nextSong = {},
+        prevSong = {},
+        toggleMode = {},
+        plus = {},
+        minus = {},
+        step = "Step",
+        bpm = "120 BPM",
+        ratio = "1:1",
+        queue = {}
+    )
+}
+*/
 
