@@ -83,6 +83,8 @@ import kotlin.math.sqrt
 
 
 @OptIn(ExperimentalMaterial3Api::class)
+
+
 @Composable
 fun PlayScreenDesign(
     //filePath: String,
@@ -267,7 +269,7 @@ fun PlayScreenDesign(
                 Icon(
                     imageVector = Icons.Default.FavoriteBorder,
                     contentDescription = "",
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(25.dp),
                     tint = Color.Black
                 )
             }
@@ -322,7 +324,7 @@ fun PlayScreenDesign(
             }
             IconButton(onClick = { queue() }) {
                 Icon(
-                    imageVector = Icons.Default.List,
+                    painter = painterResource(id = R.drawable.add_to_playlist),
                     contentDescription = "",
                     modifier = Modifier.size(20.dp),
                     tint = Color.Black
@@ -581,8 +583,8 @@ fun NewButton(
 //fun decreaseManualBpm() {
 //    PlaybackService.manualBpm -= PlaybackService.BPM_STEP
 //}
-
-/*@Preview(showBackground = true)
+/*
+@Preview(showBackground = true)
 @Composable
 fun PlayScreenDesignPreview() {
     PlayScreenDesign(

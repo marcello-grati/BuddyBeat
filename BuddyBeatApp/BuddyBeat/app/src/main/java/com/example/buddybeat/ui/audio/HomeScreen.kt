@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -158,13 +159,13 @@ fun HomeScreen(
                 Row(  modifier = Modifier.fillMaxWidth() .padding(start=20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
                     SongsOfTheWeek("YOUR PLAYLISTS")
                     Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(30.dp)) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add playlist")
+                    IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(20.dp)) {
+                        Icon(painter = painterResource(id = R.drawable.add_to_playlist), contentDescription = "Add playlist", )
                     }
                     var expanded by remember { mutableStateOf(false) }
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
-                            imageVector = Icons.Default.Menu,
+                            imageVector = Icons.Default.Refresh,
                             contentDescription = "",
                         )
                         DropdownMenu(

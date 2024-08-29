@@ -51,8 +51,8 @@ fun DialogOne(shouldShowDialog : MutableState<Boolean>, insertPlaylist : (String
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFFF1F1F1),
-                                Color(0xFF95C8EB)
+                                Color(0xFFFFFFFF),
+                                Color(0xFFB1B2FF)
                             )
                         )
                     )
