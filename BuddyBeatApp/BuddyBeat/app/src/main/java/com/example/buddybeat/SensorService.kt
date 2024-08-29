@@ -19,11 +19,6 @@ import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.LinkedList
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -37,8 +32,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
-
+/*Sensor Service new*/
 class SensorService : Service(), SensorEventListener {
     // Override callback methods here
 
@@ -66,13 +62,13 @@ class SensorService : Service(), SensorEventListener {
     private var bpm_song = 0
 
     // Step frequency variables
-    private var lastUpdateTime : Int = 0 //new
-    private var penultimateUpdateTime: Int = 0 //new
-    private var deltaBetweenTwoSteps: Int = 0 //new
-    private var stepFreqNow : Int = 0 //new: starting value of frequency steps
-    private val previousStepFrequency = mutableListOf<Int>()
-    private val currentFrequency = mutableListOf<Int>()
-    private val frequency = mutableListOf<Int>()
+    private var lastUpdateTime: Long = 0 //new
+    private var penultimateUpdateTime: Long = 0 //new
+    private var deltaBetweenTwoSteps: Long = 0 //new
+    private var stepFreqNow: Long = 0 //new: starting value of frequency steps
+    val previousStepFrequency = mutableListOf<Int>()
+    private val currentFrequency = mutableListOf<Long>()
+    private val frequency = mutableListOf<Long>()
     private var newStepFrequency: Int = 0
 
 
@@ -98,8 +94,8 @@ class SensorService : Service(), SensorEventListener {
         return binder
     }
 
-    fun updateBpm(bpm : Int){
-        bpm_song = bpm
+    fun updateBpm(bpm: Float) {
+        bpm_song = bpm.toInt()
     }
 
     val stepFreq: Int
@@ -117,7 +113,13 @@ class SensorService : Service(), SensorEventListener {
 //    notificationManager.createNotificationChannel(mChannel)
 
     private val DIRECTORY_NAME = "BuddyBeat Logs"
-    data class ValueTimestamp(val timestamp: String, val oldSPM: String, val newSPM: String, val BPM : String)
+
+    data class ValueTimestamp(
+        val timestamp: String,
+        val oldSPM: String,
+        val newSPM: String,
+        val BPM: String
+    )
 
     private val activityLogs = mutableListOf<ValueTimestamp>()
 
@@ -133,7 +135,8 @@ class SensorService : Service(), SensorEventListener {
 
     /* access of data from sensors */
     @RequiresApi(Build.VERSION_CODES.O)
-    @OptIn(UnstableApi::class) override fun onCreate() {
+    @OptIn(UnstableApi::class)
+    override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
 
@@ -148,6 +151,7 @@ class SensorService : Service(), SensorEventListener {
         startService(intent)
         startTime = System.currentTimeMillis()
         handler.postDelayed(writeLogs, interval)
+        handler.postDelayed(calculateFreq, 500)
         /*scope.launch {
             while (true) {
                 //Log.d("Service", this@SensorService.toString())
@@ -164,17 +168,76 @@ class SensorService : Service(), SensorEventListener {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun run() {
             val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            updateActivityLogs(oldStepFrequency.toString(), newStepFrequency.toString(), currentTime, bpm_song.toString())
+            updateActivityLogs(
+                oldStepFrequency.toString(),
+                newStepFrequency.toString(),
+                currentTime,
+                bpm_song.toString()
+            )
             handler.postDelayed(this, interval)
             updateNotification()
         }
     }
 
-    @OptIn(UnstableApi::class) override fun onDestroy() {
+    private val calculateFreq = object : Runnable {
+        override fun run() {
+            calculationNewFreq()
+            handler.postDelayed(this, 300)
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun calculationNewFreq() {
+        if (stepTimes.size >= 2) {
+
+            val l = stepTimes.takeLast(2)
+            lastUpdateTime = l.last()
+
+            if (System.currentTimeMillis() - lastUpdateTime > 3000) {
+                //Log.d("currentTimeMillis", System.currentTimeMillis().toString())
+                //Log.d("lastUpdateTime", lastUpdateTime.toString())
+                newStepFrequency = 0
+                Log.d("newStepFrequency", newStepFrequency.toString())
+                previousStepFrequency.add(newStepFrequency)
+            } else {
+                penultimateUpdateTime = l.first()
+                deltaBetweenTwoSteps = abs(lastUpdateTime - penultimateUpdateTime)
+                stepFreqNow = (60000 / deltaBetweenTwoSteps)
+                //definition of two lists: current and previous frequency
+                currentFrequency.add(stepFreqNow)
+                /*if (currentFrequency.size >= 2) {
+                previousStepFrequency.add(currentFrequency[currentFrequency.size - 2])
+            } else {
+                previousStepFrequency.add(0)
+            }*/
+
+                //stabilization of frequency steps
+                if (currentFrequency.size >= 12) {
+                    val newFreq = currentFrequency.average()
+                    currentFrequency.clear()
+                    newStepFrequency = if (newFreq < 60)
+                        0
+                    else (alpha * newStepFrequency + (1 - alpha) * newFreq).toInt()
+                    Log.d("newStepFrequency", newStepFrequency.toString())
+                    previousStepFrequency.add(newStepFrequency)
+                }
+
+            }
+            /*val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
+            val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
+            val weightedAverage = weightedSum / weights.sum()
+            frequency.add(weightedAverage.toInt())*/
+            //val newFreq = lastNValues.average()
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    override fun onDestroy() {
 
         Log.d("SensorService", "Distruggo il service")
         // writeToFile("BuddyBeat Logs", "Hello, this is a test!")
         writeToCsvFile(activityLogs)
+        handler.removeCallbacksAndMessages(null)
         //scope.cancel()
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
@@ -210,7 +273,7 @@ class SensorService : Service(), SensorEventListener {
                 }
 
                 /* step frequency calculus based on difference between two steps */
-                if (acceleration > threshold) {
+                /*if (acceleration > threshold) {
                     // step frequency
                     if (stepTimes.size >= 2) {
                         lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
@@ -236,10 +299,11 @@ class SensorService : Service(), SensorEventListener {
                         val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
                         val weightedAverage = weightedSum / weights.sum()
                         frequency.add(weightedAverage.toInt())
-                        newStepFrequency = frequency[frequency.size-1]
+                        val newFreq = frequency[frequency.size-1]
+                        newStepFrequency = (alpha * newStepFrequency + (1 - alpha) * newFreq).toInt()
 
                     }
-                }
+                }*/
                 //stepData ="Steps: $steps"
 
 
@@ -252,9 +316,9 @@ class SensorService : Service(), SensorEventListener {
 
                 // Calculate step frequency
                 if (now - startTime < unitTime) {  //60000 millisecond = 60 second = 1 min
-                    inputFreq = ceil((stepTimes.size.toFloat() / (now - startTime))*60000F)
+                    inputFreq = ceil((stepTimes.size.toFloat() / (now - startTime)) * 60000F)
                 } else {
-                    inputFreq = ceil((stepTimes.size.toFloat()/(unitTime))*60000F)
+                    inputFreq = ceil((stepTimes.size.toFloat() / (unitTime)) * 60000F)
                 }
 
                 outputFreq = alpha * outputFreq + (1 - alpha) * inputFreq
@@ -282,30 +346,38 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun startForegroundService() {
 
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
             .setContentText("Steps: $steps\nStep Frequency: $newStepFrequency")
             .setSmallIcon(R.drawable.ic_play)
-            .setContentIntent(PendingIntent.getActivity(
-                this, 0,
-                Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this, 0,
+                    Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
+                )
+            )
             .build()
 
         startForeground(1, notification)
     }
 
-    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun updateNotification() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
             .setContentText("Steps: $steps\nStep Frequency: $newStepFrequency")
             .setSmallIcon(R.drawable.ic_play)
-            .setContentIntent(PendingIntent.getActivity(
-                this, 0,
-                Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this, 0,
+                    Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
+                )
+            )
             .build()
 
         val notificationManager = getSystemService(NotificationManager::class.java)
@@ -316,9 +388,11 @@ class SensorService : Service(), SensorEventListener {
         stopSelf()
     }
 
-    @OptIn(UnstableApi::class) private fun writeToCsvFile(data: List<ValueTimestamp>) {
+    @OptIn(UnstableApi::class)
+    private fun writeToCsvFile(data: List<ValueTimestamp>) {
         // Generate a timestamp for the file name
-        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val timeStamp: String =
+            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "$timeStamp.csv"
 
         // Convert data to CSV format
@@ -334,7 +408,10 @@ class SensorService : Service(), SensorEventListener {
             val contentValues = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                 put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOCUMENTS}/$DIRECTORY_NAME")
+                put(
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                    "${Environment.DIRECTORY_DOCUMENTS}/$DIRECTORY_NAME"
+                )
             }
 
             val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
@@ -347,7 +424,10 @@ class SensorService : Service(), SensorEventListener {
             }
         } else {
             // For Android 9 and below, use the traditional file method
-            val documentsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), DIRECTORY_NAME)
+            val documentsDir = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
+                DIRECTORY_NAME
+            )
             if (!documentsDir.exists()) {
                 documentsDir.mkdirs()
             }
