@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pause
@@ -262,14 +263,23 @@ fun PlayScreenDesign(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            IconButton(onClick = {/*favorite*/ }) {
+                Icon(
+                    imageVector = Icons.Default.FavoriteBorder,
+                    contentDescription = "",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.Black
+                )
+            }
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .width(150.dp)
                     .fillMaxHeight(), contentAlignment = Alignment.Center
             ) {
+
                 Row(
                     modifier = Modifier
-                        .width(150.dp)
+                        .fillMaxWidth()
                         .background(Color(0xFFB1B2FF), RoundedCornerShape(40.dp)),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -310,15 +320,15 @@ fun PlayScreenDesign(
                     }
                 }
             }
-            IconButton(onClick = {
-                queue()
-            })
-            {
+            IconButton(onClick = { queue() }) {
                 Icon(
                     imageVector = Icons.Default.List,
-                    contentDescription = ""
+                    contentDescription = "",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.Black
                 )
             }
+
         }
 
     }
