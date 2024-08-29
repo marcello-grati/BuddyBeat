@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -24,6 +25,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
@@ -70,6 +72,9 @@ import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.SongItem
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.Brush
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -131,12 +136,52 @@ fun HomeScreen(
                     .padding(horizontal = 15.dp).fillMaxHeight()
             ) {
                 TopBar(updateSongs = updateSongs)
-                SearchBar()
-                Row(  modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
+                TopPopup()
+                Text(
+                    text = "CHOOSE YOUR MODE",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = { /* Handle Walking Mode */ })
+                    ModeButton("Running", Color(0xFFD0EB34), onClick = { /* Handle Running Mode */ })
+                }
+                Row(  modifier = Modifier.fillMaxWidth() .padding(start=20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
                     SongsOfTheWeek("YOUR PLAYLISTS")
+                    Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(30.dp)) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = "Add playlist")
                     }
+                    var expanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "",
+                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(Color(0xFFF0F0F0)),
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Update songs") },
+                                onClick = {
+                                    expanded = false
+                                    updateSongs()
+                                },
+                            )
+                        }
+                    }
+
                 }
                 MainButtons(
                     playlistClicked = {
@@ -235,65 +280,73 @@ fun TopBar(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.myprofilenow),
+                    painter = painterResource(id = R.drawable.help),
                     contentDescription = "Buddy Beat Logo",
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier.size(40.dp)
                 )
             }
-            var expanded by remember { mutableStateOf(false) }
-            IconButton(onClick = { expanded = !expanded }) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "",
+
+        }
+    }
+}
+
+@Composable
+fun TopPopup() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .background(Color(0xFFE6E8E5), RoundedCornerShape(10.dp))
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Hi, user!",
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 10.dp, top = 8.dp),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                IconButton(
+                    onClick = { /* Handle close popup */ },
+                    modifier = Modifier.align(Alignment.TopEnd)
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("Update songs") },
-                        onClick = {
-                            expanded = false
-                            updateSongs()
-                        },
-                    )
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Close popup")
                 }
+            }
+            Text(
+                text = "Welcome to Buddy Beat! In this app, your music moves with you—literally. Whether you're walking or running, the speed of your songs adjusts to match your activity, keeping you in the perfect rhythm. You can create your playlists and let the app automatically reorder your tracks based on your pace. If you need help, you can always refer to the help section!",
+                modifier = Modifier.padding(vertical = 8.dp),
+                fontSize = 14.sp,
+                lineHeight = 18.sp
+
+            )
+            Button(
+                onClick = { /* Handle button click */ },
+                modifier = Modifier.align(Alignment.End),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
+            ) {
+                Text("Help")
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBar() {
-    Card(
+fun ModeButton(text: String, color: Color, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
         modifier = Modifier
-            .fillMaxWidth(),
-        border = BorderStroke(3.dp, Color(0xFF0C30AF)),
-        shape = RoundedCornerShape(50.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            .width(150.dp)
+            .height(50.dp), // Removed Modifier.background
+        colors = ButtonDefaults.buttonColors(containerColor = color) // Set the background color via ButtonDefaults
     ) {
-        TextField(
-            value = "",
-            onValueChange = { /* TODO: Handle search query */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            placeholder = { Text("Search") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = Color.Blue
-                )
-            },
-            colors = TextFieldDefaults.textFieldColors(
-                containerColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-            )
-        )
+        Text(text, color = Color.Black, fontSize = 16.sp)
     }
 }
 
@@ -325,18 +378,21 @@ fun MainButtons(
                 ),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                AsyncImage(
-                    model = "",
-                    contentDescription = "All Songs",
-                    placeholder = painterResource(id = R.drawable.playlistimg01),
-                    error = painterResource(id = R.drawable.playlistimg01),
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color(0xFF7172CC), Color(0xFF91A6FE)) // Green to Blue gradient
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+
+
                 allPlaylist.find{
                     it.playlist.playlistId == allSongsId
-                }?.playlist?.title?.let { Text(it, color = Color.White, fontSize = 13.sp) }
+                }?.playlist?.title?.let { Text(it, color = Color.White, fontSize = 16.sp) }
             }
             }
         val haptics = LocalHapticFeedback.current
@@ -366,21 +422,19 @@ fun MainButtons(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF8BA4FE), Color(0xFFAC9DFF)) // Green to Blue gradient
+                            )
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
-                            model = "",
-                            contentDescription = "Now Playing",
-                            placeholder = painterResource(id = R.drawable.playlistimg02),
-                            error = painterResource(id = R.drawable.playlistimg02),
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                         Text(
                             playlist.playlist.title,
                             color = Color.White,
-                            fontSize = 13.sp
+                            fontSize = 16.sp
                         )
                     }
                 }
