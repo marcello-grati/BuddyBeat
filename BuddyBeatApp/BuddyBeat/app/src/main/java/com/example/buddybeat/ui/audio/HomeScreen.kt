@@ -155,11 +155,40 @@ fun HomeScreen(
                     ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = { /* Handle Walking Mode */ })
                     ModeButton("Running", Color(0xFFD0EB34), onClick = { /* Handle Running Mode */ })
                 }
-                Row(  modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween){
+                Row(  modifier = Modifier.fillMaxWidth() .padding(start = 20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
                     SongsOfTheWeek("YOUR PLAYLISTS")
+                    Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(30.dp)) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = "Add playlist")
                     }
+                    var expanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu, // Menu icon for the dropdown
+                            contentDescription = "More options"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color(0xFFF0F0F0))
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Option 1") },
+                            onClick = {
+                                expanded = false
+                                // Handle Option 1 click
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Option 2") },
+                            onClick = {
+                                expanded = false
+                                // Handle Option 2 click
+                            }
+                        )
+                    }
+
                 }
                 MainButtons(
                     playlistClicked = {
@@ -258,30 +287,11 @@ fun TopBar(
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.myprofilenow),
+                    painter = painterResource(id = R.drawable.help),
                     contentDescription = "Buddy Beat Logo",
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier.size(40.dp)
                 )
-            }
-            var expanded by remember { mutableStateOf(false) }
-            IconButton(onClick = { expanded = !expanded }) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "",
-                )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Color(0xFFB9C1CA)),
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Update songs") },
-                        onClick = {
-                            expanded = false
-                            updateSongs()
-                        },
-                    )
-                }
+
             }
         }
     }
