@@ -155,7 +155,7 @@ fun HomeScreen(
                     ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = { /* Handle Walking Mode */ })
                     ModeButton("Running", Color(0xFFD0EB34), onClick = { /* Handle Running Mode */ })
                 }
-                Row(  modifier = Modifier.fillMaxWidth() .padding(start = 20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
+                Row(  modifier = Modifier.fillMaxWidth() .padding(start=20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
                     SongsOfTheWeek("YOUR PLAYLISTS")
                     Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(30.dp)) {
@@ -164,29 +164,22 @@ fun HomeScreen(
                     var expanded by remember { mutableStateOf(false) }
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
-                            imageVector = Icons.Default.Menu, // Menu icon for the dropdown
-                            contentDescription = "More options"
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "",
                         )
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFFF0F0F0))
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Option 1") },
-                            onClick = {
-                                expanded = false
-                                // Handle Option 1 click
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Option 2") },
-                            onClick = {
-                                expanded = false
-                                // Handle Option 2 click
-                            }
-                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(Color(0xFFF0F0F0)),
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Update songs") },
+                                onClick = {
+                                    expanded = false
+                                    updateSongs()
+                                },
+                            )
+                        }
                     }
 
                 }
@@ -291,8 +284,8 @@ fun TopBar(
                     contentDescription = "Buddy Beat Logo",
                     modifier = Modifier.size(40.dp)
                 )
-
             }
+
         }
     }
 }
