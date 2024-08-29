@@ -40,48 +40,59 @@ class SensorService : Service(), SensorEventListener {
 
     //private val scope = CoroutineScope(Dispatchers.Default)
 
+    //sensors
     private lateinit var sensorManager: SensorManager
     private var gyroSensor: Sensor? = null
     private var accelSensor: Sensor? = null
 
-
+    //for steps calculation
     private var lastUpdate: Long = 0
     private var lastAcceleration: Float = 0f
     private var acceleration: Float = 0f
     private var currentAcceleration: Float = SensorManager.GRAVITY_EARTH
-    private var steps: Int = 0
-    private var lastStepTime: Long = 0
-    private var alpha: Float = 0.5f
-    private var inputFreq: Float = 0f
-    private var outputFreq: Float = 0f
-    private var oldStepFrequency: Int = 0
-
     private val stepTimes = LinkedList<Long>()
     private var startTime: Long = 0
-
-    private var bpm_song = 0
-
-    // Step frequency variables
-    private var lastUpdateTime: Long = 0 //new
-    private var penultimateUpdateTime: Long = 0 //new
-    private var deltaBetweenTwoSteps: Long = 0 //new
-    private var stepFreqNow: Long = 0 //new: starting value of frequency steps
-    val previousStepFrequency = mutableListOf<Int>()
-    private val currentFrequency = mutableListOf<Long>()
-    private val frequency = mutableListOf<Long>()
-    private var newStepFrequency: Int = 0
+    private var steps: Int = 0
 
 
-    /* variabili da regolare */
+    /* parameters for steps calculation */
     private var unitTime = 60000  //60000 millisecond = 60 second
     private var threshold = 2  //for step calculus
     private var deltaTime = 300// 0.5s interval of data refresh
-    private val n = 15 //stabilization of frequenc values
+    private val n = 15 //stabilization of frequency values
 
+
+    /* parameters for calculation stepFreq method 1 */
+    private var alpha: Float = 0.5f
+    private var inputFreq: Float = 0f
+    private var outputFreq: Float = 0f
+    private var stepFrequency_1: Int = 0
+
+
+    /* parameters for calculation stepFreq method 2 */
+    private var lastUpdateTime : Int = 0 //new
+    private var penultimateUpdateTime: Int = 0 //new
+    private var deltaBetweenTwoSteps: Int = 0 //new
+    private var stepFreqNow : Int = 0 //new: starting value of frequency steps
+    private val previousStepFrequency = mutableListOf<Int>()
+    private val currentFrequency = mutableListOf<Int>()
+    private val frequency = mutableListOf<Int>()
+    private var stepFrequency_2: Int = 0
+
+    /* parameters for calculation stepFreq method 3 */
+    private var lastUpdateTime_3: Long = 0 //new
+    private var penultimateUpdateTime_3: Long = 0 //new
+    private var deltaBetweenTwoSteps_3: Long = 0 //new
+    private var stepFreqNow_3: Long = 0 //new: starting value of frequency steps
+    val previousStepFrequency_3 = mutableListOf<Int>()
+    private val currentFrequency_3 = mutableListOf<Long>()
+    private var stepFrequency_3: Int = 0
+
+
+    // parameters for service management
     companion object {
         const val CHANNEL_ID = "SensorsChannel"
     }
-
 
     private val binder = LocalBinder()
 
@@ -94,44 +105,106 @@ class SensorService : Service(), SensorEventListener {
         return binder
     }
 
+
+    // parameters for writing in csv
+    private val DIRECTORY_NAME = "BuddyBeat Logs"
+    private var bpm_song = 0
+    private val activityLogs = mutableListOf<ValueTimestamp>()
+    data class ValueTimestamp(
+        val timestamp: String,
+        val SPM_1: String,
+        val SPM_2: String,
+        val SPM_3: String,
+        val BPM: String
+    )
+
+    // function called when changing ratio
     fun updateBpm(bpm: Float) {
         bpm_song = bpm.toInt()
     }
 
+    // variable read by other components
     val stepFreq: Int
-        get() = newStepFrequency
+        get() = stepFrequency_3
 
-    // Create the NotificationChannel.
-//    val name = "sensor_channel"
-//    val descriptionText = "Notification channel used for sensors"
-//    val importance = NotificationManager.IMPORTANCE_DEFAULT
-//    val mChannel = NotificationChannel("my_channel_id", name, importance)
-//    mChannel.description = descriptionText
-//    // Register the channel with the system. You can't change the importance
-//    // or other notification behaviors after this.
-//    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-//    notificationManager.createNotificationChannel(mChannel)
-
-    private val DIRECTORY_NAME = "BuddyBeat Logs"
-
-    data class ValueTimestamp(
-        val timestamp: String,
-        val oldSPM: String,
-        val newSPM: String,
-        val BPM: String
-    )
-
-    private val activityLogs = mutableListOf<ValueTimestamp>()
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        startForegroundService()
-        return START_STICKY
-    }
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
+
+    private val writeLogs = object : Runnable {
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun run() {
+            val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            updateActivityLogs(
+                currentTime,
+                stepFrequency_1.toString(),
+                stepFrequency_2.toString(),
+                stepFrequency_3.toString(),
+                bpm_song.toString()
+            )
+            updateNotification()
+            handler.postDelayed(this, interval)
+
+        }
+    }
+
+    private fun updateActivityLogs(timestamp: String, value1: String, value2: String, value3 : String, bpm: String) {
+        activityLogs.add(
+            ValueTimestamp(
+                timestamp = timestamp,
+                SPM_1 = value1,
+                SPM_2 = value2,
+                SPM_3 = value3,
+                BPM = bpm
+            )
+        )
+    }
+
+    // METHOD 3
+    private val calculateFreq = object : Runnable {
+        override fun run() {
+            calculationNewFreq()
+            handler.postDelayed(this, 200)
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun calculationNewFreq() {
+        if (stepTimes.size >= 2) {
+
+            val l = stepTimes.takeLast(2)
+            lastUpdateTime_3 = l.last()
+
+            if (System.currentTimeMillis() - lastUpdateTime_3 > 3000) {
+                stepFrequency_3 = 0
+                Log.d("stepFrequency_3", stepFrequency_3.toString())
+                previousStepFrequency_3.add(stepFrequency_3)
+            } else {
+                penultimateUpdateTime_3 = l.first()
+                deltaBetweenTwoSteps_3 = abs(lastUpdateTime_3 - penultimateUpdateTime_3)
+                stepFreqNow_3 = (60000 / deltaBetweenTwoSteps_3)
+                currentFrequency_3.add(stepFreqNow_3)
+
+                //stabilization of frequency steps
+                if (currentFrequency_3.size >= 10) {
+                    val newFreq = currentFrequency_3.average()
+                    currentFrequency_3.clear()
+                    stepFrequency_3 = if (newFreq < 65)
+                        0
+                    else (alpha * stepFrequency_3 + (1 - alpha) * newFreq).toInt()
+                    Log.d("stepFrequency_3", stepFrequency_3.toString())
+                    previousStepFrequency_3.add(stepFrequency_3)
+                }
+
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startForegroundService()
+        return START_STICKY
+    }
 
     /* access of data from sensors */
     @RequiresApi(Build.VERSION_CODES.O)
@@ -150,102 +223,22 @@ class SensorService : Service(), SensorEventListener {
         val intent = Intent(this, SensorService::class.java)
         startService(intent)
         startTime = System.currentTimeMillis()
-        handler.postDelayed(writeLogs, interval)
-        handler.postDelayed(calculateFreq, 500)
-        /*scope.launch {
-            while (true) {
-                //Log.d("Service", this@SensorService.toString())
-                //Log.d("SensorService", "Step Count: $steps")
-                //Log.d("SensorService", "Step Cadence: $stepFrequency")
-
-
-
-            }
-        }*/
-    }
-
-    private val writeLogs = object : Runnable {
-        @RequiresApi(Build.VERSION_CODES.O)
-        override fun run() {
-            val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            updateActivityLogs(
-                oldStepFrequency.toString(),
-                newStepFrequency.toString(),
-                currentTime,
-                bpm_song.toString()
-            )
-            handler.postDelayed(this, interval)
-            updateNotification()
-        }
-    }
-
-    private val calculateFreq = object : Runnable {
-        override fun run() {
-            calculationNewFreq()
-            handler.postDelayed(this, 300)
-        }
-    }
-
-    @OptIn(UnstableApi::class)
-    private fun calculationNewFreq() {
-        if (stepTimes.size >= 2) {
-
-            val l = stepTimes.takeLast(2)
-            lastUpdateTime = l.last()
-
-            if (System.currentTimeMillis() - lastUpdateTime > 3000) {
-                //Log.d("currentTimeMillis", System.currentTimeMillis().toString())
-                //Log.d("lastUpdateTime", lastUpdateTime.toString())
-                newStepFrequency = 0
-                Log.d("newStepFrequency", newStepFrequency.toString())
-                previousStepFrequency.add(newStepFrequency)
-            } else {
-                penultimateUpdateTime = l.first()
-                deltaBetweenTwoSteps = abs(lastUpdateTime - penultimateUpdateTime)
-                stepFreqNow = (60000 / deltaBetweenTwoSteps)
-                //definition of two lists: current and previous frequency
-                currentFrequency.add(stepFreqNow)
-                /*if (currentFrequency.size >= 2) {
-                previousStepFrequency.add(currentFrequency[currentFrequency.size - 2])
-            } else {
-                previousStepFrequency.add(0)
-            }*/
-
-                //stabilization of frequency steps
-                if (currentFrequency.size >= 12) {
-                    val newFreq = currentFrequency.average()
-                    currentFrequency.clear()
-                    newStepFrequency = if (newFreq < 60)
-                        0
-                    else (alpha * newStepFrequency + (1 - alpha) * newFreq).toInt()
-                    Log.d("newStepFrequency", newStepFrequency.toString())
-                    previousStepFrequency.add(newStepFrequency)
-                }
-
-            }
-            /*val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
-            val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
-            val weightedAverage = weightedSum / weights.sum()
-            frequency.add(weightedAverage.toInt())*/
-            //val newFreq = lastNValues.average()
-        }
+        handler.postDelayed(writeLogs, interval) // write in csv
+        handler.postDelayed(calculateFreq, 500) // calculate stepFreq_3
     }
 
     @OptIn(UnstableApi::class)
     override fun onDestroy() {
-
         Log.d("SensorService", "Distruggo il service")
-        // writeToFile("BuddyBeat Logs", "Hello, this is a test!")
         writeToCsvFile(activityLogs)
         handler.removeCallbacksAndMessages(null)
-        //scope.cancel()
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
         super.onDestroy()
     }
 
     /* Calculation of steps and frequency of steps from sensor data */
-    override fun onSensorChanged(event: SensorEvent?) {
+    @OptIn(UnstableApi::class) override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor == gyroSensor) {
                 //gyroData = "Gyroscope data: ${it.values[0]}, ${it.values[1]}, ${it.values[2]}"
@@ -272,8 +265,9 @@ class SensorService : Service(), SensorEventListener {
                     }
                 }
 
+                // METHOD 2
                 /* step frequency calculus based on difference between two steps */
-                /*if (acceleration > threshold) {
+                if (acceleration > threshold) {
                     // step frequency
                     if (stepTimes.size >= 2) {
                         lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
@@ -300,40 +294,32 @@ class SensorService : Service(), SensorEventListener {
                         val weightedAverage = weightedSum / weights.sum()
                         frequency.add(weightedAverage.toInt())
                         val newFreq = frequency[frequency.size-1]
-                        newStepFrequency = (alpha * newStepFrequency + (1 - alpha) * newFreq).toInt()
-
+                        stepFrequency_2 = (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
+                        Log.d("stepFrequency_2", stepFrequency_2.toString())
                     }
-                }*/
-                //stepData ="Steps: $steps"
-
-
-                /* step frequency calculus based on the last UnitTime */
+                }
 
                 // Remove times older than one minute
                 while ((stepTimes.firstOrNull() ?: Long.MAX_VALUE) < now - unitTime) {
                     stepTimes.removeFirstOrNull()
                 }
 
-                // Calculate step frequency
-                if (now - startTime < unitTime) {  //60000 millisecond = 60 second = 1 min
-                    inputFreq = ceil((stepTimes.size.toFloat() / (now - startTime)) * 60000F)
+                // METHOD 1
+                inputFreq = if (now - startTime < unitTime) {  //60000 millisecond = 60 second = 1 min
+                    ceil((stepTimes.size.toFloat() / (now - startTime)) * 60000F)
                 } else {
-                    inputFreq = ceil((stepTimes.size.toFloat() / (unitTime)) * 60000F)
+                    ceil((stepTimes.size.toFloat() / (unitTime)) * 60000F)
                 }
-
                 outputFreq = alpha * outputFreq + (1 - alpha) * inputFreq
-                oldStepFrequency = outputFreq.toInt()
-
-                lastStepTime = now
-                //stepFreq = "Frequency: $stepFrequency step/min"
+                stepFrequency_1 = outputFreq.toInt()
+                Log.d("stepFrequency_1", stepFrequency_1.toString())
             }
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    }
-
+    // notification
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
@@ -349,10 +335,9 @@ class SensorService : Service(), SensorEventListener {
     @OptIn(UnstableApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startForegroundService() {
-
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
-            .setContentText("Steps: $steps\nStep Frequency: $newStepFrequency")
+            .setContentText("Steps: $steps \nStep Frequency: $stepFreq")
             .setSmallIcon(R.drawable.ic_play)
             .setContentIntent(
                 PendingIntent.getActivity(
@@ -361,7 +346,6 @@ class SensorService : Service(), SensorEventListener {
                 )
             )
             .build()
-
         startForeground(1, notification)
     }
 
@@ -370,7 +354,7 @@ class SensorService : Service(), SensorEventListener {
     private fun updateNotification() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
-            .setContentText("Steps: $steps\nStep Frequency: $newStepFrequency")
+            .setContentText("Steps: $steps\nStep Frequency: $stepFreq")
             .setSmallIcon(R.drawable.ic_play)
             .setContentIntent(
                 PendingIntent.getActivity(
@@ -379,7 +363,6 @@ class SensorService : Service(), SensorEventListener {
                 )
             )
             .build()
-
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(1, notification)
     }
@@ -397,9 +380,9 @@ class SensorService : Service(), SensorEventListener {
 
         // Convert data to CSV format
         val csvContent = StringBuilder()
-        csvContent.append("Timestamp,oldSPM,newSPM,BPM\n")  // Add header
+        csvContent.append("Timestamp,SPM_1,SPM_2,SPM_3,BPM\n")  // Add header
         for (entry in data) {
-            csvContent.append("${entry.timestamp},${entry.oldSPM},${entry.newSPM},${entry.BPM}\n")
+            csvContent.append("${entry.timestamp}, ${entry.SPM_1}, ${entry.SPM_2}, ${entry.SPM_3}, ${entry.BPM}\n")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -443,14 +426,4 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    private fun updateActivityLogs(value: String, value2: String, timestamp: String, bpm: String) {
-        activityLogs.add(
-            ValueTimestamp(
-                timestamp = timestamp,
-                oldSPM = value,
-                newSPM = value2,
-                BPM = bpm
-            )
-        )
-    }
 }

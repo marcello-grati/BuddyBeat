@@ -647,14 +647,14 @@ class MainActivity : ComponentActivity() {
 
     private fun nextSong() {
         val stepFreq = run{
-            val d = mService.previousStepFrequency.takeLast(10).takeLastWhile {  it > 50 }
-            Log.d("d",d.toString())
+            val d = mService.previousStepFrequency_3.takeLast(10).takeLastWhile {  it > 50 }
             var l = d.average()
             if(l.isNaN()){
                 l=0.0
             }
             l
         }
+        Log.d("stepFreq before nextSong()", stepFreq.toString())
         val queueNext = queue.removeFirstOrNull()
         if(queueNext!=null){
             val media = buildMediaItem(queueNext)
