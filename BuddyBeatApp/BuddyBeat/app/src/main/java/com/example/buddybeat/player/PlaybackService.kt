@@ -38,7 +38,6 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -60,7 +59,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         val MANUAL_MODE = 1
         val OFF_MODE = 2
         val DEFAULT_BPM = 100
-        val ALPHA = 0.9f
+        val ALPHA = 0.6f
         val BPM_STEP = 2
 
         var speedMode = AUTO_MODE
@@ -120,8 +119,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Intent(this, SensorService::class.java).also { int ->
             bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
-        handler.postDelayed(sensorDataRunnable, 30000)
-        handler.postDelayed(orderSongsRunnable, 30000)
+        handler.postDelayed(sensorDataRunnable, 10000)
+        handler.postDelayed(orderSongsRunnable, 2000)
         setMediaNotificationProvider(customMediaNotificationProvider)
     }
 
@@ -173,7 +172,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         override fun run() {
             if (mBound) {
                 updateSpeedSong()
-                handler.postDelayed(this, interval)
+                handler.postDelayed(this, interval*3)
             }
         }
     }
@@ -223,7 +222,18 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             if (bpm != 0 && bpm != null && bpm != -1) {
 
                 val stepFreq = when (speedMode) {
-                    AUTO_MODE -> mService.stepFreq.toFloat()
+                    AUTO_MODE -> {
+                        //mService.stepFreq.toFloat()
+                        //val d = mService.previousStepFrequency.takeLast(5)
+                        val d = mService.previousStepFrequency.takeLastWhile { it > 50 }.takeLast(5)
+                        Log.d("d", d.toString())
+                        var l = d.average()
+                        if(l.isNaN()){
+                            l=0.0
+                        }
+                        Log.d("l",l.toString())
+                        l.toFloat()
+                    }
                     MANUAL_MODE -> manualBpm.toFloat()
                     else -> throw Exception("Invalid speed mode")
                 }
@@ -262,11 +272,13 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
 
                 ratio = outRatio
+                mService.updateBpm(ratio*bpm)
             }
         } else {
             ratio = 1f
         }
         mediaSession?.player?.setPlaybackSpeed(ratio)
+
     }
 
 
@@ -334,9 +346,17 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    val stepFreq = mService.stepFreq.toFloat()
-                    var logStepFreq = log2(stepFreq)
+                    val stepFreq = run{
+                        val d = mService.previousStepFrequency.takeLast(10).takeLastWhile {  it > 50 }
+                        Log.d("d",d.toString())
+                        var l = d.average()
+                        if(l.isNaN()){
+                            l=0.0
+                        }
+                        l
+                    }
                     Log.d("stepFreq from reordering", stepFreq.toString())
+                    var logStepFreq = log2(stepFreq)
                     logBpmA -= floor(logBpmA)
                     logBpmB -= floor(logBpmB)
                     logStepFreq -= floor(logStepFreq)

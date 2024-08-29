@@ -55,12 +55,10 @@ import androidx.media3.session.SessionToken
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
-import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
-import com.example.buddybeat.player.PlaybackService.Companion.ratio
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
@@ -143,7 +141,7 @@ class MainActivity : ComponentActivity() {
             )
             controller?.currentMediaItem?.let { viewModel.changeSong(it) }
             controller?.let { viewModel.updateDuration(it.duration) }
-            controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { mService.updateBpm(it) }
+            controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { /*mService.updateBpm(it)*/ }
             PlaybackService.ratio = 1.0f
         }
     }
@@ -648,6 +646,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
+        val stepFreq = run{
+            val d = mService.previousStepFrequency.takeLast(10).takeLastWhile {  it > 50 }
+            Log.d("d",d.toString())
+            var l = d.average()
+            if(l.isNaN()){
+                l=0.0
+            }
+            l
+        }
         val queueNext = queue.removeFirstOrNull()
         if(queueNext!=null){
             val media = buildMediaItem(queueNext)
@@ -655,7 +662,7 @@ class MainActivity : ComponentActivity() {
             return
         }
         val list = audiolist.value.toMutableList()
-        val l = list.let { viewModel.orderSongs(it) }
+        val l = list.let { viewModel.orderSongs(stepFreq, it) }
         while (true) {
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {

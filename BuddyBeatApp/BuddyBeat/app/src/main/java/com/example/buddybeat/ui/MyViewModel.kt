@@ -270,7 +270,7 @@ class MyViewModel @Inject constructor(
 
     private fun getQueue() {
         val queue = queue.toList()
-        val l = orderSongs(audiolist.value)
+        val l = orderSongs(stepFreq.value.toDouble(), audiolist.value)
         l.removeAll { playlist.contains(it.uri) }
         l.forEach {
             Log.d(it.toString(), it.bpm.toString())
@@ -281,7 +281,7 @@ class MyViewModel @Inject constructor(
         }
     }
 
-    fun orderSongs(list: MutableList<Song>): MutableList<Song> {
+    fun orderSongs(stepFreq: Double, list: MutableList<Song>): MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered")
         val myCustomComparator = Comparator<Song> { a, b ->
@@ -293,7 +293,7 @@ class MyViewModel @Inject constructor(
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    val s = stepFreq.value.toFloat()
+                    val s = stepFreq
                     //val s = 180f
                     var logStepFreq = log2(s)
                     logBpmA -= floor(logBpmA)
