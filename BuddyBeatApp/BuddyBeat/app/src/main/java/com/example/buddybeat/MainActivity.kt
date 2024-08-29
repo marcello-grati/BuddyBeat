@@ -60,6 +60,7 @@ import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
+import com.example.buddybeat.player.PlaybackService.Companion.ratio
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.audio.MusicPlayerApp
@@ -143,6 +144,7 @@ class MainActivity : ComponentActivity() {
             controller?.currentMediaItem?.let { viewModel.changeSong(it) }
             controller?.let { viewModel.updateDuration(it.duration) }
             controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { mService.updateBpm(it) }
+            PlaybackService.ratio = 1.0f
         }
     }
 

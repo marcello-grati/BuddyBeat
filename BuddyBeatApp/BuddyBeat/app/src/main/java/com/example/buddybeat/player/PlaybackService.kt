@@ -60,11 +60,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         val MANUAL_MODE = 1
         val OFF_MODE = 2
         val DEFAULT_BPM = 100
-        val ALPHA = 0.2f
+        val ALPHA = 0.9f
         val BPM_STEP = 2
 
         var speedMode = AUTO_MODE
         var manualBpm = DEFAULT_BPM
+        var ratio = 1f
     }
 
     @Inject
@@ -78,7 +79,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     private lateinit var mService: SensorService
     private var mBound: Boolean = false
 
-    var ratio = 1f
+
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -227,7 +228,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     else -> throw Exception("Invalid speed mode")
                 }
 
-                var inRatio = 1f
+                var inRatio: Float
                 var outRatio = ratio
 
 
