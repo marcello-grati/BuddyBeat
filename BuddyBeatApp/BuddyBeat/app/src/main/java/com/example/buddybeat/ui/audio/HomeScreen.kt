@@ -77,6 +77,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
+import android.content.Context
+import android.content.Intent
+
+import androidx.compose.ui.platform.LocalContext
+import com.example.buddybeat.SensorService
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -112,6 +117,8 @@ fun HomeScreen(
     changeMode : (Int) -> Unit,
     running : Boolean
 ) {
+    val context = LocalContext.current
+
     Scaffold(bottomBar = {
         if (song.title != "")
             HomeBottomBar(
@@ -159,14 +166,16 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModeButton(
+                    ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = {startWalkingMode(context) /* Handle Walking Mode */ })
+                    ModeButton("Running", Color(0xFFD0EB34), onClick = { startRunningMode(context)/* Handle Running Mode */ })
+                    /*ModeButton(
                         "Walking",
                         color = if (!running) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f),
                         onClick = { changeMode(0) })
                     ModeButton(
                         "Running",
                         color = if (running) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f),
-                        onClick = { changeMode(1) })
+                        onClick = { changeMode(1) })*/
                 }
                 Row(
                     modifier = Modifier
@@ -256,6 +265,17 @@ fun HomeScreen(
             }
         }
     }
+}
+
+private fun startWalkingMode(context: Context) {
+    val intent = Intent(context, SensorService::class.java)
+    intent.action = "SET_WALKING_MODE"
+    context.startService(intent)
+}
+private fun startRunningMode(context: Context) {
+    val intent = Intent(context, SensorService::class.java)
+    intent.action = "SET_RUNNING_MODE"
+    context.startService(intent)
 }
 
 @Composable

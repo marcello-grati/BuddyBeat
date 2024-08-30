@@ -14,41 +14,33 @@ import android.hardware.SensorManager
 import android.icu.text.SimpleDateFormat
 import android.os.Binder
 import android.os.Build
-import android.os.IBinder
-import androidx.annotation.OptIn
-import androidx.annotation.RequiresApi
-import androidx.media3.common.util.Log
-import androidx.media3.common.util.UnstableApi
-import java.util.LinkedList
-import kotlin.math.ceil
-import kotlin.math.sqrt
-
 import android.os.Environment
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.provider.MediaStore
-import androidx.compose.runtime.MutableState
+import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.datastore.dataStore
-import com.example.buddybeat.DataStoreManager.Companion.I_AM_RUNNING
-import com.example.buddybeat.data.repository.AudioRepository
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Date
+import java.util.LinkedList
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.sqrt
+
 
 /*Sensor Service new*/
 @AndroidEntryPoint
@@ -77,6 +69,8 @@ class SensorService : Service(), SensorEventListener {
 
     /* parameters for steps calculation */
     private var unitTime = 60000  //60000 millisecond = 60 second
+
+    /*SILVIA
     private var threshold = mutableDoubleStateOf(0.7)  //for step calculus
     private var deltaTime = mutableIntStateOf(250) // 0.5s interval of data refresh
 
@@ -91,6 +85,26 @@ class SensorService : Service(), SensorEventListener {
             deltaTime.intValue = 150
         }
         Log.d("Changing Mode", "Threshold: ${threshold.doubleValue}, DeltaTime: ${deltaTime.intValue}")
+    }*/
+
+    /*CHIARA*/
+    // Walking and Running modalities
+    private var threshold: Float = 0.0f
+    private var deltaTime: Long = 0L
+
+    private val walkingThreshold = 0.7f
+    private val walkingDeltaTime = 250L
+
+    private val runningThreshold = 1.5f
+    private val runningDeltaTime = 150L
+
+    private fun setWalkingMode() {
+        threshold = walkingThreshold
+        deltaTime = walkingDeltaTime
+    }
+    private fun setRunningMode() {
+        threshold = runningThreshold
+        deltaTime = runningDeltaTime
     }
 
     /* parameters for calculation stepFreq method 1 */
@@ -111,6 +125,7 @@ class SensorService : Service(), SensorEventListener {
     private var stepFrequency_2: Int = 0
     private val n = 15 //stabilization of frequency values
 
+
     /* parameters for calculation stepFreq method 3 */
     private var lastUpdateTime_3: Long = 0 //new
     private var penultimateUpdateTime_3: Long = 0 //new
@@ -121,7 +136,6 @@ class SensorService : Service(), SensorEventListener {
     private var stepFrequency_3: Int = 0
 
 
-    // parameters for service management
     companion object {
         const val CHANNEL_ID = "SensorsChannel"
     }
@@ -232,11 +246,31 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundService()
+
+        /*CHIARA*/
+        intent?.action?.let { action ->
+            Log.d("SensorService", "Received action: $action") // Log per tracciare l'azione ricevuta
+            when (action) {
+                "SET_WALKING_MODE" -> {
+                    Log.d("SensorService", "Setting Walking Mode") // Log per tracciare la modalità camminata
+                    setWalkingMode()
+                }
+                "SET_RUNNING_MODE" -> {
+                    Log.d("SensorService", "Setting Running Mode") // Log per tracciare la modalità corsa
+                    setRunningMode()
+                }
+                else -> {
+                    Log.d("SensorService", "Unknown action received: $action") // Log per azioni sconosciute
+                }
+            }
+        }
+
         return START_STICKY
     }
+
 
     /* access of data from sensors */
     @RequiresApi(Build.VERSION_CODES.O)
@@ -257,9 +291,9 @@ class SensorService : Service(), SensorEventListener {
         startTime = System.currentTimeMillis()
         handler.postDelayed(writeLogs, interval) // write in csv
         handler.postDelayed(calculateFreq, 500) // calculate stepFreq_3
-        Log.d("dataStoreManager",dataStoreManager.toString())
     }
 
+    /*SILVIA*/
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
 
@@ -267,13 +301,13 @@ class SensorService : Service(), SensorEventListener {
     override fun onDestroy() {
         Log.d("SensorService", "Distruggo il service")
         writeToCsvFile(activityLogs)
-        scope.launch {
-            dataStoreManager.setPreference(I_AM_RUNNING, false)
-        }
+        /*scope.launch {
+            dataStoreManager.setPreference(DataStoreManager.I_AM_RUNNING, false)
+        }*/
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
-        job.cancel()
+        /*job.cancel()*/
         super.onDestroy()
     }
 
@@ -297,8 +331,12 @@ class SensorService : Service(), SensorEventListener {
                 val now = System.currentTimeMillis()
 
                 /* step calculus */
+                /*SILVIA
                 if (acceleration > threshold.value) {
                     if ((now - lastUpdate) > deltaTime.value) {
+                */
+                if (acceleration > threshold) {
+                    if ((now - lastUpdate) > deltaTime) {
                         lastUpdate = now
                         steps++
                         stepTimes.add(now)
@@ -307,7 +345,10 @@ class SensorService : Service(), SensorEventListener {
 
                 // METHOD 2
                 /* step frequency calculus based on difference between two steps */
+                /* SILVIA
                 if (acceleration > threshold.value) {
+                */
+                if (acceleration > threshold) {
                     // step frequency
                     if (stepTimes.size >= 2) {
                         lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
@@ -407,14 +448,9 @@ class SensorService : Service(), SensorEventListener {
         notificationManager.notify(1, notification)
     }
 
-    @kotlin.OptIn(DelicateCoroutinesApi::class)
     override fun onTaskRemoved(rootIntent: Intent?) {
         stopSelf()
     }
-
-
-
-
 
     @OptIn(UnstableApi::class)
     private fun writeToCsvFile(data: List<ValueTimestamp>) {
