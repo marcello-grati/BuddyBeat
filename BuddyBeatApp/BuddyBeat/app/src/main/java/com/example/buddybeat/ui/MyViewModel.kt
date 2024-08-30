@@ -20,9 +20,14 @@ import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
+import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
+import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
+import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -300,14 +305,19 @@ class MyViewModel @Inject constructor(
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    val s = stepFreq
+                    val target = when (speedMode) {
+                        AUTO_MODE -> stepFreq
+                        MANUAL_MODE -> manualBpm.toDouble()
+                        OFF_MODE -> 100.0   // TODO
+                        else -> throw Exception("Invalid speed mode")
+                    }
                     //val s = 180f
-                    var logStepFreq = log2(s)
+                    var logTarget = log2(target)
                     logBpmA -= floor(logBpmA)
                     logBpmB -= floor(logBpmB)
-                    logStepFreq -= floor(logStepFreq)
-                    var distA = abs(logBpmA - logStepFreq)
-                    var distB = abs(logBpmB - logStepFreq)
+                    logTarget -= floor(logTarget)
+                    var distA = abs(logBpmA - logTarget)
+                    var distB = abs(logBpmB - logTarget)
                     if (distA > 0.5f)
                         distA = 1.0f - distA
                     if (distB > 0.5f)
