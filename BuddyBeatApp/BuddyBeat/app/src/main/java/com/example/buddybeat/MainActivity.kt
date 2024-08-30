@@ -651,7 +651,7 @@ class MainActivity : ComponentActivity() {
 
     private fun nextSong() {
         val stepFreq = run{
-            val d = mService.previousStepFrequency_3.takeLast(10).takeLastWhile {  it > 50 }
+            val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
             var l = d.average()
             if(l.isNaN()){
                 l=0.0
