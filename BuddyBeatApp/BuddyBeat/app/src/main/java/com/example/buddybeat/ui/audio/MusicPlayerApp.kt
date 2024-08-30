@@ -145,6 +145,7 @@ fun MusicPlayerNavHost(
 
     // walking/running
     val running by viewModel.iAmRunning.observeAsState(initial = false)
+    val walking by viewModel.iAmWalking.observeAsState(initial = false)
 
     if (shouldShowDialogOne.value) {
         DialogOne(shouldShowDialog = shouldShowDialogOne,
@@ -260,7 +261,8 @@ fun MusicPlayerNavHost(
                 changeMode = {
                     setMode(it)
                 },
-                running = running
+                running = running,
+                walking = walking
             )
         }
         composable(route = Destination.playlist) {

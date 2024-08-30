@@ -54,7 +54,7 @@ class MyViewModel @Inject constructor(
     val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
     val allSongsId = dataStoreManager.getPreferenceLong(ALL_SONGS_KEY).asLiveData(Dispatchers.IO)
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
-    //val iAmWalking = dataStoreManager.getPreference(I_AM_WALKING).asLiveData(Dispatchers.IO)
+    val iAmWalking = dataStoreManager.getPreference(I_AM_WALKING).asLiveData(Dispatchers.IO)
     val iAmRunning = dataStoreManager.getPreference(I_AM_RUNNING).asLiveData(Dispatchers.IO)
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
@@ -381,11 +381,15 @@ class MyViewModel @Inject constructor(
     }
 
     fun setMode(mode: Int) {
-        if(mode == 0) { //walking
+        if(mode == 0) { //none
+            setPreference(I_AM_WALKING, false)
+            setPreference(I_AM_RUNNING, false)
+        }
+        else if(mode == 1) { //walking
             setPreference(I_AM_WALKING, true)
             setPreference(I_AM_RUNNING, false)
         }
-        if(mode == 1) { //running
+        else if(mode == 2) { //running
             setPreference(I_AM_RUNNING, true)
             setPreference(I_AM_WALKING, false)
         }

@@ -306,7 +306,7 @@ class MainActivity : ComponentActivity() {
                             },
                             setMode = {
                                 viewModel.setMode(it)
-                                mService.changeMode(it)
+                                //mService.changeMode(it)
                             }
                         )
                     }

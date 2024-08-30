@@ -115,9 +115,12 @@ fun HomeScreen(
     updateSongs: () -> Unit,
     allSongsId: Long,
     changeMode : (Int) -> Unit,
-    running : Boolean
+    running : Boolean,
+    walking : Boolean
 ) {
     val context = LocalContext.current
+    val colorWalking = if (!running && walking) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
+    val colorRunning = if (!walking && running) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f)
 
     Scaffold(bottomBar = {
         if (song.title != "")
@@ -166,8 +169,12 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = {startWalkingMode(context) /* Handle Walking Mode */ })
-                    ModeButton("Running", Color(0xFFD0EB34), onClick = { startRunningMode(context)/* Handle Running Mode */ })
+                    ModeButton("Walking", color = colorWalking, onClick = {
+                        changeMode(1)
+                        startWalkingMode(context) /* Handle Walking Mode */ })
+                    ModeButton("Running", color = colorRunning, onClick = {
+                        changeMode(2)
+                        startRunningMode(context)/* Handle Running Mode */ })
                     /*ModeButton(
                         "Walking",
                         color = if (!running) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f),
