@@ -381,17 +381,19 @@ class MyViewModel @Inject constructor(
     }
 
     fun setMode(mode: Int) {
-        if(mode == 0) { //none
-            setPreference(I_AM_WALKING, false)
-            setPreference(I_AM_RUNNING, false)
-        }
-        else if(mode == 1) { //walking
-            setPreference(I_AM_WALKING, true)
-            setPreference(I_AM_RUNNING, false)
-        }
-        else if(mode == 2) { //running
-            setPreference(I_AM_RUNNING, true)
-            setPreference(I_AM_WALKING, false)
+        when (mode) {
+            0 -> { //none
+                setPreference(I_AM_WALKING, false)
+                setPreference(I_AM_RUNNING, false)
+            }
+            1 -> { //walking
+                setPreference(I_AM_WALKING, true)
+                setPreference(I_AM_RUNNING, false)
+            }
+            2 -> { //running
+                setPreference(I_AM_RUNNING, true)
+                setPreference(I_AM_WALKING, false)
+            }
         }
 
     }

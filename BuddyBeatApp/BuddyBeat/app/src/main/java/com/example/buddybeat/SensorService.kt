@@ -21,8 +21,6 @@ import android.os.Looper
 import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import dagger.hilt.android.AndroidEntryPoint
