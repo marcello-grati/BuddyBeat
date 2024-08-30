@@ -63,7 +63,8 @@ fun MusicPlayerApp(
     addToQueue: (Song) -> Unit,
     playPause : () -> Unit,
     buildMediaItem: (Song) -> MediaItem,
-    setSongInPlaylist : (MediaItem) -> Unit
+    setSongInPlaylist : (MediaItem) -> Unit,
+    setMode : (Int) -> Unit
 ) {
     val navController = rememberNavController()
     MusicPlayerNavHost(
@@ -85,7 +86,8 @@ fun MusicPlayerApp(
         addToQueue = addToQueue,
         playPause = playPause,
         buildMediaItem = buildMediaItem,
-        setSongInPlaylist = setSongInPlaylist
+        setSongInPlaylist = setSongInPlaylist,
+        setMode = setMode
     )
 }
 
@@ -111,7 +113,8 @@ fun MusicPlayerNavHost(
     addToQueue: (Song) -> Unit,
     playPause : () -> Unit,
     buildMediaItem: (Song) -> MediaItem,
-    setSongInPlaylist : (MediaItem) -> Unit
+    setSongInPlaylist : (MediaItem) -> Unit,
+    setMode : (Int) -> Unit
 ) {
 
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
@@ -138,6 +141,10 @@ fun MusicPlayerNavHost(
     val showBottomSheet = remember { mutableStateOf(false) }
     val songClicked = remember { mutableLongStateOf(-1L) }
     val playlistLongClicked = remember { mutableStateOf(Playlist(title="", description = "")) }
+
+
+    // walking/running
+    val running by viewModel.iAmRunning.observeAsState(initial = false)
 
     if (shouldShowDialogOne.value) {
         DialogOne(shouldShowDialog = shouldShowDialogOne,
@@ -249,7 +256,11 @@ fun MusicPlayerNavHost(
                 updateSongs = {
                     viewModel.updateSongs()
                 },
-                allSongsId = allSongs
+                allSongsId = allSongs,
+                changeMode = {
+                    setMode(it)
+                },
+                running = running
             )
         }
         composable(route = Destination.playlist) {

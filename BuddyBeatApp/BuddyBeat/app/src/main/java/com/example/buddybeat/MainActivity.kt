@@ -303,6 +303,10 @@ class MainActivity : ComponentActivity() {
                             },
                             setSongInPlaylist = {
                                 setSongInPlaylist(it)
+                            },
+                            setMode = {
+                                viewModel.setMode(it)
+                                mService.changeMode(it)
                             }
                         )
                     }

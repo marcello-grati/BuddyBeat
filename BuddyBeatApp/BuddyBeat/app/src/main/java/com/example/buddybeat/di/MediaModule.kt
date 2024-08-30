@@ -5,6 +5,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.BeatExtractor
 import com.example.buddybeat.DataStoreManager
+import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.ContentResolverHelper
 import com.example.buddybeat.data.SongDatabase
 import com.example.buddybeat.data.repository.AudioRepository
@@ -20,6 +21,14 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object MediaModule {
+
+    @Provides
+    @Singleton
+    fun provideDataStoreManager(
+        @ApplicationContext context: Context
+    ): DataStoreManager {
+        return DataStoreManager(context)
+    }
 
     @OptIn(UnstableApi::class) @Provides
     fun provideCustomMediaNotificationProvider(@ApplicationContext context : Context) : CustomMediaNotificationProvider {
@@ -51,12 +60,4 @@ object MediaModule {
         return BeatExtractor(context)
     }
 
-    @Provides
-    @Singleton
-    fun provideDataStoreManager(
-        @ApplicationContext context: Context
-    ): DataStoreManager {
-        return DataStoreManager(context)
-    }
-    
 }

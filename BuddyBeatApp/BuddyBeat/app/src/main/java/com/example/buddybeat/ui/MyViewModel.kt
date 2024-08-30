@@ -13,6 +13,8 @@ import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.BPM_UPDATED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
+import com.example.buddybeat.DataStoreManager.Companion.I_AM_RUNNING
+import com.example.buddybeat.DataStoreManager.Companion.I_AM_WALKING
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
@@ -47,10 +49,25 @@ class MyViewModel @Inject constructor(
     private val dataStoreManager: DataStoreManager
 ) : ViewModel() {
 
+    // PREFERENCES
     val isUploaded = dataStoreManager.getPreference(IS_UPLOADED_KEY).asLiveData(Dispatchers.IO)
     val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
     val allSongsId = dataStoreManager.getPreferenceLong(ALL_SONGS_KEY).asLiveData(Dispatchers.IO)
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
+    //val iAmWalking = dataStoreManager.getPreference(I_AM_WALKING).asLiveData(Dispatchers.IO)
+    val iAmRunning = dataStoreManager.getPreference(I_AM_RUNNING).asLiveData(Dispatchers.IO)
+
+    private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setPreference(key, value)
+        }
+    }
+
+    private fun setPreferenceLong(key: Preferences.Key<Long>, value: Long) {
+        viewModelScope.launch {
+            dataStoreManager.setPreferenceLong(key, value)
+        }
+    }
 
 
     private val _progressLoading = MutableStateFlow(0)
@@ -135,17 +152,7 @@ class MyViewModel @Inject constructor(
         //currentPlaylist.value = playlist
     }
 
-    private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setPreference(key, value)
-        }
-    }
 
-    fun setPreferenceLong(key: Preferences.Key<Long>, value: Long) {
-        viewModelScope.launch {
-            dataStoreManager.setPreferenceLong(key, value)
-        }
-    }
 
     fun addPlaylist(playlist: Playlist) = viewModelScope.launch {
         songRepo.insert(playlist)
@@ -371,6 +378,18 @@ class MyViewModel @Inject constructor(
         val d = insertPlaylist(favorites)
         Log.d("PlaylistIdD", d.toString())
         setPreferenceLong(FAVORITES_KEY, d)
+    }
+
+    fun setMode(mode: Int) {
+        if(mode == 0) { //walking
+            setPreference(I_AM_WALKING, true)
+            setPreference(I_AM_RUNNING, false)
+        }
+        if(mode == 1) { //running
+            setPreference(I_AM_RUNNING, true)
+            setPreference(I_AM_WALKING, false)
+        }
+
     }
 }
 

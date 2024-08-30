@@ -76,12 +76,13 @@ import com.example.buddybeat.ui.components.SongItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
     showPlayer: Boolean,
-    changeShow : () -> Unit,
+    changeShow: () -> Unit,
     playlistClicked: (PlaylistWithSongs) -> Unit,
     audioList: List<Song>,
     allPlaylist: List<PlaylistWithSongs>,
@@ -96,19 +97,21 @@ fun HomeScreen(
     onStart: () -> Unit,
     incrementSpeed: () -> Unit,
     decrementSpeed: () -> Unit,
-    addToFavorite : (Long) -> Unit,
-    favoriteContainsSong : (Long) -> LiveData<Int>,
-    removeFavorite : (Long) -> Unit,
-    shouldShowDialogTwo : MutableState<Boolean>,
-    shouldShowDialogOne : MutableState<Boolean>,
+    addToFavorite: (Long) -> Unit,
+    favoriteContainsSong: (Long) -> LiveData<Int>,
+    removeFavorite: (Long) -> Unit,
+    shouldShowDialogTwo: MutableState<Boolean>,
+    shouldShowDialogOne: MutableState<Boolean>,
     shouldShowDialogThree: MutableState<Boolean>,
-    songClicked : MutableState<Long>,
-    addToQueue : (Song) -> Unit,
-    showBottomSheet : MutableState<Boolean>,
+    songClicked: MutableState<Long>,
+    addToQueue: (Song) -> Unit,
+    showBottomSheet: MutableState<Boolean>,
     playlistLongClicked: MutableState<Playlist>,
     updateSongs: () -> Unit,
-    allSongsId : Long
-    ) {
+    allSongsId: Long,
+    changeMode : (Int) -> Unit,
+    running : Boolean
+) {
     Scaffold(bottomBar = {
         if (song.title != "")
             HomeBottomBar(
@@ -134,10 +137,13 @@ fun HomeScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 15.dp).fillMaxHeight()
+                    .padding(horizontal = 15.dp)
+                    .fillMaxHeight()
             ) {
-                TopBar(updateSongs = updateSongs)
-                TopPopup()
+                TopBar()
+                var expandedHelp by remember { mutableStateOf(true) }
+                if (expandedHelp)
+                    TopPopup( onClickClose = { expandedHelp = false })
                 Text(
                     text = "CHOOSE YOUR MODE",
                     fontWeight = FontWeight.Bold,
@@ -153,14 +159,32 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = { /* Handle Walking Mode */ })
-                    ModeButton("Running", Color(0xFFD0EB34), onClick = { /* Handle Running Mode */ })
+                    ModeButton(
+                        "Walking",
+                        color = if (!running) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f),
+                        onClick = { changeMode(0) })
+                    ModeButton(
+                        "Running",
+                        color = if (running) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f),
+                        onClick = { changeMode(1) })
                 }
-                Row(  modifier = Modifier.fillMaxWidth() .padding(start=20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 15.dp, end = 15.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
                     SongsOfTheWeek("YOUR PLAYLISTS")
                     Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = {shouldShowDialogOne.value = true}, modifier = Modifier.size(20.dp)) {
-                        Icon(painter = painterResource(id = R.drawable.add_to_playlist), contentDescription = "Add playlist", )
+                    IconButton(
+                        onClick = { shouldShowDialogOne.value = true },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.add_to_playlist),
+                            contentDescription = "Add playlist",
+                        )
                     }
                     var expanded by remember { mutableStateOf(false) }
                     IconButton(onClick = { expanded = !expanded }) {
@@ -186,7 +210,8 @@ fun HomeScreen(
                 }
                 MainButtons(
                     playlistClicked = {
-                        playlistClicked(it) },
+                        playlistClicked(it)
+                    },
                     allPlaylist = allPlaylist,
                     showBottomSheet = showBottomSheet,
                     playlistLongClicked = playlistLongClicked,
@@ -196,20 +221,13 @@ fun HomeScreen(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    /*items(3) { index ->
-                    //SongItem(
-                    //    //songName = "Song Name $index",
-                    //    //artist = "Artist $index",
-                    //    isPlaying = index == 0
-                    //)
-                }*/
                     itemsIndexed(audioList) { index, audio ->
                         SongItem(
                             audio = audio,
                             onItemClick = {
                                 onItemClick(index)
                             },
-                            isPlaying = audio.songId==song.id,
+                            isPlaying = audio.songId == song.id,
                             addToFavorite = addToFavorite,
                             favoriteContainsSong = favoriteContainsSong,
                             removeFavorite = removeFavorite,
@@ -228,18 +246,20 @@ fun HomeScreen(
     OnLifecycleEvent { owner, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                if(showPlayer) {
+                if (showPlayer) {
                     onBarClick()
                     changeShow()
                 }
             }
-            else -> { /**/ }
+
+            else -> { /**/
+            }
         }
     }
 }
 
 @Composable
-fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event:Lifecycle.Event) -> Unit) {
+fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {
     val eventHandler = rememberUpdatedState(onEvent)
     val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
 
@@ -259,7 +279,6 @@ fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event:Lifecycle.Event) -> 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    updateSongs : () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -273,26 +292,24 @@ fun TopBar(
             modifier = Modifier
                 .size(width = 120.dp, height = 60.dp),  // Set different width and height
         )
-        Row (horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically){
-            Card(
-                onClick = { /*TODO*/ },
-                shape = RoundedCornerShape(50.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.help),
-                    contentDescription = "Buddy Beat Logo",
-                    modifier = Modifier.size(40.dp)
-                )
-            }
-
+        Card(
+            onClick = { /*TODO Help Section*/ },
+            shape = RoundedCornerShape(50.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.help),
+                contentDescription = "Help Button",
+                modifier = Modifier.size(40.dp)
+            )
         }
     }
 }
 
 @Composable
-fun TopPopup() {
+fun TopPopup(
+    onClickClose : () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,21 +331,21 @@ fun TopPopup() {
                     fontWeight = FontWeight.Bold
                 )
                 IconButton(
-                    onClick = { /* Handle close popup */ },
+                    onClick = { onClickClose()  },
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = "Close popup")
                 }
             }
             Text(
-                text = "Welcome to Buddy Beat! In this app, your music moves with you—literally. Whether you're walking or running, the speed of your songs adjusts to match your activity, keeping you in the perfect rhythm. You can create your playlists and let the app automatically reorder your tracks based on your pace. If you need help, you can always refer to the help section!",
+                text = stringResource(R.string.help_section),
                 modifier = Modifier.padding(vertical = 8.dp),
                 fontSize = 14.sp,
                 lineHeight = 18.sp
 
             )
             Button(
-                onClick = { /* Handle button click */ },
+                onClick = { /*TODO help section */},
                 modifier = Modifier.align(Alignment.End),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
             ) {
@@ -358,12 +375,13 @@ fun MainButtons(
     playlistClicked: (PlaylistWithSongs) -> Unit,
     allPlaylist: List<PlaylistWithSongs>,
     showBottomSheet: MutableState<Boolean>,
-    playlistLongClicked : MutableState<Playlist>,
-    allSongsId : Long
+    playlistLongClicked: MutableState<Playlist>,
+    allSongsId: Long
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth().height(280.dp)
+            .fillMaxWidth()
+            .height(280.dp)
             .padding(top = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Card(
@@ -371,9 +389,10 @@ fun MainButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .combinedClickable (
+                .combinedClickable(
                     onClick = {
-                        allPlaylist.find{it.playlist.playlistId==allSongsId}
+                        allPlaylist
+                            .find { it.playlist.playlistId == allSongsId }
                             ?.let { playlistClicked(it) }
                     }
                 ),
@@ -384,18 +403,21 @@ fun MainButtons(
                     .fillMaxSize()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFF7172CC), Color(0xFF91A6FE)) // Green to Blue gradient
+                            colors = listOf(
+                                Color(0xFF7172CC),
+                                Color(0xFF91A6FE)
+                            ) // Green to Blue gradient
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
 
 
-                allPlaylist.find{
+                allPlaylist.find {
                     it.playlist.playlistId == allSongsId
                 }?.playlist?.title?.let { Text(it, color = Color.White, fontSize = 16.sp) }
             }
-            }
+        }
         val haptics = LocalHapticFeedback.current
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -426,9 +448,12 @@ fun MainButtons(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFF8BA4FE), Color(0xFFAC9DFF)) // Green to Blue gradient
-                            )
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFF8BA4FE),
+                                        Color(0xFFAC9DFF)
+                                    ) // Green to Blue gradient
+                                )
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -535,8 +560,6 @@ fun MainButtons(
         }*/
     }
 }
-
-
 
 
 @Composable

@@ -24,6 +24,8 @@ class DataStoreManager(
         val BPM_UPDATED_KEY = booleanPreferencesKey("BPM_UPDATED_KEY")
         val ALL_SONGS_KEY = longPreferencesKey("ALL_SONGS_KEY")
         val FAVORITES_KEY = longPreferencesKey("FAVORITES_KEY")
+        val I_AM_WALKING = booleanPreferencesKey("WALKING")
+        val I_AM_RUNNING = booleanPreferencesKey("RUNNING")
     }
 
     suspend fun setPreference(key: Preferences.Key<Boolean>, value:Boolean){

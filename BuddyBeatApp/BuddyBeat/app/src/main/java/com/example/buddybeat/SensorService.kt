@@ -27,18 +27,38 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.datastore.dataStore
+import com.example.buddybeat.DataStoreManager.Companion.I_AM_RUNNING
+import com.example.buddybeat.data.repository.AudioRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 import kotlin.math.abs
 
 /*Sensor Service new*/
+@AndroidEntryPoint
 class SensorService : Service(), SensorEventListener {
     // Override callback methods here
 
     //private val scope = CoroutineScope(Dispatchers.Default)
+
+    @Inject
+    lateinit var dataStoreManager: DataStoreManager
 
     //sensors
     private lateinit var sensorManager: SensorManager
@@ -57,10 +77,21 @@ class SensorService : Service(), SensorEventListener {
 
     /* parameters for steps calculation */
     private var unitTime = 60000  //60000 millisecond = 60 second
-    private var threshold = 2  //for step calculus
-    private var deltaTime = 300// 0.5s interval of data refresh
-    private val n = 15 //stabilization of frequency values
+    private var threshold = mutableDoubleStateOf(0.7)  //for step calculus
+    private var deltaTime = mutableIntStateOf(250) // 0.5s interval of data refresh
 
+    @OptIn(UnstableApi::class)
+    fun changeMode(mode:Int){
+        if(mode == 0) { // walking
+            threshold.doubleValue = 0.7
+            deltaTime.intValue = 250
+        }
+        else if (mode==1){ //running
+            threshold.doubleValue = 1.5
+            deltaTime.intValue = 150
+        }
+        Log.d("Changing Mode", "Threshold: ${threshold.doubleValue}, DeltaTime: ${deltaTime.intValue}")
+    }
 
     /* parameters for calculation stepFreq method 1 */
     private var alpha: Float = 0.5f
@@ -78,6 +109,7 @@ class SensorService : Service(), SensorEventListener {
     private val currentFrequency = mutableListOf<Int>()
     private val frequency = mutableListOf<Int>()
     private var stepFrequency_2: Int = 0
+    private val n = 15 //stabilization of frequency values
 
     /* parameters for calculation stepFreq method 3 */
     private var lastUpdateTime_3: Long = 0 //new
@@ -225,15 +257,23 @@ class SensorService : Service(), SensorEventListener {
         startTime = System.currentTimeMillis()
         handler.postDelayed(writeLogs, interval) // write in csv
         handler.postDelayed(calculateFreq, 500) // calculate stepFreq_3
+        Log.d("dataStoreManager",dataStoreManager.toString())
     }
+
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     @OptIn(UnstableApi::class)
     override fun onDestroy() {
         Log.d("SensorService", "Distruggo il service")
         writeToCsvFile(activityLogs)
+        scope.launch {
+            dataStoreManager.setPreference(I_AM_RUNNING, false)
+        }
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
+        job.cancel()
         super.onDestroy()
     }
 
@@ -257,8 +297,8 @@ class SensorService : Service(), SensorEventListener {
                 val now = System.currentTimeMillis()
 
                 /* step calculus */
-                if (acceleration > threshold) {
-                    if ((now - lastUpdate) > deltaTime) {
+                if (acceleration > threshold.value) {
+                    if ((now - lastUpdate) > deltaTime.value) {
                         lastUpdate = now
                         steps++
                         stepTimes.add(now)
@@ -267,7 +307,7 @@ class SensorService : Service(), SensorEventListener {
 
                 // METHOD 2
                 /* step frequency calculus based on difference between two steps */
-                if (acceleration > threshold) {
+                if (acceleration > threshold.value) {
                     // step frequency
                     if (stepTimes.size >= 2) {
                         lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
@@ -367,9 +407,14 @@ class SensorService : Service(), SensorEventListener {
         notificationManager.notify(1, notification)
     }
 
+    @kotlin.OptIn(DelicateCoroutinesApi::class)
     override fun onTaskRemoved(rootIntent: Intent?) {
         stopSelf()
     }
+
+
+
+
 
     @OptIn(UnstableApi::class)
     private fun writeToCsvFile(data: List<ValueTimestamp>) {

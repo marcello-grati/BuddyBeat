@@ -70,9 +70,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     @Inject
     lateinit var customMediaNotificationProvider : CustomMediaNotificationProvider
 
-    @Inject
-    lateinit var songRepo: AudioRepository
-
     private var mediaSession: MediaSession? = null
 
     private lateinit var mService: SensorService

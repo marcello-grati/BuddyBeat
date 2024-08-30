@@ -11,4 +11,5 @@
     <string name="now_playing">Now playing</string>
     <string name="add_playlist">Add Playlist</string>
     <string name="add_song">Add Song</string>
+    <string name="help_section">Welcome to Buddy Beat! In this app, your music moves with you—literally. Whether you\'re walking or running, the speed of your songs adjusts to match your activity, keeping you in the perfect rhythm. You can create your playlists and let the app automatically reorder your tracks based on your pace. If you need help, you can always refer to the help section!</string>
 </resources>
