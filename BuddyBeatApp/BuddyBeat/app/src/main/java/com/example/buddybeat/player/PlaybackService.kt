@@ -48,7 +48,6 @@ import kotlin.math.min
 class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     companion object {
-        //var playlist: MutableMap<String, MediaItem> = mutableMapOf()
         var playlist : MutableList<String> = mutableListOf() //already played
         var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
         var audioListId = MutableStateFlow(0L)
@@ -309,7 +308,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     var logBpmB = log2(b.bpm.toFloat())
                     val target = when (speedMode) {
                         AUTO_MODE -> { run{
-                                val d = mService.previousStepFrequency_3.takeLast(10).takeLastWhile {  it > 50 }
+                                val d = mService.previousStepFrequency_3.takeLastWhile {  it > 50 }.takeLast(5)
                                 var l = d.average()
                                 if(l.isNaN()){
                                     l=0.0
