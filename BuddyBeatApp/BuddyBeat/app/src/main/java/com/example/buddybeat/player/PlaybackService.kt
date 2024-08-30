@@ -32,7 +32,6 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Song
-import com.example.buddybeat.data.repository.AudioRepository
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -174,42 +173,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
     }
 
-//    private fun updateSpeedSong() {
-//        val stepFreq = mService.stepFreq
-//        Log.d("StepCadence from PlaybackService", stepFreq.toString())
-//        var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
-//        var rat = 1f
-//        if (bpm != 0 && bpm != null && bpm!=-1) {
-//
-//            // We compute the log_2() of step frequency and of double, half and original value of BPM
-//            val logStepFreq = log2(stepFreq.toFloat())
-//            val logBpm = log2(bpm.toFloat())
-//            val logHalfBPM = log2(bpm.toFloat() / 2.0f)
-//            val logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-//
-//            // We update BPM if one of its multiples has a smaller distance value
-//            if (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
-//                bpm /= 2
-//            } else if (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
-//                bpm *= 2
-//            }
-//            // Speed-up ratio computed as step frequency / BPM
-//            rat = stepFreq.toFloat() / bpm.toFloat()
-//        }
-//        if (stepFreq < 60)
-//            rat = 1f
-//
-//        // ratio forced into [0.8, 1.2] range
-//        rat = rat.coerceAtLeast(0.8f)
-//        rat = rat.coerceAtMost(1.2f)
-//
-//        ratio = rat
-//
-//        Log.d("RATIO_3", ratio.toString())
-//
-//        mediaSession?.player?.setPlaybackSpeed(ratio)
-//    }
-
     private fun updateSpeedSong() {
 
         if (speedMode != OFF_MODE) {
@@ -258,7 +221,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 // Speed-up ratio computed as step frequency / BPM
                 inRatio = stepFreq / bpm.toFloat()
 
-                if (stepFreq < 60)
+                if (stepFreq < 60 && speedMode==AUTO_MODE)
                     inRatio = 1f
 
                 // ratio forced into [0.8, 1.2] range
