@@ -61,7 +61,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         val ALPHA = 0.6f
         val BPM_STEP = 2
 
-        var speedMode = AUTO_MODE
+        var speedMode = OFF_MODE
         var manualBpm = DEFAULT_BPM
         var ratio = 1f
     }

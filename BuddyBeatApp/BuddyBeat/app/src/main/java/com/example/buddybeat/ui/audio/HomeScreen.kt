@@ -70,6 +70,8 @@ import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
+import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.SongItem
@@ -105,13 +107,12 @@ fun HomeScreen(
     playlistLongClicked: MutableState<Playlist>,
     updateSongs: () -> Unit,
     allSongsId: Long,
-    changeMode : (Int) -> Unit,
-    running : Boolean,
-    walking : Boolean
+    changeMode : (Long) -> Unit,
+    mode : Long
 ) {
     val context = LocalContext.current
-    val colorWalking = if (!running && walking) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
-    val colorRunning = if (!walking && running) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f)
+    val colorWalking = if (mode==1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
+    val colorRunning = if (mode==2L) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f)
 
     Scaffold(bottomBar = {
         if (song.title != "")
@@ -161,10 +162,12 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     ModeButton("Walking", color = colorWalking, onClick = {
-                        changeMode(1)
+                        changeMode(1L)
+                        speedMode = AUTO_MODE
                         startWalkingMode(context) /* Handle Walking Mode */ })
                     ModeButton("Running", color = colorRunning, onClick = {
-                        changeMode(2)
+                        changeMode(2L)
+                        speedMode = AUTO_MODE
                         startRunningMode(context)/* Handle Running Mode */ })
                     /*ModeButton(
                         "Walking",

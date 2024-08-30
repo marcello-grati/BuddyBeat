@@ -67,6 +67,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.R
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
@@ -83,17 +84,11 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@androidx.annotation.OptIn(UnstableApi::class) @OptIn(ExperimentalMaterial3Api::class)
 
 
 @Composable
 fun PlayScreenDesign(
-    //filePath: String,
-    //duration: Long,
-    //songName: String,
-    //artist: String,
-    //isPlaying : Boolean,
-    //currentTime : Float,
     onNavigateUp: () -> Unit,
     song: CurrentSong,
     duration: Long,
@@ -113,11 +108,8 @@ fun PlayScreenDesign(
     ratio : String,
     queue : () -> Unit,
     target : String,
-    speedMode: Int
+    speedMode: Long
 ) {
-    //var isPlaying by remember { mutableStateOf(false) }
-    //var currentTime by remember { mutableStateOf(0f) }
-    //val durationInSeconds = durationToSeconds(duration)
     var text by remember { mutableStateOf("auto") }
 
     /*LaunchedEffect(isPlaying, currentTime) {

@@ -15,9 +15,7 @@ import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.BPM_UPDATED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
-import com.example.buddybeat.DataStoreManager.Companion.I_AM_RUNNING
-import com.example.buddybeat.DataStoreManager.Companion.I_AM_WALKING
-import com.example.buddybeat.DataStoreManager.Companion.MODALITY
+import com.example.buddybeat.DataStoreManager.Companion.MODE
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
@@ -62,9 +60,9 @@ class MyViewModel @Inject constructor(
     val bpmUpdated = dataStoreManager.getPreference(BPM_UPDATED_KEY).asLiveData(Dispatchers.IO)
     val allSongsId = dataStoreManager.getPreferenceLong(ALL_SONGS_KEY).asLiveData(Dispatchers.IO)
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
-    val iAmWalking = dataStoreManager.getPreference(I_AM_WALKING).asLiveData(Dispatchers.IO)
-    val iAmRunning = dataStoreManager.getPreference(I_AM_RUNNING).asLiveData(Dispatchers.IO)
-    val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
+    val mode = dataStoreManager.getPreferenceLong(MODE).asLiveData(Dispatchers.IO)
+    //val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
+    //val manualBpm = dataStoreManager.getPreferenceLong(MANUAL_BPM).asLiveData(Dispatchers.IO)
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
         viewModelScope.launch {
@@ -287,7 +285,7 @@ class MyViewModel @Inject constructor(
     @OptIn(UnstableApi::class)
     private fun getQueue() {
         val queue = queue.toList()
-        val target = when (modality.value) {
+        val target = when (speedMode) {
             AUTO_MODE -> stepFreq.value.toDouble()
             MANUAL_MODE -> manualBpm.toDouble()
             OFF_MODE -> 0.0
@@ -317,13 +315,6 @@ class MyViewModel @Inject constructor(
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    /*val target = when (speedMode) {
-                        AUTO_MODE -> stepFreq
-                        MANUAL_MODE -> manualBpm.toDouble()
-                        OFF_MODE -> 100.0   // TODO
-                        else -> throw Exception("Invalid speed mode")
-                    }*/
-                    //val s = 180f
                     var logTarget = log2(target)
                     logBpmA -= floor(logBpmA)
                     logBpmB -= floor(logBpmB)
@@ -402,27 +393,8 @@ class MyViewModel @Inject constructor(
         setPreferenceLong(FAVORITES_KEY, d)
     }
 
-    fun setMode(mode: Int) {
-        when (mode) {
-            0 -> { //none
-                setPreference(I_AM_WALKING, false)
-                setPreference(I_AM_RUNNING, false)
-            }
-            1 -> { //walking
-                setPreference(I_AM_WALKING, true)
-                setPreference(I_AM_RUNNING, false)
-            }
-            2 -> { //running
-                setPreference(I_AM_RUNNING, true)
-                setPreference(I_AM_WALKING, false)
-            }
-        }
-
-    }
-
-
-    fun setModality(modality: Long) {
-        setPreferenceLong(MODALITY, modality)
+    fun setMode(mode: Long) {
+        setPreferenceLong(MODE, mode)
     }
 }
 

@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
             val binder = service as SensorService.LocalBinder
             mService = binder.getService()
             mBound = true
+            viewModel.mode.value?.let { mService.changeMode(it) }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -179,16 +180,17 @@ class MainActivity : ComponentActivity() {
     
     private fun toggleSpeedMode() {
         speedMode = (speedMode + 1) % 3
-        viewModel.setModality(speedMode)
     }
 
 //    fun setManualBpm(bpm : Int) {
 //        manualBpm = bpm
 //    }
-    fun increaseManualBpm() {
+//
+
+    private fun increaseManualBpm() {
         manualBpm += BPM_STEP
     }
-    fun decreaseManualBpm() {
+    private fun decreaseManualBpm() {
         manualBpm -= BPM_STEP
     }
 
@@ -591,7 +593,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
-        val target = when (viewModel.modality.value) {
+        val target = when (speedMode) {
             PlaybackService.AUTO_MODE -> run{
                 val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
                 var l = d.average()

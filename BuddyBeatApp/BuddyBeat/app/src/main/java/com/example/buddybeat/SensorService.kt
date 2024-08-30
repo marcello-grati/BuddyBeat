@@ -68,19 +68,17 @@ class SensorService : Service(), SensorEventListener {
     /*SILVIA
     private var threshold = mutableDoubleStateOf(0.7)  //for step calculus
     private var deltaTime = mutableIntStateOf(250) // 0.5s interval of data refresh
+    */
 
     @OptIn(UnstableApi::class)
-    fun changeMode(mode:Int){
-        if(mode == 0) { // walking
-            threshold.doubleValue = 0.7
-            deltaTime.intValue = 250
+    fun changeMode(mode:Long){
+        if(mode == 0L) { // walking
+            setWalkingMode()
         }
-        else if (mode==1){ //running
-            threshold.doubleValue = 1.5
-            deltaTime.intValue = 150
+        else if (mode == 1L){ //running
+            setRunningMode()
         }
-        Log.d("Changing Mode", "Threshold: ${threshold.doubleValue}, DeltaTime: ${deltaTime.intValue}")
-    }*/
+    }
 
     /*CHIARA*/
     // Walking and Running modalities
@@ -300,9 +298,7 @@ class SensorService : Service(), SensorEventListener {
         Log.d("SensorService", "Distruggo il service")
         writeToCsvFile(activityLogs)
         scope.launch {
-            dataStoreManager.setPreference(DataStoreManager.I_AM_RUNNING, false)
-            dataStoreManager.setPreference(DataStoreManager.I_AM_WALKING, false)
-            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
         }
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this, gyroSensor)
