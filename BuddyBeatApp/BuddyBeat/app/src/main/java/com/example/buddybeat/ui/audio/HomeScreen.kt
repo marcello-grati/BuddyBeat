@@ -76,6 +76,11 @@ import com.example.buddybeat.ui.components.SongItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Brush
+import android.content.Context
+import android.content.Intent
+
+import androidx.compose.ui.platform.LocalContext
+import com.example.buddybeat.SensorService
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -109,6 +114,8 @@ fun HomeScreen(
     updateSongs: () -> Unit,
     allSongsId : Long
     ) {
+    val context = LocalContext.current
+
     Scaffold(bottomBar = {
         if (song.title != "")
             HomeBottomBar(
@@ -153,8 +160,8 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = { /* Handle Walking Mode */ })
-                    ModeButton("Running", Color(0xFFD0EB34), onClick = { /* Handle Running Mode */ })
+                    ModeButton("Walking", color = Color(0xFFB1B2FF), onClick = {startWalkingMode(context) /* Handle Walking Mode */ })
+                    ModeButton("Running", Color(0xFFD0EB34), onClick = { startRunningMode(context)/* Handle Running Mode */ })
                 }
                 Row(  modifier = Modifier.fillMaxWidth() .padding(start=20.dp, end = 20.dp),verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End){
                     SongsOfTheWeek("YOUR PLAYLISTS")
@@ -236,6 +243,17 @@ fun HomeScreen(
             else -> { /**/ }
         }
     }
+}
+
+private fun startWalkingMode(context: Context) {
+    val intent = Intent(context, SensorService::class.java)
+    intent.action = "SET_WALKING_MODE"
+    context.startService(intent)
+}
+private fun startRunningMode(context: Context) {
+    val intent = Intent(context, SensorService::class.java)
+    intent.action = "SET_RUNNING_MODE"
+    context.startService(intent)
 }
 
 @Composable

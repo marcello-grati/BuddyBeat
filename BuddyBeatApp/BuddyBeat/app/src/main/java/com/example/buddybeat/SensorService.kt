@@ -14,25 +14,25 @@ import android.hardware.SensorManager
 import android.icu.text.SimpleDateFormat
 import android.os.Binder
 import android.os.Build
+import android.os.Environment
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import java.util.LinkedList
-import kotlin.math.ceil
-import kotlin.math.sqrt
-
-import android.os.Environment
-import android.os.Handler
-import android.os.Looper
-import android.provider.MediaStore
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Date
+import java.util.LinkedList
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.sqrt
+
 
 /*Sensor Service new*/
 class SensorService : Service(), SensorEventListener {
@@ -61,6 +61,25 @@ class SensorService : Service(), SensorEventListener {
 
     private var bpm_song = 0
 
+    // Walking and Running modalities
+    private var threshold: Float = 0.0f
+    private var deltaTime: Long = 0L
+
+    private val walkingThreshold = 0.7f
+    private val walkingDeltaTime = 250L
+
+    private val runningThreshold = 1.5f
+    private val runningDeltaTime = 150L
+
+    private fun setWalkingMode() {
+        threshold = walkingThreshold
+        deltaTime = walkingDeltaTime
+    }
+    private fun setRunningMode() {
+        threshold = runningThreshold
+        deltaTime = runningDeltaTime
+    }
+
     // Step frequency variables
     private var lastUpdateTime: Long = 0 //new
     private var penultimateUpdateTime: Long = 0 //new
@@ -74,8 +93,8 @@ class SensorService : Service(), SensorEventListener {
 
     /* variabili da regolare */
     private var unitTime = 60000  //60000 millisecond = 60 second
-    private var threshold = 2  //for step calculus
-    private var deltaTime = 300// 0.5s interval of data refresh
+    //private var threshold = 2  //for step calculus
+    //private var deltaTime = 300// 0.5s interval of data refresh
     private val n = 15 //stabilization of frequenc values
 
     companion object {
@@ -123,12 +142,30 @@ class SensorService : Service(), SensorEventListener {
 
     private val activityLogs = mutableListOf<ValueTimestamp>()
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         startForegroundService()
+
+        intent?.action?.let { action ->
+            Log.d("SensorService", "Received action: $action") // Log per tracciare l'azione ricevuta
+            when (action) {
+                "SET_WALKING_MODE" -> {
+                    Log.d("SensorService", "Setting Walking Mode") // Log per tracciare la modalità camminata
+                    setWalkingMode()
+                }
+                "SET_RUNNING_MODE" -> {
+                    Log.d("SensorService", "Setting Running Mode") // Log per tracciare la modalità corsa
+                    setRunningMode()
+                }
+                else -> {
+                    Log.d("SensorService", "Unknown action received: $action") // Log per azioni sconosciute
+                }
+            }
+        }
+
         return START_STICKY
     }
+
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -302,6 +339,9 @@ class SensorService : Service(), SensorEventListener {
                         val newFreq = frequency[frequency.size-1]
                         newStepFrequency = (alpha * newStepFrequency + (1 - alpha) * newFreq).toInt()
 
+                        // Limit the size of the lists to avoid memory issues
+                        if (currentFrequency.size > n) currentFrequency.removeAt(0)
+                        if (previousStepFrequency.size > n) previousStepFrequency.removeAt(0)
                     }
                 }*/
                 //stepData ="Steps: $steps"

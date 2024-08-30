@@ -56,7 +56,8 @@
         </service>
         <service
             android:name=".SensorService"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse"
+            android:exported="true">
         </service>
 
     </application>
