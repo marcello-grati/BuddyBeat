@@ -302,6 +302,7 @@ class SensorService : Service(), SensorEventListener {
         scope.launch {
             dataStoreManager.setPreference(DataStoreManager.I_AM_RUNNING, false)
             dataStoreManager.setPreference(DataStoreManager.I_AM_WALKING, false)
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
         }
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this, gyroSensor)

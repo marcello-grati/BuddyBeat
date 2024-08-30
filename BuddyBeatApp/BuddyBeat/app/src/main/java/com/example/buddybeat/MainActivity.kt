@@ -179,6 +179,7 @@ class MainActivity : ComponentActivity() {
     
     private fun toggleSpeedMode() {
         speedMode = (speedMode + 1) % 3
+        viewModel.setModality(speedMode)
     }
 
 //    fun setManualBpm(bpm : Int) {
@@ -332,18 +333,7 @@ class MainActivity : ComponentActivity() {
             DisposableEffect(state) {
                 state.launchMultiplePermissionRequest()
                 onDispose {
-                    /*val list = ContentResolverHelper(applicationContext).getAudioData()
-                    val allSongsPlaylist = Playlist(title = "ALL SONGS", description = "All songs")
-                    val favorites = Playlist(title = "FAVORITES", description = "Favorites")
-                    val l = viewModel.insertPlaylist(allSongsPlaylist)
-                    Log.d("PlaylistIdL", l.toString())
-                    viewModel.setPreferenceLong(ALL_SONGS_KEY, l)
-                    viewModel.insertAllSongs(list,l)
-                    val d = viewModel.insertPlaylist(favorites)
-                    Log.d("PlaylistIdD", d.toString())
-                    viewModel.setPreferenceLong(FAVORITES_KEY, d)*/
                     viewModel.insertAllSongs()
-                    //viewModel.insertAllSongs(l)
                 }
             }
 
@@ -451,55 +441,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-//    private fun updateRatio() {
-//
-//        if (speedMode != OFF_MODE) {
-//
-//            val stepFreq = when (speedMode) {
-//                AUTO_MODE -> mService.stepFreq.toFloat()
-//                MANUAL_MODE -> manualBpm.toFloat()
-//                else -> throw Exception("Invalid speed mode")
-//            }
-//            var bpm = controller?.mediaMetadata?.extras?.getInt("bpm")
-//            var inRatio = 1f
-//            var outRatio = _ratio.value
-//
-//            if (bpm != 0 && bpm != null) {
-//
-//                // We compute the log_2() of step frequency and of double, half and original value of BPM
-//                val logStepFreq = log2(stepFreq)
-//                var logBpm = log2(bpm.toFloat())
-//                var logHalfBPM = log2(bpm.toFloat() / 2.0f)
-//                var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-//
-//                // We update BPM if one of its multiples has a smaller distance value
-//                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
-//                    bpm /= 2
-//                    logBpm = logHalfBPM
-//                    logHalfBPM = log2(bpm.toFloat() / 2.0f)
-//                }
-//                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
-//                    bpm *= 2
-//                    logBpm = logDoubleBPM
-//                    logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-//                }
-//                // Speed-up ratio computed as step frequency / BPM
-//                inRatio = stepFreq / bpm.toFloat()
-//            }
-//            if (stepFreq < 60)
-//                inRatio = 1f
-//
-//            // ratio forced into [0.8, 1.2] range
-//            inRatio = inRatio.coerceAtLeast(0.8f)
-//            inRatio = inRatio.coerceAtMost(1.25f)
-//
-//            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
-//
-//            _ratio.update { outRatio }
-//        } else {
-//            _ratio.update { 1f }
-//        }
-//    }
 
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onStart() {
@@ -650,23 +591,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
-        val stepFreq = run{
-            val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
-            var l = d.average()
-            if(l.isNaN()){
-                l=0.0
+        val target = when (viewModel.modality.value) {
+            PlaybackService.AUTO_MODE -> run{
+                val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
+                var l = d.average()
+                if(l.isNaN()){
+                    l=0.0
+                }
+                l
             }
-            l
+            PlaybackService.MANUAL_MODE -> manualBpm.toDouble()
+            PlaybackService.OFF_MODE -> 0.0
+            else -> throw Exception("Invalid speed mode")
         }
-        Log.d("stepFreq before nextSong()", stepFreq.toString())
+        Log.d("stepFreq before nextSong()", target.toString())
         val queueNext = queue.removeFirstOrNull()
         if(queueNext!=null){
             val media = buildMediaItem(queueNext)
             setSongInPlaylist(media)
             return
         }
-        val list = audiolist.value.toMutableList()
-        val l = list.let { viewModel.orderSongs(stepFreq, it) }
+        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist.value) else audiolist.value
         while (true) {
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {

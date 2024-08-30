@@ -1,12 +1,14 @@
 package com.example.buddybeat.ui
 
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.BeatExtractor
 import com.example.buddybeat.DataStoreManager
 import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
@@ -15,6 +17,7 @@ import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.I_AM_RUNNING
 import com.example.buddybeat.DataStoreManager.Companion.I_AM_WALKING
+import com.example.buddybeat.DataStoreManager.Companion.MODALITY
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
@@ -61,6 +64,7 @@ class MyViewModel @Inject constructor(
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
     val iAmWalking = dataStoreManager.getPreference(I_AM_WALKING).asLiveData(Dispatchers.IO)
     val iAmRunning = dataStoreManager.getPreference(I_AM_RUNNING).asLiveData(Dispatchers.IO)
+    val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
         viewModelScope.launch {
@@ -280,9 +284,16 @@ class MyViewModel @Inject constructor(
         }
     }
 
+    @OptIn(UnstableApi::class)
     private fun getQueue() {
         val queue = queue.toList()
-        val l = orderSongs(stepFreq.value.toDouble(), audiolist.value)
+        val target = when (modality.value) {
+            AUTO_MODE -> stepFreq.value.toDouble()
+            MANUAL_MODE -> manualBpm.toDouble()
+            OFF_MODE -> 0.0
+            else -> throw Exception("Invalid speed mode")
+        }
+        val l = if (target!=0.0) orderSongs(stepFreq.value.toDouble(), audiolist.value) else audiolist.value
         l.removeAll { playlist.contains(it.uri) }
         l.forEach {
             Log.d(it.toString(), it.bpm.toString())
@@ -293,7 +304,8 @@ class MyViewModel @Inject constructor(
         }
     }
 
-    fun orderSongs(stepFreq: Double, list: MutableList<Song>): MutableList<Song> {
+    @OptIn(UnstableApi::class)
+    fun orderSongs(target: Double, list: MutableList<Song>): MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered")
         val myCustomComparator = Comparator<Song> { a, b ->
@@ -305,12 +317,12 @@ class MyViewModel @Inject constructor(
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    val target = when (speedMode) {
+                    /*val target = when (speedMode) {
                         AUTO_MODE -> stepFreq
                         MANUAL_MODE -> manualBpm.toDouble()
                         OFF_MODE -> 100.0   // TODO
                         else -> throw Exception("Invalid speed mode")
-                    }
+                    }*/
                     //val s = 180f
                     var logTarget = log2(target)
                     logBpmA -= floor(logBpmA)
@@ -406,6 +418,11 @@ class MyViewModel @Inject constructor(
             }
         }
 
+    }
+
+
+    fun setModality(modality: Long) {
+        setPreferenceLong(MODALITY, modality)
     }
 }
 

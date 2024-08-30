@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,7 @@ class DataStoreManager(
         val FAVORITES_KEY = longPreferencesKey("FAVORITES_KEY")
         val I_AM_WALKING = booleanPreferencesKey("WALKING")
         val I_AM_RUNNING = booleanPreferencesKey("RUNNING")
+        val MODALITY = longPreferencesKey("MODALITY")
     }
 
     suspend fun setPreference(key: Preferences.Key<Boolean>, value:Boolean){
