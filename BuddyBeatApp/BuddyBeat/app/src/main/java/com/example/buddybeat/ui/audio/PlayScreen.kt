@@ -72,6 +72,7 @@ import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.CurrentSong
 import kotlin.math.PI
@@ -110,7 +111,8 @@ fun PlayScreenDesign(
     step : String,
     bpm : String,
     ratio : String,
-    queue : () -> Unit
+    queue : () -> Unit,
+    target : String
 ) {
     //var isPlaying by remember { mutableStateOf(false) }
     //var currentTime by remember { mutableStateOf(0f) }
@@ -240,7 +242,7 @@ fun PlayScreenDesign(
 
             // Right side - Manual and Auto buttons
             Row {
-                NewButton(name = "manual", onClick = {})
+                NewButton(name = target, onClick = {})
                 NewButton(name = text, onClick = {
                     toggleMode()
 
