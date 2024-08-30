@@ -119,7 +119,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Intent(this, SensorService::class.java).also { int ->
             bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
-        handler.postDelayed(sensorDataRunnable, 10000)
+        handler.postDelayed(sensorDataRunnable, 15000) // after 10 seconds it starts to updateSpeedSongs
         handler.postDelayed(orderSongsRunnable, 2000)
         setMediaNotificationProvider(customMediaNotificationProvider)
     }
@@ -172,7 +172,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         override fun run() {
             if (mBound) {
                 updateSpeedSong()
-                handler.postDelayed(this, interval*3)
+                handler.postDelayed(this, interval*3) //every 3 seconds change ratio
             }
         }
     }
@@ -225,13 +225,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     AUTO_MODE -> {
                         //mService.stepFreq.toFloat()
                         //val d = mService.previousStepFrequency.takeLast(5)
-                        val d = mService.previousStepFrequency.takeLastWhile { it > 50 }.takeLast(5)
-                        Log.d("d", d.toString())
+                        val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(3)
                         var l = d.average()
                         if(l.isNaN()){
                             l=0.0
                         }
-                        Log.d("l",l.toString())
+                        Log.d("stepFreq when changing ratio",l.toString())
                         l.toFloat()
                     }
                     MANUAL_MODE -> manualBpm.toFloat()
@@ -272,7 +271,10 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
 
                 ratio = outRatio
-                mService.updateBpm(ratio*bpm)
+                mService.updateBpm(ratio*bpm) //update Bpm in csv
+            }
+            else {
+                ratio = 1f
             }
         } else {
             ratio = 1f
@@ -318,7 +320,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 if (!playlist.contains(media.mediaId)) {
                     Log.d("IOOOO","From Playback service, it does not contain ${media.mediaId}")
                     setSongInPlaylist(media)
-                    //mediaSession?.player?.seekToDefaultPosition(mediaSession?.player!!.currentMediaItemIndex + 1)
                     break
                 }
 
@@ -334,7 +335,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
         Log.d("IOOOO", "mediaItemCount: " + mediaSession?.player?.mediaItemCount.toString())
     }
-    fun orderSongs(): MutableList<Song> {
+    private fun orderSongs(): MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered from PlayBackService")
         val myCustomComparator = Comparator<Song> { a, b ->
@@ -347,15 +348,14 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
                     val stepFreq = run{
-                        val d = mService.previousStepFrequency.takeLast(10).takeLastWhile {  it > 50 }
-                        Log.d("d",d.toString())
+                        val d = mService.previousStepFrequency_3.takeLast(10).takeLastWhile {  it > 50 }
                         var l = d.average()
                         if(l.isNaN()){
                             l=0.0
                         }
                         l
                     }
-                    Log.d("stepFreq from reordering", stepFreq.toString())
+                    Log.d("stepFreq before reordering", stepFreq.toString())
                     var logStepFreq = log2(stepFreq)
                     logBpmA -= floor(logBpmA)
                     logBpmB -= floor(logBpmB)
@@ -366,7 +366,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                         distA = 1.0f - distA
                     if (distB > 0.5f)
                         distB = 1.0f - distB
-                    //Log.d("Comparator", "Comparing ${a.bpm} and ${b.bpm} => result: $distA, $distB")
                     when {
                         distA < distB -> return@Comparator -1
                         distA > distB -> return@Comparator 1
@@ -406,43 +405,11 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
-    /*private val notificationPlayerCustomCommandButtons =
-        NotificationPlayerCustomCommandButton.entries.map { command -> command.commandButton }*/
 
-    /*override fun onConnect(
-        session: MediaSession,
-        controller: MediaSession.ControllerInfo
-    ): MediaSession.ConnectionResult {
-        if (session.isMediaNotificationController(controller)) {
-            val sessionCommands =
-                notificationPlayerCustomCommandButtons[0].sessionCommand.let {
-                    val m = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
-                    if(it!=null)
-                        m.add(it)
-                    m.build()
-                }
-            val playerCommands =
-                MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
-                    .remove(COMMAND_SEEK_TO_PREVIOUS)
-                    .remove(COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
-                    .remove(COMMAND_SEEK_TO_NEXT)
-                    .remove(COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
-                    .build()
-            // Custom layout and available commands to configure the legacy/framework session.
-            return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
-                .setCustomLayout(
-                    notificationPlayerCustomCommandButtons
-                )
-                .setAvailablePlayerCommands(playerCommands)
-                .setAvailableSessionCommands(sessionCommands)
-                .build()
-        }
-        // Default commands with default custom layout for all other controllers.
-        return MediaSession.ConnectionResult.AcceptedResultBuilder(session).build()
-    }*/
 
+    // CUSTOM NOTIFICATION
     private val notificationPlayerCustomCommandButtons =
-        NotificationPlayerCustomCommandButton.values().map { command -> command.commandButton }
+        NotificationPlayerCustomCommandButton.entries.map { command -> command.commandButton }
 
     @SuppressLint("WrongConstant")
     override fun onConnect(
