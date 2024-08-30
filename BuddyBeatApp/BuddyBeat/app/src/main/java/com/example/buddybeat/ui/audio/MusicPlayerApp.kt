@@ -34,6 +34,7 @@ import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
+import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.Queue
 import kotlinx.coroutines.flow.update
@@ -360,7 +361,8 @@ fun MusicPlayerNavHost(
                     viewModel.showQueue(true)
                     navController.navigate(Destination.queue)
                 },
-                target = manualBpm.toString()
+                target = manualBpm.toString(),
+                speedMode = speedMode
             )
         }
         composable(route = Destination.queue,

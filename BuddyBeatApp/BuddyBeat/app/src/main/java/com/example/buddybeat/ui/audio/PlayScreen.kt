@@ -112,7 +112,8 @@ fun PlayScreenDesign(
     bpm : String,
     ratio : String,
     queue : () -> Unit,
-    target : String
+    target : String,
+    speedMode: Int
 ) {
     //var isPlaying by remember { mutableStateOf(false) }
     //var currentTime by remember { mutableStateOf(0f) }
@@ -243,17 +244,16 @@ fun PlayScreenDesign(
             // Right side - Manual and Auto buttons
             Row {
                 NewButton(name = target, onClick = {})
-                NewButton(name = text, onClick = {
-                    toggleMode()
-
-                    text = when (speedMode) {
+                NewButton(
+                    name = when (speedMode) {
                         AUTO_MODE -> "auto"
                         MANUAL_MODE -> "manual"
                         OFF_MODE -> "off"
                         else -> "error"
-                    }
-                    Log.d("Button", "Toggled to $text")
-                })
+                    }, onClick = {
+                        toggleMode()
+                        Log.d("Button", "Toggled to $text")
+                    })
             }
         }
 
