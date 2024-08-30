@@ -307,21 +307,28 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    val stepFreq = run{
-                        val d = mService.previousStepFrequency_3.takeLast(10).takeLastWhile {  it > 50 }
-                        var l = d.average()
-                        if(l.isNaN()){
-                            l=0.0
+                    val target = when (speedMode) {
+                        AUTO_MODE -> { run{
+                                val d = mService.previousStepFrequency_3.takeLast(10).takeLastWhile {  it > 50 }
+                                var l = d.average()
+                                if(l.isNaN()){
+                                    l=0.0
+                                }
+                                l
+                            }
                         }
-                        l
+                        MANUAL_MODE -> manualBpm.toDouble()
+                        OFF_MODE -> 100.0   // TODO
+                        else -> throw Exception("Invalid speed mode")
                     }
-                    Log.d("stepFreq before reordering", stepFreq.toString())
-                    var logStepFreq = log2(stepFreq)
+
+                    Log.d("stepFreq before reordering", target.toString())
+                    var logTarget = log2(target)
                     logBpmA -= floor(logBpmA)
                     logBpmB -= floor(logBpmB)
-                    logStepFreq -= floor(logStepFreq)
-                    var distA = abs(logBpmA - logStepFreq)
-                    var distB = abs(logBpmB - logStepFreq)
+                    logTarget -= floor(logTarget)
+                    var distA = abs(logBpmA - logTarget)
+                    var distB = abs(logBpmB - logTarget)
                     if (distA > 0.5f)
                         distA = 1.0f - distA
                     if (distB > 0.5f)
