@@ -34,7 +34,6 @@ import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
-import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.Queue
 import kotlinx.coroutines.flow.update
