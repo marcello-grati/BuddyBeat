@@ -287,7 +287,21 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             setSongInPlaylist(media)
             return
         }
-        val l = orderSongs()
+        val target = when (speedMode) {
+            AUTO_MODE -> run{
+                val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
+                var l = d.average()
+                if(l.isNaN()){
+                    l=0.0
+                }
+                l
+            }
+            MANUAL_MODE -> manualBpm.toDouble()
+            OFF_MODE -> 0.0
+            else -> throw Exception("Invalid speed mode")
+        }
+        Log.d("stepFreq before nextSong()", target.toString())
+        val l = if (target!=0.0) orderSongs(target) else audiolist.value
         l.forEach {
             Log.d(it.toString(), it.bpm.toString())
         }
@@ -314,7 +328,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
         Log.d("IOOOO", "mediaItemCount: " + mediaSession?.player?.mediaItemCount.toString())
     }
-    private fun orderSongs(): MutableList<Song> {
+    private fun orderSongs(target : Double): MutableList<Song> {
 
         Log.d("Ordering", "Song list reordered from PlayBackService")
         val myCustomComparator = Comparator<Song> { a, b ->
@@ -326,22 +340,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 else -> {
                     var logBpmA = log2(a.bpm.toFloat())
                     var logBpmB = log2(b.bpm.toFloat())
-                    val target = when (speedMode) {
-                        AUTO_MODE -> { run{
-                                val d = mService.previousStepFrequency_3.takeLastWhile {  it > 50 }.takeLast(5)
-                                var l = d.average()
-                                if(l.isNaN()){
-                                    l=0.0
-                                }
-                                l
-                            }
-                        }
-                        MANUAL_MODE -> manualBpm.toDouble()
-                        OFF_MODE -> 100.0   // TODO
-                        else -> throw Exception("Invalid speed mode")
-                    }
-
-                    Log.d("stepFreq before reordering", target.toString())
                     var logTarget = log2(target)
                     logBpmA -= floor(logBpmA)
                     logBpmB -= floor(logBpmB)
