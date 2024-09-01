@@ -107,6 +107,7 @@ fun HomeScreen(
     playlistLongClicked: MutableState<Playlist>,
     updateSongs: () -> Unit,
     allSongsId: Long,
+    setModality : (Long) -> Unit,
     changeMode : (Long) -> Unit,
     mode : Long
 ) {
@@ -164,10 +165,12 @@ fun HomeScreen(
                     ModeButton("Walking", color = colorWalking, onClick = {
                         changeMode(1L)
                         speedMode = AUTO_MODE
+                        setModality(speedMode)
                         startWalkingMode(context) /* Handle Walking Mode */ })
                     ModeButton("Running", color = colorRunning, onClick = {
                         changeMode(2L)
                         speedMode = AUTO_MODE
+                        setModality(speedMode)
                         startRunningMode(context)/* Handle Running Mode */ })
                     /*ModeButton(
                         "Walking",

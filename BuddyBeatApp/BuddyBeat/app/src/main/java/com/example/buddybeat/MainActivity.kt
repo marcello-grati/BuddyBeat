@@ -180,6 +180,8 @@ class MainActivity : ComponentActivity() {
     
     private fun toggleSpeedMode() {
         speedMode = (speedMode + 1) % 3
+        viewModel.setModality(speedMode)
+        Log.d("MODALITY", speedMode.toString())
     }
 
 //    fun setManualBpm(bpm : Int) {

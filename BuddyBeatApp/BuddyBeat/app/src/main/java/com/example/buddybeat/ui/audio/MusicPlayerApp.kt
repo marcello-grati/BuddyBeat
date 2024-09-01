@@ -146,6 +146,7 @@ fun MusicPlayerNavHost(
 
     // walking/running
     val mode by viewModel.mode.observeAsState(initial = 0L)
+    val modality by viewModel.modality.observeAsState(initial = 0L)
 
     if (shouldShowDialogOne.value) {
         DialogOne(shouldShowDialog = shouldShowDialogOne,
@@ -258,6 +259,9 @@ fun MusicPlayerNavHost(
                     viewModel.updateSongs()
                 },
                 allSongsId = allSongs,
+                setModality = {
+                    viewModel.setModality(it)
+                },
                 changeMode = {
                     setMode(it)
                 },
@@ -359,7 +363,8 @@ fun MusicPlayerNavHost(
                     navController.navigate(Destination.queue)
                 },
                 target = manualBpm.toString(),
-                speedMode = speedMode
+                speedMode = speedMode,
+                modality = modality
             )
         }
         composable(route = Destination.queue,

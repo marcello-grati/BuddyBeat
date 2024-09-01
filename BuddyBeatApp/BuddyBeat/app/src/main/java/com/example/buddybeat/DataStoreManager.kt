@@ -26,8 +26,8 @@ class DataStoreManager(
         val ALL_SONGS_KEY = longPreferencesKey("ALL_SONGS_KEY")
         val FAVORITES_KEY = longPreferencesKey("FAVORITES_KEY")
         val MODE = longPreferencesKey("MODE")
+        val MODALITY = longPreferencesKey("MODALITY")
         //val I_AM_RUNNING = booleanPreferencesKey("RUNNING")
-        //val MODALITY = longPreferencesKey("MODALITY")
         //val MANUAL_BPM = longPreferencesKey("MANUAL_BPM")
     }
 

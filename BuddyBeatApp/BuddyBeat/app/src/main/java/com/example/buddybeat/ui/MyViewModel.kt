@@ -15,6 +15,7 @@ import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.BPM_UPDATED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
+import com.example.buddybeat.DataStoreManager.Companion.MODALITY
 import com.example.buddybeat.DataStoreManager.Companion.MODE
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
@@ -61,7 +62,7 @@ class MyViewModel @Inject constructor(
     val allSongsId = dataStoreManager.getPreferenceLong(ALL_SONGS_KEY).asLiveData(Dispatchers.IO)
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
     val mode = dataStoreManager.getPreferenceLong(MODE).asLiveData(Dispatchers.IO)
-    //val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
+    val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
     //val manualBpm = dataStoreManager.getPreferenceLong(MANUAL_BPM).asLiveData(Dispatchers.IO)
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
@@ -395,6 +396,10 @@ class MyViewModel @Inject constructor(
 
     fun setMode(mode: Long) {
         setPreferenceLong(MODE, mode)
+    }
+
+    fun setModality(modality: Long) {
+        setPreferenceLong(MODALITY, modality)
     }
 }
 

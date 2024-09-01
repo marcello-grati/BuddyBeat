@@ -40,6 +40,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -151,10 +152,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
         scope.launch {
             dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
         }
+        speedMode = OFF_MODE
         unbindService(connection)
         mBound = false
-        job.cancel()
+        job.cancelChildren()
         super.onDestroy()
     }
 
@@ -167,6 +170,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         playlist.add(updatedMediaItems.last().mediaId)
         if(playlist.size > ((audiolist.value.size.div(2))))
             playlist.removeFirstOrNull()
+        Log.d("onAddMediaItems", playlist.toString())
         Log.d("onAddMediaItems", playlist.toString())
         return Futures.immediateFuture(updatedMediaItems)
     }

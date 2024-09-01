@@ -27,6 +27,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -72,10 +73,10 @@ class SensorService : Service(), SensorEventListener {
 
     @OptIn(UnstableApi::class)
     fun changeMode(mode:Long){
-        if(mode == 0L) { // walking
+        if(mode == 1L) { // walking
             setWalkingMode()
         }
-        else if (mode == 1L){ //running
+        else if (mode == 2L){ //running
             setRunningMode()
         }
     }
@@ -299,11 +300,12 @@ class SensorService : Service(), SensorEventListener {
         writeToCsvFile(activityLogs)
         scope.launch {
             dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
         }
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
-        job.cancel()
+        job.cancelChildren()
         super.onDestroy()
     }
 

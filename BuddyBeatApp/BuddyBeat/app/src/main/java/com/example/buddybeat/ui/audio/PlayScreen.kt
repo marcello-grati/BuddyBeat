@@ -108,9 +108,15 @@ fun PlayScreenDesign(
     ratio : String,
     queue : () -> Unit,
     target : String,
-    speedMode: Long
+    speedMode: Long,
+    modality : Long
 ) {
-    var text by remember { mutableStateOf("auto") }
+    val text = when (modality) {
+        OFF_MODE -> "off"
+        AUTO_MODE -> "auto"
+        MANUAL_MODE -> "manual"
+        else -> "error"
+    }
 
     /*LaunchedEffect(isPlaying, currentTime) {
         if (isPlaying) {
@@ -237,12 +243,7 @@ fun PlayScreenDesign(
             Row {
                 NewButton(name = target, onClick = {})
                 NewButton(
-                    name = when (speedMode) {
-                        AUTO_MODE -> "auto"
-                        MANUAL_MODE -> "manual"
-                        OFF_MODE -> "off"
-                        else -> "error"
-                    }, onClick = {
+                    name = text, onClick = {
                         toggleMode()
                         Log.d("Button", "Toggled to $text")
                     })
