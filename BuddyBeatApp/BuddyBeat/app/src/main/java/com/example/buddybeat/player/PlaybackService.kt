@@ -30,13 +30,18 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.example.buddybeat.DataStoreManager
 import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Song
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -68,6 +73,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     @Inject
     lateinit var customMediaNotificationProvider : CustomMediaNotificationProvider
+
+    @Inject
+    lateinit var dataStoreManager: DataStoreManager
 
     private var mediaSession: MediaSession? = null
 
@@ -131,6 +139,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         stopSelf()
     }
 
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
+
     // Remember to release the player and media session in onDestroy
     override fun onDestroy() {
         mediaSession?.run {
@@ -138,8 +149,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             release()
             mediaSession = null
         }
+        scope.launch {
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
+        }
         unbindService(connection)
         mBound = false
+        job.cancel()
         super.onDestroy()
     }
 
