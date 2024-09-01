@@ -14,6 +14,8 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
@@ -55,9 +57,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     companion object {
         var playlist : MutableList<String> = mutableListOf() //already played
-        var audiolist : MutableStateFlow<MutableList<Song>> = MutableStateFlow(mutableListOf()) //list of possible songs
+        var audiolist =  mutableStateListOf<Song>()//list of possible songs
         var audioListId = MutableStateFlow(0L)
-        var queue : MutableList<Song> = mutableListOf()
+        var queue =  mutableStateListOf<Song>()
 
         const val OFF_MODE = 0L
         const val AUTO_MODE = 1L
@@ -168,7 +170,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     ): ListenableFuture<List<MediaItem>> {
         val updatedMediaItems = mediaItems.map { mediaitem -> mediaitem.buildUpon().setUri(mediaitem.requestMetadata.mediaUri).build() }
         playlist.add(updatedMediaItems.last().mediaId)
-        if(playlist.size > ((audiolist.value.size.div(2))))
+        if(playlist.size > ((audiolist.size.div(2))))
             playlist.removeFirstOrNull()
         Log.d("onAddMediaItems", playlist.toString())
         Log.d("onAddMediaItems", playlist.toString())
@@ -178,7 +180,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private fun onAddSong(media : MediaItem){
         playlist.add(media.mediaId)
-        if(playlist.size > (audiolist.value.size.div(2)))
+        if(playlist.size > (audiolist.size.div(2)))
             playlist.removeFirstOrNull()
         Log.d("onAddSong", playlist.toString())
     }
@@ -301,10 +303,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("stepFreq before nextSong()", target.toString())
-        val l = if (target!=0.0) orderSongs(target) else audiolist.value
-        l.forEach {
-            Log.d(it.toString(), it.bpm.toString())
-        }
+        val l = if (target!=0.0) orderSongs(target) else audiolist
+        if(speedMode!=OFF_MODE)
+            l.removeAll { it.bpm == -1 || it.bpm == 0 }
         while(true){
             val nextSong = l.removeFirstOrNull()
             if(nextSong != null) {
@@ -359,7 +360,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             }
 
         }
-        val list = audiolist.value.toMutableList()
+        val list = audiolist.toMutableList()
         return list.sortedWith(myCustomComparator).toMutableList()
     }
 

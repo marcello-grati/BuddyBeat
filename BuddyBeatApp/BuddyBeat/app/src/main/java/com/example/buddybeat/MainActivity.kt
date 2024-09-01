@@ -468,6 +468,7 @@ class MainActivity : ComponentActivity() {
         controller.isPlaying.let { viewModel.updateIsPlaying(it) }
         controller.duration.let { viewModel.updateDuration(it) }
         controller.currentPosition.let { viewModel.updateProgress(it) }
+        viewModel.modality.value?.let { speedMode = it }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -615,7 +616,9 @@ class MainActivity : ComponentActivity() {
             setSongInPlaylist(media)
             return
         }
-        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist.value) else audiolist.value
+        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist
+        if(viewModel.modality.value!= PlaybackService.OFF_MODE)
+            l.removeAll { it.bpm == -1 || it.bpm == 0 }
         while (true) {
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {

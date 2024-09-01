@@ -24,11 +24,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
@@ -43,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -67,6 +70,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.R
 import com.example.buddybeat.player.PlaybackService
@@ -108,8 +112,10 @@ fun PlayScreenDesign(
     ratio : String,
     queue : () -> Unit,
     target : String,
-    speedMode: Long,
-    modality : Long
+    modality : Long,
+    addToFavorite: (Long) -> Unit,
+    removeFavorite: (Long) -> Unit,
+    favoriteContainsSong: (Long) -> LiveData<Int>,
 ) {
     val text = when (modality) {
         OFF_MODE -> "off"
@@ -117,6 +123,8 @@ fun PlayScreenDesign(
         MANUAL_MODE -> "manual"
         else -> "error"
     }
+
+    val img by favoriteContainsSong(song.id).observeAsState(initial = 0)
 
     /*LaunchedEffect(isPlaying, currentTime) {
         if (isPlaying) {
@@ -215,6 +223,7 @@ fun PlayScreenDesign(
             NewButton(name = bpm, onClick = {})
 
             // Center - Plus and Minus buttons
+
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -260,9 +269,16 @@ fun PlayScreenDesign(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            IconButton(onClick = {/*favorite*/ }) {
+            IconButton(onClick = {
+                if(img==0) {
+                    addToFavorite(song.id)
+                }
+                else{
+                    removeFavorite(song.id)
+                }
+            }) {
                 Icon(
-                    imageVector = Icons.Default.FavoriteBorder,
+                    imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "",
                     modifier = Modifier.size(25.dp),
                     tint = Color.Black
@@ -319,9 +335,9 @@ fun PlayScreenDesign(
             }
             IconButton(onClick = { queue() }) {
                 Icon(
-                    painter = painterResource(id = R.drawable.add_to_playlist),
+                    imageVector = Icons.Default.QueueMusic,
                     contentDescription = "",
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(25.dp),
                     tint = Color.Black
                 )
             }

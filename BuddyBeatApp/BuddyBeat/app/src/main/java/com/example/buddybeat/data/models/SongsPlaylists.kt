@@ -24,7 +24,7 @@ data class Song(
     @ColumnInfo(name = "uri")
     val uri: String,
     @ColumnInfo(name = "bpm")
-    val bpm: Int = -1)
+    var bpm: Int = -1)
 {
     override fun toString(): String = "$title - $artist"
 }
