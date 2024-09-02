@@ -217,22 +217,24 @@ fun PlayScreenDesign(
 
             // Center - Plus and Minus buttons
 
+            val enabled = modality == MANUAL_MODE
             Row(
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = {
                     minus()
-                }) {
+                }, enabled = enabled) {
                     Icon(
                         imageVector = Icons.Default.RemoveCircleOutline,
                         contentDescription = "",
                         modifier = Modifier.size(30.dp)
                     )
                 }
+                NewButton(name = target, onClick = {}, enabled = enabled)
                 IconButton(onClick = {
                     plus()
-                }) {
+                }, enabled = enabled) {
                     Icon(
                         imageVector = Icons.Default.AddCircleOutline,
                         contentDescription = "",
@@ -242,14 +244,11 @@ fun PlayScreenDesign(
             }
 
             // Right side - Manual and Auto buttons
-            Row {
-                NewButton(name = target, onClick = {})
-                NewButton(
+            NewButton(
                     name = text, onClick = {
                         toggleMode()
                         Log.d("Button", "Toggled to $text")
                     })
-            }
         }
 
         // Play ROW
@@ -552,7 +551,8 @@ fun formatSecondsToDuration(milliseconds: Long): String {
 @Composable
 fun NewButton(
     name: String,
-    onClick : () -> Unit){
+    onClick : () -> Unit,
+    enabled : Boolean = true){
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -560,7 +560,8 @@ fun NewButton(
         modifier = Modifier
             .padding(horizontal = 5.dp)
             .size(width = 70.dp, height = 50.dp),
-        onClick = onClick
+        onClick = onClick,
+        enabled = enabled
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
