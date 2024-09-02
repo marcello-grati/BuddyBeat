@@ -18,8 +18,6 @@ import android.os.Environment
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.os.PowerManager
-import android.os.PowerManager.WakeLock
 import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
@@ -89,11 +87,11 @@ class SensorService : Service(), SensorEventListener {
     private var threshold: Float = 0.0f
     private var deltaTime: Long = 0L
 
-    private val walkingThreshold = 0.7f  //0.7f
-    private val walkingDeltaTime = 300L   // 250L
+    private val walkingThreshold = 1.3f
+    private val walkingDeltaTime = 350L
 
-    private val runningThreshold = 1.0f   //1.5f
-    private val runningDeltaTime = 200L  // 150L
+    private val runningThreshold = 2.25f
+    private val runningDeltaTime = 250L
 
     private fun setWalkingMode() {
         threshold = walkingThreshold
