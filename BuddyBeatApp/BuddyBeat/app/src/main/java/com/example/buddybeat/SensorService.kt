@@ -86,10 +86,10 @@ class SensorService : Service(), SensorEventListener {
     private var threshold: Float = 0.0f
     private var deltaTime: Long = 0L
 
-    private val walkingThreshold = 0.7f
-    private val walkingDeltaTime = 250L
+    private val walkingThreshold = 1.23f
+    private val walkingDeltaTime = 300L
 
-    private val runningThreshold = 1.5f
+    private val runningThreshold = 1.9f
     private val runningDeltaTime = 150L
 
     private fun setWalkingMode() {
