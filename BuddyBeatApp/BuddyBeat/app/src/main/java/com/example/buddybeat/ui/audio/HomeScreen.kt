@@ -2,6 +2,8 @@ package com.example.buddybeat.ui.audio
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -76,6 +78,7 @@ import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.SongItem
 
+@RequiresApi(Build.VERSION_CODES.O)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun HomeScreen(
@@ -166,12 +169,14 @@ fun HomeScreen(
                         changeMode(1L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
-                        startWalkingMode(context) /* Handle Walking Mode */ })
+                        //startWalkingMode(context) /* Handle Walking Mode */
+                    })
                     ModeButton("Running", color = colorRunning, onClick = {
                         changeMode(2L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
-                        startRunningMode(context)/* Handle Running Mode */ })
+                        //startRunningMode(context)/* Handle Running Mode */
+                    })
                     /*ModeButton(
                         "Walking",
                         color = if (!running) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f),
@@ -271,15 +276,17 @@ fun HomeScreen(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun startWalkingMode(context: Context) {
     val intent = Intent(context, SensorService::class.java)
     intent.action = "SET_WALKING_MODE"
-    context.startService(intent)
+    context.startForegroundService(intent)
 }
+@RequiresApi(Build.VERSION_CODES.O)
 private fun startRunningMode(context: Context) {
     val intent = Intent(context, SensorService::class.java)
     intent.action = "SET_RUNNING_MODE"
-    context.startService(intent)
+    context.startForegroundService(intent)
 }
 
 @Composable

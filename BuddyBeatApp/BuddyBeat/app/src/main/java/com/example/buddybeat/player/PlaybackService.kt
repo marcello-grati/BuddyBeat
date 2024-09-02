@@ -195,6 +195,9 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     private fun updateSpeedSong() {
 
+        var inRatio: Float
+        var outRatio = ratio
+
         if (speedMode != OFF_MODE) {
 
             var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
@@ -205,48 +208,51 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     AUTO_MODE -> {
                         //mService.stepFreq.toFloat()
                         //val d = mService.previousStepFrequency.takeLast(5)
-                        val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(3)
-                        var l = d.average()
-                        if(l.isNaN()){
-                            l=0.0
+                        if(System.currentTimeMillis()-mService.lastUpdate>3000)
+                            0f
+                        else {
+                            val d = mService.previousStepFrequency_3.takeLast(10)
+                            Log.d("PreviousFreq updateSpeed playbackService", d.toString())
+                            var l = d.average()
+                            if (l.isNaN()) {
+                                l = 0.0
+                            }
+                            Log.d("stepFreq when changing ratio", l.toString())
+                            l.toFloat()
                         }
-                        Log.d("stepFreq when changing ratio",l.toString())
-                        l.toFloat()
                     }
                     MANUAL_MODE -> manualBpm.toFloat()
                     else -> throw Exception("Invalid speed mode")
                 }
 
-                var inRatio: Float
-                var outRatio = ratio
-
-
-                // We compute the log_2() of step frequency and of double, half and original value of BPM
-                val logStepFreq = log2(stepFreq)
-                var logBpm = log2(bpm.toFloat())
-                var logHalfBPM = log2(bpm.toFloat() / 2.0f)
-                var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-
-                // We update BPM if one of its multiples has a smaller distance value
-                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
-                    bpm /= 2
-                    logBpm = logHalfBPM
-                    logHalfBPM = log2(bpm.toFloat() / 2.0f)
-                }
-                while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
-                    bpm *= 2
-                    logBpm = logDoubleBPM
-                    logDoubleBPM = log2(bpm.toFloat() * 2.0f)
-                }
-                // Speed-up ratio computed as step frequency / BPM
-                inRatio = stepFreq / bpm.toFloat()
-
                 if (stepFreq < 60 && speedMode==AUTO_MODE)
                     inRatio = 1f
+                else {
+                    // We compute the log_2() of step frequency and of double, half and original value of BPM
+                    val logStepFreq = log2(stepFreq)
+                    var logBpm = log2(bpm.toFloat())
+                    var logHalfBPM = log2(bpm.toFloat() / 2.0f)
+                    var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
 
-                // ratio forced into [0.8, 1.2] range
-                inRatio = inRatio.coerceAtLeast(0.8f)
-                inRatio = inRatio.coerceAtMost(1.25f)
+                    // We update BPM if one of its multiples has a smaller distance value
+                    while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
+                        bpm /= 2
+                        logBpm = logHalfBPM
+                        logHalfBPM = log2(bpm.toFloat() / 2.0f)
+                    }
+                    while (abs(logStepFreq - logBpm) > abs(logStepFreq - logDoubleBPM)) {
+                        bpm *= 2
+                        logBpm = logDoubleBPM
+                        logDoubleBPM = log2(bpm.toFloat() * 2.0f)
+                    }
+                    // Speed-up ratio computed as step frequency / BPM
+                    inRatio = stepFreq / bpm.toFloat()
+
+
+                    // ratio forced into [0.8, 1.2] range
+                    inRatio = inRatio.coerceAtLeast(0.8f)
+                    inRatio = inRatio.coerceAtMost(1.25f)
+                }
 
                 outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
 
@@ -254,10 +260,14 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 mService.updateBpm(ratio*bpm) //update Bpm in csv
             }
             else {
-                ratio = 1f
+                inRatio = 1f
+                outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+                ratio = outRatio
             }
         } else {
-            ratio = 1f
+            inRatio = 1f
+            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+            ratio = outRatio
         }
         mediaSession?.player?.setPlaybackSpeed(ratio)
 
@@ -290,7 +300,8 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
         val target = when (speedMode) {
             AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
+                val d = mService.previousStepFrequency_3.takeLast(10)
+                Log.d("PreviousFreq nextSong playbackService", d.toString())
                 var l = d.average()
                 if(l.isNaN()){
                     l=0.0

@@ -311,7 +311,7 @@ class MainActivity : ComponentActivity() {
                             },
                             setMode = {
                                 viewModel.setMode(it)
-                                //mService.changeMode(it)
+                                mService.changeMode(it)
                             }
                         )
                     }
@@ -598,7 +598,8 @@ class MainActivity : ComponentActivity() {
     private fun nextSong() {
         val target = when (speedMode) {
             PlaybackService.AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
+                val d = mService.previousStepFrequency_3.takeLast(10)
+                Log.d("PreviousFreq nextSong mainActivity", d.toString())
                 var l = d.average()
                 if(l.isNaN()){
                     l=0.0

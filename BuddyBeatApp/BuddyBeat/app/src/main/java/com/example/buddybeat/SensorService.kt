@@ -18,6 +18,8 @@ import android.os.Environment
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
+import android.os.PowerManager.WakeLock
 import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
@@ -54,7 +56,7 @@ class SensorService : Service(), SensorEventListener {
     private var accelSensor: Sensor? = null
 
     //for steps calculation
-    private var lastUpdate: Long = 0
+    var lastUpdate: Long = 0
     private var lastAcceleration: Float = 0f
     private var acceleration: Float = 0f
     private var currentAcceleration: Float = SensorManager.GRAVITY_EARTH
@@ -72,12 +74,13 @@ class SensorService : Service(), SensorEventListener {
     */
 
     @OptIn(UnstableApi::class)
-    fun changeMode(mode:Long){
-        if(mode == 1L) { // walking
+    fun changeMode(mode: Long) {
+        if (mode == 1L) { // walking
             setWalkingMode()
-        }
-        else if (mode == 2L){ //running
+            Log.d("threshold + deltaTime", "$threshold + $deltaTime")
+        } else if (mode == 2L) { //running
             setRunningMode()
+            Log.d("threshold + deltaTime", "$threshold + $deltaTime")
         }
     }
 
@@ -86,16 +89,17 @@ class SensorService : Service(), SensorEventListener {
     private var threshold: Float = 0.0f
     private var deltaTime: Long = 0L
 
-    private val walkingThreshold = 0.7f
-    private val walkingDeltaTime = 250L
+    private val walkingThreshold = 0.7f  //0.7f
+    private val walkingDeltaTime = 300L   // 250L
 
-    private val runningThreshold = 1.5f
-    private val runningDeltaTime = 150L
+    private val runningThreshold = 1.0f   //1.5f
+    private val runningDeltaTime = 200L  // 150L
 
     private fun setWalkingMode() {
         threshold = walkingThreshold
         deltaTime = walkingDeltaTime
     }
+
     private fun setRunningMode() {
         threshold = runningThreshold
         deltaTime = runningDeltaTime
@@ -109,25 +113,25 @@ class SensorService : Service(), SensorEventListener {
 
 
     /* parameters for calculation stepFreq method 2 */
-    private var lastUpdateTime : Int = 0 //new
-    private var penultimateUpdateTime: Int = 0 //new
-    private var deltaBetweenTwoSteps: Int = 0 //new
-    private var stepFreqNow : Int = 0 //new: starting value of frequency steps
-    private val previousStepFrequency = mutableListOf<Int>()
-    private val currentFrequency = mutableListOf<Int>()
-    private val frequency = mutableListOf<Int>()
+    private var lastUpdateTime: Long = 0L //new
+    private var penultimateUpdateTime: Long = 0L //new
+    private var deltaBetweenTwoSteps: Long = 0L //new
+    private var stepFreqNow: Long = 0L //new: starting value of frequency steps
+    //private val previousStepFrequency = mutableListOf<Int>()
+    private val currentFrequency = mutableListOf<Long>()
+    //private val frequency = mutableListOf<Int>()
     private var stepFrequency_2: Int = 0
     private val n = 15 //stabilization of frequency values
+    val previousStepFrequency_3 = mutableListOf<Int>()
 
 
     /* parameters for calculation stepFreq method 3 */
-    private var lastUpdateTime_3: Long = 0 //new
+    /*private var lastUpdateTime_3: Long = 0 //new
     private var penultimateUpdateTime_3: Long = 0 //new
     private var deltaBetweenTwoSteps_3: Long = 0 //new
     private var stepFreqNow_3: Long = 0 //new: starting value of frequency steps
-    val previousStepFrequency_3 = mutableListOf<Int>()
     private val currentFrequency_3 = mutableListOf<Long>()
-    private var stepFrequency_3: Int = 0
+    private var stepFrequency_3: Int = 0*/
 
 
     companion object {
@@ -150,13 +154,14 @@ class SensorService : Service(), SensorEventListener {
     private val DIRECTORY_NAME = "BuddyBeat Logs"
     private var bpm_song = 0
     private val activityLogs = mutableListOf<ValueTimestamp>()
+
     data class ValueTimestamp(
         val timestamp: String,
-        val SPM_1: String,
+        //val SPM_1: String,
         val SPM_2: String,
-        val SPM_3: String,
+        //val SPM_3: String,
         val BPM: String,
-        val steps : String
+        val steps: String
     )
 
     // function called when changing ratio
@@ -166,8 +171,8 @@ class SensorService : Service(), SensorEventListener {
 
     // variable read by other components
     val stepFreq: Int
-        get() = stepFrequency_3
-
+        get() = if(System.currentTimeMillis()-lastUpdate>3000) 0
+            else stepFrequency_2
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -178,9 +183,9 @@ class SensorService : Service(), SensorEventListener {
             val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
             updateActivityLogs(
                 currentTime,
-                stepFrequency_1.toString(),
-                stepFrequency_2.toString(),
-                stepFrequency_3.toString(),
+                //stepFrequency_1.toString(),
+                stepFreq.toString(),
+                //stepFrequency_3.toString(),
                 bpm_song.toString(),
                 steps.toString()
             )
@@ -190,13 +195,20 @@ class SensorService : Service(), SensorEventListener {
         }
     }
 
-    private fun updateActivityLogs(timestamp: String, value1: String, value2: String, value3 : String, bpm: String, steps : String) {
+    private fun updateActivityLogs(
+        timestamp: String,
+        //value1: String,
+        value2: String,
+        //value3: String,
+        bpm: String,
+        steps: String
+    ) {
         activityLogs.add(
             ValueTimestamp(
                 timestamp = timestamp,
-                SPM_1 = value1,
+                //SPM_1 = value1,
                 SPM_2 = value2,
-                SPM_3 = value3,
+                //SPM_3 = value3,
                 BPM = bpm,
                 steps = steps
             )
@@ -204,14 +216,14 @@ class SensorService : Service(), SensorEventListener {
     }
 
     // METHOD 3
-    private val calculateFreq = object : Runnable {
+    /*private val calculateFreq = object : Runnable {
         override fun run() {
             calculationNewFreq()
             handler.postDelayed(this, 200)
         }
-    }
+    }*/
 
-    @OptIn(UnstableApi::class)
+    /*@OptIn(UnstableApi::class)
     private fun calculationNewFreq() {
         if (stepTimes.size >= 2) {
 
@@ -229,7 +241,7 @@ class SensorService : Service(), SensorEventListener {
                 currentFrequency_3.add(stepFreqNow_3)
 
                 //stabilization of frequency steps
-                if (currentFrequency_3.size >= 10) {
+                /*if (currentFrequency_3.size >= 10) {
                     val newFreq = currentFrequency_3.average()
                     currentFrequency_3.clear()
                     stepFrequency_3 = if (newFreq < 65)
@@ -237,18 +249,34 @@ class SensorService : Service(), SensorEventListener {
                     else (alpha * stepFrequency_3 + (1 - alpha) * newFreq).toInt()
                     Log.d("stepFrequency_3", stepFrequency_3.toString())
                     previousStepFrequency_3.add(stepFrequency_3)
+                }*/
+
+                //stabilization of frequency steps
+                val lastNValues = if (currentFrequency_3.size >= n) {
+                    currentFrequency_3.takeLast(n)
+                } else {
+                    currentFrequency_3
                 }
+                val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
+                val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
+                val weightedAverage = weightedSum / weights.sum()
+                val newFreq = weightedAverage.toInt()
+                stepFrequency_3 = if (newFreq < 65)
+                    0 else (alpha * stepFrequency_3 + (1 - alpha) * newFreq).toInt()
+                Log.d("stepFrequency_3", stepFrequency_3.toString())
+                previousStepFrequency_3.add(stepFrequency_3)
 
             }
         }
-    }
+    }*/
 
-    @OptIn(UnstableApi::class) @RequiresApi(Build.VERSION_CODES.O)
+    @OptIn(UnstableApi::class)
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundService()
 
         /*CHIARA*/
-        intent?.action?.let { action ->
+        /*intent?.action?.let { action ->
             Log.d("SensorService", "Received action: $action") // Log per tracciare l'azione ricevuta
             when (action) {
                 "SET_WALKING_MODE" -> {
@@ -263,8 +291,7 @@ class SensorService : Service(), SensorEventListener {
                     Log.d("SensorService", "Unknown action received: $action") // Log per azioni sconosciute
                 }
             }
-        }
-
+        }*/
         return START_STICKY
     }
 
@@ -287,7 +314,7 @@ class SensorService : Service(), SensorEventListener {
         startService(intent)
         startTime = System.currentTimeMillis()
         handler.postDelayed(writeLogs, interval) // write in csv
-        handler.postDelayed(calculateFreq, 500) // calculate stepFreq_3
+        //handler.postDelayed(calculateFreq, 500) // calculate stepFreq_3
     }
 
     /*SILVIA*/
@@ -310,7 +337,8 @@ class SensorService : Service(), SensorEventListener {
     }
 
     /* Calculation of steps and frequency of steps from sensor data */
-    @OptIn(UnstableApi::class) override fun onSensorChanged(event: SensorEvent?) {
+    @OptIn(UnstableApi::class)
+    override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor == gyroSensor) {
                 //gyroData = "Gyroscope data: ${it.values[0]}, ${it.values[1]}, ${it.values[2]}"
@@ -337,11 +365,12 @@ class SensorService : Service(), SensorEventListener {
                     if ((now - lastUpdate) > deltaTime) {
                         lastUpdate = now
                         steps++
+                        Log.d("steps", steps.toString())
                         stepTimes.add(now)
                     }
                 }
 
-                // METHOD 2
+                // METHOD 2 / 3
                 /* step frequency calculus based on difference between two steps */
                 /* SILVIA
                 if (acceleration > threshold.value) {
@@ -349,18 +378,13 @@ class SensorService : Service(), SensorEventListener {
                 if (acceleration > threshold) {
                     // step frequency
                     if (stepTimes.size >= 2) {
-                        lastUpdateTime = stepTimes[stepTimes.size - 1].toInt()
-                        penultimateUpdateTime = stepTimes[stepTimes.size - 2].toInt()
-                        deltaBetweenTwoSteps = lastUpdateTime - penultimateUpdateTime
+                        val l = stepTimes.takeLast(2)
+                        lastUpdateTime = l.last()
+                        penultimateUpdateTime = l.first()
+                        deltaBetweenTwoSteps = abs(lastUpdateTime - penultimateUpdateTime)
                         stepFreqNow = (60000 / deltaBetweenTwoSteps)
 
-                        //definition of two lists: current and previous frequency
                         currentFrequency.add(stepFreqNow)
-                        if (currentFrequency.size >= 2) {
-                            previousStepFrequency.add(currentFrequency[currentFrequency.size - 2])
-                        }else{
-                            previousStepFrequency.add(0)
-                        }
 
                         //stabilization of frequency steps
                         val lastNValues = if (currentFrequency.size >= n) {
@@ -369,12 +393,14 @@ class SensorService : Service(), SensorEventListener {
                             currentFrequency
                         }
                         val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
-                        val weightedSum = lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
+                        val weightedSum =
+                            lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
                         val weightedAverage = weightedSum / weights.sum()
-                        frequency.add(weightedAverage.toInt())
-                        val newFreq = frequency[frequency.size-1]
-                        stepFrequency_2 = (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
-                        Log.d("stepFrequency_2", stepFrequency_2.toString())
+                        val newFreq = weightedAverage.toInt()
+                        stepFrequency_2 = if (newFreq < 65)
+                            0 else (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
+                        Log.d("stepFrequency_3", stepFrequency_2.toString())
+                        previousStepFrequency_3.add(stepFrequency_2)
                     }
                 }
 
@@ -384,14 +410,15 @@ class SensorService : Service(), SensorEventListener {
                 }
 
                 // METHOD 1
-                inputFreq = if (now - startTime < unitTime) {  //60000 millisecond = 60 second = 1 min
-                    ceil((stepTimes.size.toFloat() / (now - startTime)) * 60000F)
-                } else {
-                    ceil((stepTimes.size.toFloat() / (unitTime)) * 60000F)
-                }
+                inputFreq =
+                    if (now - startTime < unitTime) {  //60000 millisecond = 60 second = 1 min
+                        ceil((stepTimes.size.toFloat() / (now - startTime)) * 60000F)
+                    } else {
+                        ceil((stepTimes.size.toFloat() / (unitTime)) * 60000F)
+                    }
                 outputFreq = alpha * outputFreq + (1 - alpha) * inputFreq
                 stepFrequency_1 = outputFreq.toInt()
-                Log.d("stepFrequency_1", stepFrequency_1.toString())
+                //Log.d("stepFrequency_1", stepFrequency_1.toString())
             }
         }
     }
@@ -459,9 +486,9 @@ class SensorService : Service(), SensorEventListener {
 
         // Convert data to CSV format
         val csvContent = StringBuilder()
-        csvContent.append("Timestamp,SPM_1,SPM_2,SPM_3,BPM,steps\n")  // Add header
+        csvContent.append("Timestamp,SPM_2,BPM,steps\n")  // Add header
         for (entry in data) {
-            csvContent.append("${entry.timestamp}, ${entry.SPM_1}, ${entry.SPM_2}, ${entry.SPM_3}, ${entry.BPM}, ${entry.steps}\n")
+            csvContent.append("${entry.timestamp}, ${entry.SPM_2},${entry.BPM}, ${entry.steps}\n")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
