@@ -129,8 +129,6 @@ fun HomeScreen(
                 onStart = onStart,
                 nextSong = nextSong,
                 prevSong = prevSong,
-                incrementSpeed = incrementSpeed,
-                decrementSpeed = decrementSpeed,
                 favoriteContains = favoriteContainsSong(song.id),
                 addToFavorite = {
                     addToFavorite(song.id)

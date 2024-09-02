@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,10 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
+import com.bumptech.glide.load.resource.bitmap.CenterInside
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
 
@@ -56,8 +59,6 @@ fun HomeBottomBar(
     onProgress: (Float) -> Unit,
     isPlaying: Boolean,
     onStart: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit,
     favoriteContains: LiveData<Int>,
     addToFavorite: () -> Unit,
     removeFavorite: () -> Unit
@@ -105,8 +106,6 @@ fun HomeBottomBar(
                 isPlaying = isPlaying,
                 onStart = onStart,
                 onNext = nextSong,
-                incrementSpeed = incrementSpeed,
-                decrementSpeed = decrementSpeed,
                 favoriteContains = favoriteContains,
                 addToFavorite = addToFavorite,
                 removeFavorite = removeFavorite
@@ -124,108 +123,75 @@ fun NowPlaying(
     isPlaying: Boolean,
     onStart: () -> Unit,
     onNext: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit,
     favoriteContains: LiveData<Int>,
     addToFavorite: () -> Unit,
-    removeFavorite: () -> Unit)
-{
+    removeFavorite: () -> Unit
+) {
     val img by favoriteContains.observeAsState(initial = 0)
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            //add progress TODO
-            /*Slider(
-                value = progress,
-                onValueChange = { onProgress(it) },
-                valueRange = 0f..100f,
-                modifier = Modifier.fillMaxWidth()
-            )*/
-            LinearDeterminateIndicator(currentProgress = progress/100, color = Color.White, trackColor = Color.DarkGray)
-            // add duration TODO
+            LinearDeterminateIndicator(
+                currentProgress = progress / 100,
+                color = Color.White,
+                trackColor = Color.DarkGray
+            )
         }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF000000))
-                .padding(vertical = 15.dp, horizontal = 5.dp)
+                .padding(vertical = 15.dp, horizontal = 15.dp)
                 .clickable {
                     onBarClick()
                 },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+
             Row() {
                 Card(
                     shape = RoundedCornerShape(10.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
                     modifier = Modifier.size(50.dp)
                 ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         AsyncImage(
                             model = "",
                             contentDescription = "Now Playing",
                             placeholder = painterResource(id = R.drawable.musicicon1),
                             error = painterResource(id = R.drawable.musicicon1),
-                            modifier = Modifier.width(100.dp)
+                            modifier = Modifier.width(50.dp)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(Modifier.align(Alignment.CenterVertically)) {
                     Text(
-                        text = if (song.title.length > 15) "${song.title.take(15)}..." else song.title,
-                        color = Color.White, fontSize = 13.sp
+                        text = if (song.title.length > 20) "${song.title.take(20)}..." else song.title,
+                        color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = if (song.artist.length > 15) "${song.artist.take(15)}..." else song.artist,
-                        color = Color.LightGray, fontSize = 13.sp
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                IconButton(
-                    onClick = { decrementSpeed() }, modifier = Modifier
-                        .background(
-                            Color.White,
-                            RoundedCornerShape(30.dp)
-                        )
-                        .size(30.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Remove,
-                        contentDescription = "Decrease speed",
-                        tint = Color.Black
-                    )
-                }
-                IconButton(
-                    onClick = { incrementSpeed() }, modifier = Modifier
-                        .background(
-                            Color.White,
-                            RoundedCornerShape(30.dp)
-                        )
-                        .size(30.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Increase speed",
-                        tint = Color.Black
+                        text = if (song.artist.length > 20) "${song.artist.take(20)}..." else song.artist,
+                        color = Color.LightGray, fontSize = 15.sp
                     )
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                IconButton(modifier = Modifier.size(34.dp),onClick = {
-                    if(img==0) {
+                IconButton(modifier = Modifier.size(34.dp), onClick = {
+                    if (img == 0) {
                         addToFavorite()
-                    }
-                    else{
+                    } else {
                         removeFavorite()
                     }
                 }) {
                     Icon(
-                        imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if (img != 0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Add to favorites",
                         tint = Color.White,
                     )
@@ -246,20 +212,6 @@ fun NowPlaying(
                         tint = Color.Black
                     )
                 }
-                /*Card(
-                        onClick = {},
-                        shape = CircleShape,
-                        modifier = Modifier.size(35.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "",
-                                modifier = Modifier.size(30.dp), tint = Color.Black
-                            )
-                        }
-                    }*/
             }
         }
     }

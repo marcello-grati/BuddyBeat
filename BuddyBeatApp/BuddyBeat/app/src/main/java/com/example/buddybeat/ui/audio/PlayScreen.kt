@@ -49,10 +49,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -61,6 +65,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -163,19 +168,33 @@ fun PlayScreenDesign(
             }
             Column(
                 modifier = Modifier
-                    .padding(bottom = 100.dp)
+                    .padding(bottom = 150.dp)
+                    .padding(horizontal = 70.dp)
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
             ) {
                 Text(
                     text = song.title,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.W900
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+                    textAlign = TextAlign.Center, color = Color(0xFFFDFEFF), fontSize = 25.sp, fontWeight = FontWeight.W900,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        shadow = Shadow(
+                            color = Color.DarkGray, offset = Offset(5f,5f), blurRadius = 2f
+                        )
+                    )
                 )
                 Text(
                     text = song.artist,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center, color = Color.White, fontSize = 16.sp
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+                    textAlign = TextAlign.Center, color = Color(0xFFFDFEFF), fontSize = 20.sp,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        shadow = Shadow(
+                            color = Color.DarkGray, offset = Offset(5.0f, 5.0f), blurRadius = 1f
+                        )
+                    )
                 )
             }
 
@@ -272,7 +291,7 @@ fun PlayScreenDesign(
                 Icon(
                     imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "",
-                    modifier = Modifier.size(25.dp),
+                    modifier = Modifier.size(30.dp),
                     tint = Color.Black
                 )
             }
@@ -329,7 +348,7 @@ fun PlayScreenDesign(
                 Icon(
                     imageVector = Icons.Default.QueueMusic,
                     contentDescription = "",
-                    modifier = Modifier.size(25.dp),
+                    modifier = Modifier.size(30.dp),
                     tint = Color.Black
                 )
             }
@@ -367,9 +386,11 @@ fun CoverPicture(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight(0.9f)
+                .fillMaxHeight(0.85f)
                 .padding(horizontal = 70.dp)
-                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp)),
+                //.alpha(0.7f),
+            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.5f) })
         )
     }
     else
@@ -381,9 +402,11 @@ fun CoverPicture(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight(0.9f)
+                .fillMaxHeight(0.85f)
                 .padding(horizontal = 70.dp)
-                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp)),
+                //.alpha(0.7f),
+            //colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.5f) })
         )
 }
 

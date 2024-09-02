@@ -363,7 +363,7 @@ class SensorService : Service(), SensorEventListener {
                     if ((now - lastUpdate) > deltaTime) {
                         lastUpdate = now
                         steps++
-                        Log.d("steps", steps.toString())
+                        //Log.d("steps", steps.toString())
                         stepTimes.add(now)
                     }
                 }

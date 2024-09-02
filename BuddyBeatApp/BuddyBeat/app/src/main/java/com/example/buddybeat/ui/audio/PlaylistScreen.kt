@@ -96,8 +96,6 @@ fun PlaylistScreen(
                     onProgress = onProgress,
                     isPlaying = isPlaying,
                     onStart = onStart,
-                    incrementSpeed = incrementSpeed,
-                    decrementSpeed = decrementSpeed,
                     favoriteContains = favoriteContainsSong(song.id),
                     addToFavorite = {
                         addToFavorite(song.id)
