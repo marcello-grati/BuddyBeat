@@ -639,7 +639,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun prevSong() {
-        controller?.seekToPreviousMediaItem()
+        if(controller?.currentPosition!! > 1000L)
+            controller?.seekToDefaultPosition()
+        else controller?.seekToPreviousMediaItem()
     }
 
     private fun incrementSpeed(value: Int) {
