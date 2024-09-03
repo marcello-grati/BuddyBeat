@@ -306,7 +306,7 @@ class MyViewModel @Inject constructor(
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
-        val l = if (target!=0.0) orderSongs(stepFreq.value.toDouble(), audiolist) else audiolist
+        val l = if (target!=0.0) orderSongs(stepFreq.value.toDouble(), audiolist) else audiolist.toMutableList()
         l.removeAll { playlist.contains(it.uri) }
         if(modality.value!=OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }

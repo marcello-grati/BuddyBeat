@@ -87,7 +87,7 @@ fun QueueItem(
                 )
             }
             Column(modifier = Modifier.weight(0.5f)) {
-                Text(text = audio.bpm.toString())
+                Text(text = if(audio.bpm!=0 && audio.bpm!=-1) audio.bpm.toString() else "  -  ")
             }
             var expanded by remember { mutableStateOf(false) }
             IconButton(onClick = {

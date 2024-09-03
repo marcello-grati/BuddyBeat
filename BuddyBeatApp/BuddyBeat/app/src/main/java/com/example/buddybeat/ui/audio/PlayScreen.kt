@@ -232,7 +232,7 @@ fun PlayScreenDesign(
             verticalAlignment = Alignment.CenterVertically // Align items vertically centered
         ) {
             // Left side - BPM button
-            NewButton(name = bpm, onClick = {})
+            NewButton(name = if(bpm!="0" && bpm!="-1") bpm else "-", onClick = {}, enabled = false)
 
             // Center - Plus and Minus buttons
 

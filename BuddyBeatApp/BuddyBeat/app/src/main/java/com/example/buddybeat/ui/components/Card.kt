@@ -72,7 +72,7 @@ fun FilledCardExample(
                 .padding(top = 5.dp, bottom = 5.dp, start = 5.dp, end = 5.dp),
         ) {
             Text(
-                text = "Bpm: \n $bpm",
+                text = "Bpm: \n ${if(bpm!="0" && bpm!="-1") bpm else "-"}",
                 modifier = Modifier
                     .width(100.dp)
                     .height(60.dp)
@@ -216,7 +216,7 @@ fun NowPlaying(
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = audio.bpm.toString())
+            Text(text = if(audio.bpm!=0 && audio.bpm!=-1) audio.bpm.toString() else "-")
         }
     }
 }
