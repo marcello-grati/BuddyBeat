@@ -373,6 +373,7 @@ class MyViewModel @Inject constructor(
             }
         }
         setPreference(IS_UPLOADED_KEY, true)
+        setPreference(BPM_UPDATED_KEY, false)
     }
 
     //with IGNORE
