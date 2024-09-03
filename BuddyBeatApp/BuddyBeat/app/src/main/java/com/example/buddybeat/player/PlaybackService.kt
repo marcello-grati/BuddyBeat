@@ -44,6 +44,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -141,24 +142,23 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         stopSelf()
     }
 
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     // Remember to release the player and media session in onDestroy
     override fun onDestroy() {
+        runBlocking {
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
+        }
+        runBlocking {
+            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
+        }
         mediaSession?.run {
             player.release()
             release()
             mediaSession = null
         }
-        scope.launch {
-            dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
-            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
-        }
         speedMode = OFF_MODE
         unbindService(connection)
         mBound = false
-        job.cancelChildren()
         super.onDestroy()
     }
 

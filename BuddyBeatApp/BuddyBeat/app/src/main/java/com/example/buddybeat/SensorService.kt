@@ -75,23 +75,28 @@ class SensorService : Service(), SensorEventListener {
     fun changeMode(mode: Long) {
         if (mode == 1L) { // walking
             setWalkingMode()
-            Log.d("threshold + deltaTime", "$threshold + $deltaTime")
         } else if (mode == 2L) { //running
             setRunningMode()
-            Log.d("threshold + deltaTime", "$threshold + $deltaTime")
+        } else if (mode == 0L) {
+            reset()
         }
     }
 
     /*CHIARA*/
     // Walking and Running modalities
-    private var threshold: Float = 0.0f
-    private var deltaTime: Long = 0L
+    private var threshold: Float = 4f
+    private var deltaTime: Long = 2000L
 
     private val walkingThreshold = 1.3f
     private val walkingDeltaTime = 350L
 
     private val runningThreshold = 2.25f
     private val runningDeltaTime = 250L
+
+    private fun reset() {
+        threshold = 4f
+        deltaTime = 2000L
+    }
 
     private fun setWalkingMode() {
         threshold = walkingThreshold

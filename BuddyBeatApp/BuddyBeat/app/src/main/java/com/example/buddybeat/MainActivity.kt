@@ -55,6 +55,7 @@ import androidx.media3.session.SessionToken
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
+import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
@@ -179,8 +180,17 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun toggleSpeedMode() {
+        if(speedMode == OFF_MODE){
+            viewModel.setMode(1L)
+            mService.changeMode(1L)
+        }
         speedMode = (speedMode + 1) % 3
+        if(speedMode== OFF_MODE){
+            viewModel.setMode(0L)
+            mService.changeMode(0L)
+        }
         viewModel.setModality(speedMode)
+
         Log.d("MODALITY", speedMode.toString())
     }
 
@@ -468,7 +478,9 @@ class MainActivity : ComponentActivity() {
         controller.isPlaying.let { viewModel.updateIsPlaying(it) }
         controller.duration.let { viewModel.updateDuration(it) }
         controller.currentPosition.let { viewModel.updateProgress(it) }
-        viewModel.modality.value?.let { speedMode = it }
+        viewModel.modality.value?.let { Log.d("modality value", it.toString())
+            Log.d("modality value", speedMode.toString())
+            speedMode = it }
     }
 
     @OptIn(DelicateCoroutinesApi::class)

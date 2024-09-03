@@ -1,7 +1,9 @@
 package com.example.buddybeat.ui.audio
 
 import PlayScreenDesign
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -45,6 +47,7 @@ object Destination {
     const val queue = "queue"
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MusicPlayerApp(
     showPlayer: Boolean,
@@ -93,6 +96,7 @@ fun MusicPlayerApp(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerNavHost(
