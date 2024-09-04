@@ -51,10 +51,11 @@ fun SongItem(
     shouldShowDialogTwo : MutableState<Boolean>,
     shouldShowDialogThree : MutableState<Boolean>,
     songClicked : MutableState<Long>,
-    addToQueue : (Song) -> Unit
+    addToQueue : (Song) -> Unit,
+    colorUI : Color
 ) {
     val img by favoriteContainsSong(audio.songId).observeAsState(initial = 0)
-    val backgroundColor = if (isPlaying) Color(0xFF82B0E6) else Color(0xFFD6E1E7)
+    val backgroundColor = if (isPlaying) colorUI else colorUI.copy(alpha=0.2f)
     Card(
         modifier = Modifier
             .fillMaxWidth()

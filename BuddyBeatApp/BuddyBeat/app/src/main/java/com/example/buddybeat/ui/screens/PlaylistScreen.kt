@@ -79,7 +79,8 @@ fun PlaylistScreen(
     shouldShowDialogFour: MutableState<Boolean>,
     allSongsId: Long,
     favoritesId: Long,
-    onNavigateUp: () -> Unit
+    colorUI : Color,
+    onNavigateUp: () -> Unit,
 ) {
     Scaffold(
         bottomBar = {
@@ -184,7 +185,8 @@ fun PlaylistScreen(
                             shouldShowDialogTwo = shouldShowDialogTwo,
                             songClicked = songClicked,
                             shouldShowDialogThree = shouldShowDialogThree,
-                            addToQueue = addToQueue
+                            addToQueue = addToQueue,
+                            colorUI = colorUI
                         )
                     }
                 }

@@ -111,7 +111,8 @@ fun HomeScreen(
     favoritesId: Long,
     setModality: (Long) -> Unit,
     changeMode: (Long) -> Unit,
-    mode: Long
+    mode: Long,
+    colorUI : Color
 ) {
     val context = LocalContext.current
     val colorWalking = if (mode == 1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
@@ -230,7 +231,8 @@ fun HomeScreen(
                     showBottomSheet = showBottomSheet,
                     playlistLongClicked = playlistLongClicked,
                     allSongsId = allSongsId,
-                    favoritesId = favoritesId
+                    favoritesId = favoritesId,
+                    colorUI = colorUI
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
@@ -249,7 +251,8 @@ fun HomeScreen(
                             shouldShowDialogTwo = shouldShowDialogTwo,
                             songClicked = songClicked,
                             shouldShowDialogThree = shouldShowDialogThree,
-                            addToQueue = addToQueue
+                            addToQueue = addToQueue,
+                            colorUI = colorUI
                         )
                     }
                     item { Spacer(modifier = Modifier.height(10.dp)) }
@@ -406,7 +409,8 @@ fun MainButtons(
     showBottomSheet: MutableState<Boolean>,
     playlistLongClicked: MutableState<Playlist>,
     allSongsId: Long,
-    favoritesId: Long
+    favoritesId: Long,
+    colorUI: Color
 ) {
     Column(
         modifier = Modifier
@@ -434,8 +438,8 @@ fun MainButtons(
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                Color(0xFF7172CC),
-                                Color(0xFF91A6FE)
+                                colorUI.copy(red=0.6f),
+                                colorUI
                             ) // Green to Blue gradient
                         )
                     ),
@@ -479,8 +483,8 @@ fun MainButtons(
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF8BA4FE),
-                                        Color(0xFFAC9DFF)
+                                        colorUI.copy(red=0.6f),
+                                        colorUI
                                     ) // Green to Blue gradient
                                 )
                             ),

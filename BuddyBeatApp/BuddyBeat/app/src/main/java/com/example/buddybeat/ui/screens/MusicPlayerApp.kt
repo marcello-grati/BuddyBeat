@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.media3.common.MediaItem
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -152,6 +153,11 @@ fun MusicPlayerNavHost(
     val queue = viewModel.queueList1
     val audioList = viewModel.queueList2
 
+    val colorUI = if (mode==1L) Color(0xFFB1B2FF) else if (mode==2L) Color(0xFFD0EB34) else Color(
+        0xFFA5D1E9
+    )
+
+
     if (shouldShowDialogOne.value) {
         NewPlaylist(shouldShowDialog = shouldShowDialogOne,
             insertPlaylist = { viewModel.insertPlaylist(Playlist(title = it, description = it)) })
@@ -269,7 +275,8 @@ fun MusicPlayerNavHost(
                 changeMode = {
                     setMode(it)
                 },
-                mode = mode
+                mode = mode,
+                colorUI = colorUI
             )
         }
         composable(route = Destination.playlist) {
@@ -346,7 +353,8 @@ fun MusicPlayerNavHost(
                         shouldShowDialogFive = shouldShowDialogFive,
                         shouldShowDialogFour = shouldShowDialogFour,
                         allSongsId = allSongs,
-                        favoritesId = favorites
+                        favoritesId = favorites,
+                        colorUI = colorUI
                     ) { navController.navigateUp() }
                 }
             }
@@ -382,7 +390,8 @@ fun MusicPlayerNavHost(
                 },
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
-                }
+                },
+                colorUI = colorUI
             )
         }
         composable(route = Destination.queue,

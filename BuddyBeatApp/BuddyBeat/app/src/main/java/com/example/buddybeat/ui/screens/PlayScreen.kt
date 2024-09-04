@@ -107,6 +107,7 @@ fun PlayScreenDesign(
     addToFavorite: (Long) -> Unit,
     removeFavorite: (Long) -> Unit,
     favoriteContainsSong: (Long) -> LiveData<Int>,
+    colorUI : Color
 ) {
     val text = when (modality) {
         OFF_MODE -> "off"
@@ -301,7 +302,7 @@ fun PlayScreenDesign(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFB1B2FF), RoundedCornerShape(40.dp)),
+                        .background(colorUI, RoundedCornerShape(40.dp)),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
 
