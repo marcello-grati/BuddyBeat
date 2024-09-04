@@ -217,11 +217,20 @@ fun PlayScreenDesign(
             verticalAlignment = Alignment.CenterVertically // Align items vertically centered
         ) {
             // Left side - BPM button
-            NewButton(
-                name = if (bpm != "0" && bpm != "-1") bpm else "-",
-                onClick = {},
-                enabled = false
-            )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
+                    .size(width = 70.dp, height = 50.dp),
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (bpm != "0" && bpm != "-1") bpm else "-",
+                    )
+                }
+            }
 
             // Center - Plus and Minus buttons
 
