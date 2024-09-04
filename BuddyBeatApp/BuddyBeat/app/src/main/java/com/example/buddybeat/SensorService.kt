@@ -160,7 +160,7 @@ class SensorService : Service(), SensorEventListener {
 
     data class ValueTimestamp(
         val timestamp: String,
-        //val SPM_1: String,
+        val SPM_1: String,
         val SPM_2: String,
         //val SPM_3: String,
         val BPM: String,
@@ -186,7 +186,7 @@ class SensorService : Service(), SensorEventListener {
             val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
             updateActivityLogs(
                 currentTime,
-                //stepFrequency_1.toString(),
+                stepFrequency_1.toString(),
                 stepFreq.toString(),
                 //stepFrequency_3.toString(),
                 bpm_song.toString(),
@@ -200,7 +200,7 @@ class SensorService : Service(), SensorEventListener {
 
     private fun updateActivityLogs(
         timestamp: String,
-        //value1: String,
+        value1: String,
         value2: String,
         //value3: String,
         bpm: String,
@@ -209,7 +209,7 @@ class SensorService : Service(), SensorEventListener {
         activityLogs.add(
             ValueTimestamp(
                 timestamp = timestamp,
-                //SPM_1 = value1,
+                SPM_1 = value1,
                 SPM_2 = value2,
                 //SPM_3 = value3,
                 BPM = bpm,
@@ -489,9 +489,9 @@ class SensorService : Service(), SensorEventListener {
 
         // Convert data to CSV format
         val csvContent = StringBuilder()
-        csvContent.append("Timestamp,SPM_2,BPM,steps\n")  // Add header
+        csvContent.append("Timestamp,SPM_1,SPM_2,BPM,steps\n")  // Add header
         for (entry in data) {
-            csvContent.append("${entry.timestamp}, ${entry.SPM_2},${entry.BPM}, ${entry.steps}\n")
+            csvContent.append("${entry.timestamp},${entry.SPM_1}, ${entry.SPM_2},${entry.BPM}, ${entry.steps}\n")
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
