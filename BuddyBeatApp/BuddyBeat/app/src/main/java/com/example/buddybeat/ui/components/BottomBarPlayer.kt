@@ -11,18 +11,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -45,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
-import com.bumptech.glide.load.resource.bitmap.CenterInside
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
 
@@ -56,7 +52,6 @@ fun HomeBottomBar(
     prevSong: () -> Unit,
     nextSong: () -> Unit,
     progress: Float,
-    onProgress: (Float) -> Unit,
     isPlaying: Boolean,
     onStart: () -> Unit,
     favoriteContains: LiveData<Int>,
@@ -102,10 +97,8 @@ fun HomeBottomBar(
                 song = song,
                 onBarClick = onBarClick,
                 progress = progress,
-                onProgress = onProgress,
                 isPlaying = isPlaying,
                 onStart = onStart,
-                onNext = nextSong,
                 favoriteContains = favoriteContains,
                 addToFavorite = addToFavorite,
                 removeFavorite = removeFavorite
@@ -119,10 +112,8 @@ fun NowPlaying(
     song: CurrentSong,
     onBarClick: () -> Unit,
     progress: Float,
-    onProgress: (Float) -> Unit,
     isPlaying: Boolean,
     onStart: () -> Unit,
-    onNext: () -> Unit,
     favoriteContains: LiveData<Int>,
     addToFavorite: () -> Unit,
     removeFavorite: () -> Unit
@@ -216,180 +207,3 @@ fun NowPlaying(
         }
     }
 }
-
-
-/*@Composable
-fun HomeBottomBarItem(
-    song: CurrentSong,
-    onBarClick: () -> Unit,
-    progress: Float,
-    onProgress: (Float) -> Unit,
-    isPlaying: Boolean,
-    onStart: () -> Unit,
-    onNext: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .height(100.dp)
-            .clickable(onClick = { onBarClick() })
-
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp)
-                    .height(20.dp)
-            ) {
-                //add progress TODO
-                Slider(
-                    value = progress,
-                    onValueChange = { onProgress(it) },
-                    valueRange = 0f..100f,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                // add duration TODO
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ArtistInfo(title = song.title, artist = song.artist, modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.size(10.dp))
-                MediaPlayerController(
-                    isAudioPlaying = isPlaying,
-                    onStart = onStart,
-                    onNext = onNext,
-                    incrementSpeed = incrementSpeed,
-                    decrementSpeed = decrementSpeed
-                )
-            }
-        }
-    }
-}*/
-
-
-/*@Composable
-fun MediaPlayerController(
-    isAudioPlaying: Boolean,
-    onStart: () -> Unit,
-    onNext: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        PlayerIconItem(
-            icon = if (isAudioPlaying) Icons.Default.Pause
-            else Icons.Default.PlayArrow
-        ) {
-            onStart()
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        PlayerIconItem(
-            icon = Icons.Default.SkipNext
-        ) {
-            onNext()
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        Column {
-            PlayerIconItem(
-                icon = Icons.Default.Add,
-                modifier = Modifier.size(30.dp)
-            ) {
-                incrementSpeed()
-            }
-            Spacer(modifier = Modifier.size(2.dp))
-            PlayerIconItem(
-                icon = Icons.Default.Remove,
-                modifier = Modifier.size(30.dp)
-            ) {
-                decrementSpeed()
-            }
-        }
-    }
-}*/
-
-/*@Composable
-fun ArtistInfo(
-    modifier: Modifier = Modifier,
-    title: String,
-    artist: String
-) {
-    Row(
-        modifier = modifier.padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.MusicNote,
-            modifier = Modifier.size(30.dp),
-            contentDescription = null
-        )
-
-        Spacer(modifier = Modifier.size(10.dp))
-        Column(modifier = Modifier.fillMaxWidth())
-        {
-            Text(
-                text = title,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleMedium,
-                overflow = TextOverflow.Clip,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.size(0.dp))
-            Text(
-                text = artist,
-                fontWeight = FontWeight.Normal,
-                style = MaterialTheme.typography.titleSmall,
-                overflow = TextOverflow.Clip,
-                maxLines = 1
-            )
-        }
-    }
-}*/
-
-/*@Composable
-fun PlayerIconItem(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    borderStroke: BorderStroke? = null,
-    backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit
-) {
-    Surface(
-        shape = CircleShape,
-        border = borderStroke,
-        modifier = modifier
-            .clip(CircleShape)
-            .clickable {
-                onClick()
-            },
-        contentColor = color,
-        color = backgroundColor
-    ) {
-        Box(
-            modifier = modifier.padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null
-            )
-        }
-    }
-}*/
-

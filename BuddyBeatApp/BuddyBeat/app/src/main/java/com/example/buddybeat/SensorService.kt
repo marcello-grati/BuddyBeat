@@ -66,19 +66,19 @@ class SensorService : Service(), SensorEventListener {
     /* parameters for steps calculation */
     private var unitTime = 60000  //60000 millisecond = 60 second
 
-    /*SILVIA
-    private var threshold = mutableDoubleStateOf(0.7)  //for step calculus
-    private var deltaTime = mutableIntStateOf(250) // 0.5s interval of data refresh
-    */
 
     @OptIn(UnstableApi::class)
     fun changeMode(mode: Long) {
-        if (mode == 1L) { // walking
-            setWalkingMode()
-        } else if (mode == 2L) { //running
-            setRunningMode()
-        } else if (mode == 0L) {
-            reset()
+        when (mode) {
+            1L -> { // walking
+                setWalkingMode()
+            }
+            2L -> { //running
+                setRunningMode()
+            }
+            0L -> {
+                reset()
+            }
         }
     }
 

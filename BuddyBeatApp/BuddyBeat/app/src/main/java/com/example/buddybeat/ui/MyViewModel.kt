@@ -63,7 +63,6 @@ class MyViewModel @Inject constructor(
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
     val mode = dataStoreManager.getPreferenceLong(MODE).asLiveData(Dispatchers.IO)
     val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
-    //val manualBpm = dataStoreManager.getPreferenceLong(MANUAL_BPM).asLiveData(Dispatchers.IO)
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
         viewModelScope.launch {
@@ -95,9 +94,6 @@ class MyViewModel @Inject constructor(
     private val _currentSong = MutableStateFlow(CurrentSong(0L, "", "", "", -1))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
 
-    /*private val _currentId = MutableStateFlow(-1L)
-    val currentId: StateFlow<Long> = _currentId.asStateFlow()*/
-
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
@@ -107,12 +103,8 @@ class MyViewModel @Inject constructor(
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
-    /*private val _currentBpm = MutableStateFlow(0)
-    val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()*/
-
     //CURRENT PLAYLIST
 
-    //val currentPlaylist = MutableStateFlow(PlaylistWithSongs(Playlist(title = "", description = ""), mutableListOf()))
     val currentPlaylistId = MutableStateFlow(0L)
 
 
@@ -120,9 +112,6 @@ class MyViewModel @Inject constructor(
     private val _allPlaylist: LiveData<MutableList<PlaylistWithSongs>> = songRepo.getAllPlaylist()
     val allPlaylist = _allPlaylist
 
-    //ALL SONGS
-    private val _audioList = songRepo.getAllSongs()
-    val allSongs = _audioList
 
     //QUEUE
     var queueList1 = mutableStateListOf<Song>()
@@ -159,12 +148,6 @@ class MyViewModel @Inject constructor(
     fun setVisiblePlaylist(playlist: PlaylistWithSongs) {
         currentPlaylistId.value = playlist.playlist.playlistId
         //currentPlaylist.value = playlist
-    }
-
-
-
-    fun addPlaylist(playlist: Playlist) = viewModelScope.launch {
-        songRepo.insert(playlist)
     }
 
     fun removePlaylist(playlist: Playlist) = viewModelScope.launch {
@@ -208,7 +191,7 @@ class MyViewModel @Inject constructor(
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO) {
         calculateBpm().collect { value ->
             songRepo.updateBpm(value.first, value.second)
-            if(value.first == currentSong.value.id){
+            if (value.first == currentSong.value.id) {
                 _currentSong.update {
                     it.copy(
                         id = it.id,
@@ -219,7 +202,7 @@ class MyViewModel @Inject constructor(
                     )
                 }
             }
-            if(audiolist.find { it.songId == value.first }!=null) {
+            if (audiolist.find { it.songId == value.first } != null) {
                 audiolist.find { it.songId == value.first }!!.bpm = value.second
             }
         }
@@ -306,9 +289,12 @@ class MyViewModel @Inject constructor(
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
-        val l = if (target!=0.0) orderSongs(stepFreq.value.toDouble(), audiolist) else audiolist.toMutableList()
+        val l = if (target != 0.0) orderSongs(
+            stepFreq.value.toDouble(),
+            audiolist
+        ) else audiolist.toMutableList()
         l.removeAll { playlist.contains(it.uri) }
-        if(modality.value!=OFF_MODE)
+        if (modality.value != OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
         /*l.forEach {
             Log.d(it.toString(), it.bpm.toString())
@@ -418,7 +404,13 @@ class MyViewModel @Inject constructor(
     }
 }
 
-data class CurrentSong(val id: Long, val title: String, val artist: String, val uri: String, val bpm : Int)
+data class CurrentSong(
+    val id: Long,
+    val title: String,
+    val artist: String,
+    val uri: String,
+    val bpm: Int
+)
 
 
 

@@ -1,4 +1,4 @@
-package com.example.buddybeat.ui.audio
+package com.example.buddybeat.ui.screens
 
 import android.content.Context
 import android.content.Intent
@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,10 +95,7 @@ fun HomeScreen(
     prevSong: () -> Unit,
     nextSong: () -> Unit,
     progress: Float,
-    onProgress: (Float) -> Unit,
     onStart: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit,
     addToFavorite: (Long) -> Unit,
     favoriteContainsSong: (Long) -> LiveData<Int>,
     removeFavorite: (Long) -> Unit,
@@ -110,13 +108,14 @@ fun HomeScreen(
     playlistLongClicked: MutableState<Playlist>,
     updateSongs: () -> Unit,
     allSongsId: Long,
-    setModality : (Long) -> Unit,
-    changeMode : (Long) -> Unit,
-    mode : Long
+    favoritesId: Long,
+    setModality: (Long) -> Unit,
+    changeMode: (Long) -> Unit,
+    mode: Long
 ) {
     val context = LocalContext.current
-    val colorWalking = if (mode==1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
-    val colorRunning = if (mode==2L) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f)
+    val colorWalking = if (mode == 1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
+    val colorRunning = if (mode == 2L) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f)
 
     Scaffold(bottomBar = {
         if (song.title != "")
@@ -125,7 +124,6 @@ fun HomeScreen(
                 onBarClick = onBarClick,
                 isPlaying = isPlaying,
                 progress = progress,
-                onProgress = onProgress,
                 onStart = onStart,
                 nextSong = nextSong,
                 prevSong = prevSong,
@@ -147,7 +145,7 @@ fun HomeScreen(
                 TopBar()
                 var expandedHelp by remember { mutableStateOf(true) }
                 if (expandedHelp)
-                    TopPopup( onClickClose = { expandedHelp = false })
+                    TopPopup(onClickClose = { expandedHelp = false })
                 Text(
                     text = "CHOOSE YOUR MODE",
                     fontWeight = FontWeight.Bold,
@@ -231,7 +229,8 @@ fun HomeScreen(
                     allPlaylist = allPlaylist,
                     showBottomSheet = showBottomSheet,
                     playlistLongClicked = playlistLongClicked,
-                    allSongsId = allSongsId
+                    allSongsId = allSongsId,
+                    favoritesId = favoritesId
                 )
                 SongsOfTheWeek("RECOMMENDED:")
                 LazyColumn(
@@ -280,6 +279,7 @@ private fun startWalkingMode(context: Context) {
     intent.action = "SET_WALKING_MODE"
     context.startForegroundService(intent)
 }
+
 @RequiresApi(Build.VERSION_CODES.O)
 private fun startRunningMode(context: Context) {
     val intent = Intent(context, SensorService::class.java)
@@ -337,7 +337,7 @@ fun TopBar(
 
 @Composable
 fun TopPopup(
-    onClickClose : () -> Unit
+    onClickClose: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -360,7 +360,7 @@ fun TopPopup(
                     fontWeight = FontWeight.Bold
                 )
                 IconButton(
-                    onClick = { onClickClose()  },
+                    onClick = { onClickClose() },
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = "Close popup")
@@ -374,7 +374,7 @@ fun TopPopup(
 
             )
             Button(
-                onClick = { /*TODO help section */},
+                onClick = { /*TODO help section */ },
                 modifier = Modifier.align(Alignment.End),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
             ) {
@@ -405,7 +405,8 @@ fun MainButtons(
     allPlaylist: List<PlaylistWithSongs>,
     showBottomSheet: MutableState<Boolean>,
     playlistLongClicked: MutableState<Playlist>,
-    allSongsId: Long
+    allSongsId: Long,
+    favoritesId: Long
 ) {
     Column(
         modifier = Modifier
@@ -454,23 +455,22 @@ fun MainButtons(
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             itemsIndexed(allPlaylist.dropWhile { it.playlist.playlistId == allSongsId }) { index, playlist ->
+                val modifier = if (playlist.playlist.playlistId != favoritesId)
+                    Modifier.combinedClickable(
+                        onClick = {
+                            playlistClicked(playlist)
+                        },
+                        onLongClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showBottomSheet.value = true
+                            playlistLongClicked.value = playlist.playlist
+                        }
+                    ) else Modifier.clickable(onClick = { playlistClicked(playlist) })
                 Card(
                     shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier
-                        //.weight(1f)
+                    modifier = modifier
                         .fillMaxWidth()
-                        .height(80.dp)
-                        //.padding(5.dp)
-                        .combinedClickable(
-                            onClick = {
-                                playlistClicked(playlist)
-                            },
-                            onLongClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                showBottomSheet.value = true
-                                playlistLongClicked.value = playlist.playlist
-                            }
-                        ),
+                        .height(80.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Box(
@@ -495,98 +495,6 @@ fun MainButtons(
                 }
             }
         }
-
-
-        /*LazyColumn {
-            itemsIndexed(allPlaylist.drop(1)) { index, playlist ->
-                Card(
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .height(80.dp)
-                            .combinedClickable(
-                                onClick = {
-                                    setVisiblePlaylist(
-                                        playlist.playlist.playlistId,
-                                        playlist.songs, playlist.playlist.title
-                                    )
-                                    allSongsClicked(playlist)
-                                },
-                                onLongClick = {
-                                    /*TODO Show menu to rename playlist and delete playlist*/
-                                }
-                            ),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AsyncImage(
-                                model = "",
-                                contentDescription = "Now Playing",
-                                placeholder = painterResource(id = R.drawable.playlistimg02),
-                                error = painterResource(id = R.drawable.playlistimg02),
-                                contentScale = ContentScale.FillBounds,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                playlist.playlist.title.uppercase(),
-                                color = Color.White,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }*/
-        /*Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Card(
-                onClick = { /*TODO*/ },
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .height(100.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AsyncImage(
-                        model = "",
-                        contentDescription = "Now Playing",
-                        placeholder = painterResource(id = R.drawable.img2),
-                        error = painterResource(id = R.drawable.img2),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f, 3f)
-                    )
-                    Text("RECENTLY PLAYED", color = Color.White, fontSize = 13.sp)
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Card(
-                onClick = { /*TODO*/ },
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .height(100.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AsyncImage(
-                        model = "",
-                        contentDescription = "Now Playing",
-                        placeholder = painterResource(id = R.drawable.img2),
-                        error = painterResource(id = R.drawable.img2),
-                        contentScale = ContentScale.FillBounds, modifier = Modifier.scale(10f, 3f)
-                    )
-                    Text("FAVORITES", color = Color.White, fontSize = 13.sp)
-                }
-            }
-        }*/
     }
 }
 
@@ -599,162 +507,3 @@ fun SongsOfTheWeek(data: String) {
         modifier = Modifier.padding(vertical = 16.dp)
     )
 }
-
-/*@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SongItem(songName: String, artist: String, isPlaying: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFEAEAEA), shape = RoundedCornerShape(8.dp))
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Card(
-            onClick = { /*TODO*/ }, shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
-            modifier = Modifier.size(45.dp)
-        ) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                AsyncImage(
-                    model = "",
-                    contentDescription = "Now Playing",
-                    placeholder = painterResource(id = R.drawable.musicicon),
-                    error = painterResource(id = R.drawable.musicicon),
-                    modifier = Modifier.width(45.dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = if (songName.length > 15) "${songName.take(15)}..." else songName,
-                color = Color.Black
-            )
-            Text(
-                text = if (artist.length > 15) "${artist.take(15)}..." else artist,
-                color = Color.DarkGray
-            )
-        }
-        IconButton(onClick = { /* TODO: Add to favorites */ }) {
-            Icon(
-                imageVector = Icons.Default.FavoriteBorder,
-                contentDescription = "Add to favorites",
-                tint = Color.Black
-            )
-        }
-        IconButton(onClick = { /* TODO: Show more options */ }) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More options",
-                tint = Color.Black
-            )
-        }
-    }
-}*/
-
-/*@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NowPlaying(songName: String, artist: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF000000))
-            .padding(vertical = 15.dp, horizontal = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row {
-            Card(
-                onClick = { /*TODO*/ }, shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
-                modifier = Modifier.size(50.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AsyncImage(
-                        model = "",
-                        contentDescription = "Now Playing",
-                        placeholder = painterResource(id = R.drawable.musicicon1),
-                        error = painterResource(id = R.drawable.musicicon1),
-                        modifier = Modifier.width(100.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = if (songName.length > 15) "${songName.take(15)}..." else songName,
-                    color = Color.White, fontSize = 13.sp
-                )
-                Text(
-                    text = if (artist.length > 15) "${artist.take(15)}..." else artist,
-                    color = Color.LightGray, fontSize = 13.sp
-                )
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            IconButton(
-                onClick = { /* TODO: Decrease speed */ }, modifier = Modifier
-                    .background(
-                        Color.White,
-                        RoundedCornerShape(30.dp)
-                    )
-                    .size(30.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Remove,
-                    contentDescription = "Decrease speed",
-                    tint = Color.Black
-                )
-            }
-            IconButton(
-                onClick = { /* TODO: Decrease speed */ }, modifier = Modifier
-                    .background(
-                        Color.White,
-                        RoundedCornerShape(30.dp)
-                    )
-                    .size(30.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Decrease speed",
-                    tint = Color.Black
-                )
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            IconButton(
-                onClick = { /* TODO: Add to favorites */ }, modifier = Modifier
-
-                    .size(34.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FavoriteBorder,
-                    contentDescription = "Add to favorites",
-                    tint = Color.Black
-                )
-            }
-            Card(
-                onClick = {},
-                shape = CircleShape,
-                modifier = Modifier.size(35.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "",
-                        modifier = Modifier.size(30.dp), tint = Color.Black
-                    )
-                }
-            }
-        }
-    }
-}*/
-
-/*@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun show() {
-    HomeScreen()
-}*/
-

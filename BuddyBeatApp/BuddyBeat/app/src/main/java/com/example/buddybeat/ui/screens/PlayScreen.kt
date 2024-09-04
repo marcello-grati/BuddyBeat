@@ -1,4 +1,3 @@
-
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -49,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -86,9 +84,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 
-@androidx.annotation.OptIn(UnstableApi::class) @OptIn(ExperimentalMaterial3Api::class)
-
-
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayScreenDesign(
     onNavigateUp: () -> Unit,
@@ -97,20 +94,16 @@ fun PlayScreenDesign(
     isPlaying: Boolean,
     progress: Float,
     onProgress: (Float) -> Unit,
-    //playpause
     onStart: () -> Unit,
-    //next prev
     nextSong: () -> Unit,
     prevSong: () -> Unit,
-    toggleMode : () -> Unit,
-    plus : () -> Unit,
-    minus : () -> Unit,
-    step : String,
-    bpm : String,
-    ratio : String,
-    queue : () -> Unit,
-    target : String,
-    modality : Long,
+    toggleMode: () -> Unit,
+    plus: () -> Unit,
+    minus: () -> Unit,
+    bpm: String,
+    queue: () -> Unit,
+    target: String,
+    modality: Long,
     addToFavorite: (Long) -> Unit,
     removeFavorite: (Long) -> Unit,
     favoriteContainsSong: (Long) -> LiveData<Int>,
@@ -123,17 +116,6 @@ fun PlayScreenDesign(
     }
 
     val img by favoriteContainsSong(song.id).observeAsState(initial = 0)
-
-    /*LaunchedEffect(isPlaying, currentTime) {
-        if (isPlaying) {
-            while (currentTime < duration) {
-                delay(1000L)
-                currentTime += 1f
-            }
-            isPlaying = false
-        }
-    }*/
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -153,13 +135,13 @@ fun PlayScreenDesign(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onNavigateUp()} ) {
+                IconButton(onClick = { onNavigateUp() }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIos,
                         contentDescription = "",
                     )
                 }
-                IconButton(onClick = {  }) {
+                IconButton(onClick = { }) {
                     Icon(
                         painter = painterResource(id = R.drawable.help),
                         contentDescription = null,
@@ -175,19 +157,26 @@ fun PlayScreenDesign(
                 Text(
                     text = song.title,
                     maxLines = 2,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
-                    textAlign = TextAlign.Center, color = Color(0xFFFDFEFF), fontSize = 25.sp, fontWeight = FontWeight.W900,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFFFDFEFF),
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.W900,
                     style = TextStyle(
                         fontSize = 24.sp,
                         shadow = Shadow(
-                            color = Color.DarkGray, offset = Offset(5f,5f), blurRadius = 2f
+                            color = Color.DarkGray, offset = Offset(5f, 5f), blurRadius = 2f
                         )
                     )
                 )
                 Text(
                     text = song.artist,
                     maxLines = 2,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
                     textAlign = TextAlign.Center, color = Color(0xFFFDFEFF), fontSize = 20.sp,
                     style = TextStyle(
                         fontSize = 24.sp,
@@ -205,18 +194,14 @@ fun PlayScreenDesign(
                     .fillMaxWidth()
                     .height(350.dp),
                 progress = progress
-            ) { //newProgress ->
-                //currentTime = newProgress * duration
-                //if (currentTime == 0f) {
-                //    isPlaying = false
-                //}
-                onProgress(it*100)
+            ) {
+                onProgress(it * 100)
             }
 
         }
         Text(
-            text = if(progress*duration<=duration)
-                formatSecondsToDuration((progress*duration).toLong()) else "00:00",
+            text = if (progress * duration <= duration)
+                formatSecondsToDuration((progress * duration).toLong()) else "00:00",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center, color = Color.Gray, fontSize = 19.sp
         )
@@ -232,7 +217,11 @@ fun PlayScreenDesign(
             verticalAlignment = Alignment.CenterVertically // Align items vertically centered
         ) {
             // Left side - BPM button
-            NewButton(name = if(bpm!="0" && bpm!="-1") bpm else "-", onClick = {}, enabled = false)
+            NewButton(
+                name = if (bpm != "0" && bpm != "-1") bpm else "-",
+                onClick = {},
+                enabled = false
+            )
 
             // Center - Plus and Minus buttons
 
@@ -264,10 +253,10 @@ fun PlayScreenDesign(
 
             // Right side - Manual and Auto buttons
             NewButton(
-                    name = text, onClick = {
-                        toggleMode()
-                        Log.d("Button", "Toggled to $text")
-                    })
+                name = text, onClick = {
+                    toggleMode()
+                    Log.d("Button", "Toggled to $text")
+                })
         }
 
         // Play ROW
@@ -281,15 +270,14 @@ fun PlayScreenDesign(
         ) {
 
             IconButton(onClick = {
-                if(img==0) {
+                if (img == 0) {
                     addToFavorite(song.id)
-                }
-                else{
+                } else {
                     removeFavorite(song.id)
                 }
             }) {
                 Icon(
-                    imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = if (img != 0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "",
                     modifier = Modifier.size(30.dp),
                     tint = Color.Black
@@ -329,7 +317,7 @@ fun PlayScreenDesign(
                 Card(
                     onClick = {
                         //isPlaying = !isPlaying
-                              onStart()
+                        onStart()
                     },
                     shape = CircleShape,
                     modifier = Modifier.size(70.dp),
@@ -362,13 +350,13 @@ fun PlayScreenDesign(
 @Composable
 fun CoverPicture(
     song: CurrentSong
-){
+) {
     var art: Bitmap? = BitmapFactory.decodeResource(Resources.getSystem(), R.drawable.bblogo)
     var bitmap = art?.asImageBitmap()
     //Log.d("cover", song.title + song.uri)
     val mmr = MediaMetadataRetriever()
     val bfo = BitmapFactory.Options()
-    if(song.uri!="") {
+    if (song.uri != "") {
         mmr.setDataSource(LocalContext.current, song.uri.toUri())
     }
     val rawArt: ByteArray? = mmr.embeddedPicture
@@ -377,7 +365,7 @@ fun CoverPicture(
     if (art != null) {
         bitmap = art.asImageBitmap()
     }
-    if(bitmap!=null){
+    if (bitmap != null) {
         Image(
             bitmap = bitmap,
             //model = File(filePath),
@@ -389,11 +377,10 @@ fun CoverPicture(
                 .fillMaxHeight(0.85f)
                 .padding(horizontal = 70.dp)
                 .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp)),
-                //.alpha(0.7f),
+            //.alpha(0.7f),
             colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.5f) })
         )
-    }
-    else
+    } else
         Image(
             painter = painterResource(id = R.drawable.scaled),
             //model = File(filePath),
@@ -405,7 +392,7 @@ fun CoverPicture(
                 .fillMaxHeight(0.85f)
                 .padding(horizontal = 70.dp)
                 .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp)),
-                //.alpha(0.7f),
+            //.alpha(0.7f),
             //colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.5f) })
         )
 }
@@ -564,7 +551,7 @@ fun durationToSeconds(duration: String): Float {
 }
 
 fun formatSecondsToDuration(milliseconds: Long): String {
-    val seconds : Int = milliseconds.toInt() / 1000
+    val seconds: Int = milliseconds.toInt() / 1000
     val minutes = seconds / 60
     val remainingSeconds = seconds % 60
     return String.format("%02d:%02d", minutes, remainingSeconds)
@@ -574,8 +561,9 @@ fun formatSecondsToDuration(milliseconds: Long): String {
 @Composable
 fun NewButton(
     name: String,
-    onClick : () -> Unit,
-    enabled : Boolean = true){
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -593,51 +581,4 @@ fun NewButton(
         }
     }
 }
-
-//@androidx.annotation.OptIn(UnstableApi::class)
-//private fun toggleSpeedMode() {
-//    PlaybackService.speedMode = (PlaybackService.speedMode + 1) % 3
-//}
-
-//@androidx.annotation.OptIn(UnstableApi::class)
-//fun setManualBpm(bpm : Int) {
-//    PlaybackService.manualBpm = bpm
-//}
-//@androidx.annotation.OptIn(UnstableApi::class)
-//fun increaseManualBpm() {
-//    PlaybackService.manualBpm += PlaybackService.BPM_STEP
-//}
-//@androidx.annotation.OptIn(UnstableApi::class)
-//fun decreaseManualBpm() {
-//    PlaybackService.manualBpm -= PlaybackService.BPM_STEP
-//}
-/*
-@Preview(showBackground = true)
-@Composable
-fun PlayScreenDesignPreview() {
-    PlayScreenDesign(
-        onNavigateUp = {},
-        song = CurrentSong(
-            id= 1L,
-            title = "Sample Song Title",
-            artist = "Sample Artist",
-            uri = "" // Empty URI for preview purposes
-        ),
-        duration = 300000L,
-        isPlaying = false,
-        progress = 0.5f,
-        onProgress = {},
-        onStart = {},
-        nextSong = {},
-        prevSong = {},
-        toggleMode = {},
-        plus = {},
-        minus = {},
-        step = "Step",
-        bpm = "120 BPM",
-        ratio = "1:1",
-        queue = {}
-    )
-}
-*/
 

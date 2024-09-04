@@ -38,8 +38,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -62,7 +60,7 @@ import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.MyViewModel
-import com.example.buddybeat.ui.audio.MusicPlayerApp
+import com.example.buddybeat.ui.screens.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
@@ -96,8 +94,6 @@ class MainActivity : ComponentActivity() {
             if (controllerFuture.isDone && !controllerFuture.isCancelled) controllerFuture.get() else null
 
     private var job: Job? = Job()
-
-    var speed: Float = 1f
 
     var _ratio: MutableStateFlow<Float> = MutableStateFlow(1f)
     val ratio: StateFlow<Float> = _ratio.asStateFlow()
@@ -230,8 +226,6 @@ class MainActivity : ComponentActivity() {
             showPlayer = true
 
         setContent {
-            val permissionsRequested by remember { mutableStateOf(false) }
-
             BuddyBeatTheme {
                 val state = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     rememberMultiplePermissionsState(
@@ -285,12 +279,6 @@ class MainActivity : ComponentActivity() {
                             onStart = {
                                 playPause()
                             },
-                            incrementSpeed = {
-                                incrementSpeed(+1)
-                            },
-                            decrementSpeed = {
-                                incrementSpeed(-1)
-                            },
                             onProgress = {
                                 onProgress(it)
                             },
@@ -325,9 +313,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-//                    else -> RequiredPermission(state = state) {
-//                        state.launchMultiplePermissionRequest()
-//                    }
                     else -> RequiredPermission(state = state)
                 }
             }
@@ -398,55 +383,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    /*@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
-    @Composable
-    fun RequiredPermission(
-        state: MultiplePermissionsState,
-        onRequestPermission: () -> Unit
-    ) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Column(Modifier.padding(vertical = 120.dp, horizontal = 16.dp)) {
-                Icon(
-                    Icons.Rounded.LibraryMusic,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Read external storage permission required",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Spacer(Modifier.height(4.dp))
-                Text("This is required in order for the app to collect the songs")
-            }
-            val context = LocalContext.current
-            Button(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                onClick = {
-                    if (state.shouldShowRationale) {
-                        onRequestPermission()
-                    } else {
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                        context.startActivity(intent)
-                    }
-                }
-            ) {
-                Text(if (state.shouldShowRationale) "Request Permission" else "Go to settings")
-            }
-        }
-    }*/
-
 
     private fun updateDataTextView() {
         run {
@@ -519,20 +455,6 @@ class MainActivity : ComponentActivity() {
 
 
     //used in UI
-
-    /*private fun setPlaylist() {
-//        Log.d("IOOOO", "setting playlist..." )
-////        viewModel.audioList.value?.forEach { audio ->
-////            val media = buildMediaItem(audio)
-////            controller?.addMediaItem(media)
-////        }
-//        val mediaItems = viewModel.audioList.value?.map { mediaitem -> buildMediaItem(mediaitem)}
-//        if (mediaItems != null) {
-//            controller?.addMediaItems(mediaItems)
-//        }
-//        //controller?.clearMediaItems()
-//        Log.d("IOOOO", "Playlist set " + controller?.mediaItemCount.toString() )
-    }*/
 
     private fun setSongInPlaylist(media: MediaItem) {
         Log.d("IOOOO", "setting media: ${media.mediaId}")
@@ -619,7 +541,7 @@ class MainActivity : ComponentActivity() {
                 l
             }
             PlaybackService.MANUAL_MODE -> manualBpm.toDouble()
-            PlaybackService.OFF_MODE -> 0.0
+            OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("stepFreq before nextSong()", target.toString())
@@ -630,7 +552,7 @@ class MainActivity : ComponentActivity() {
             return
         }
         val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist
-        if(viewModel.modality.value!= PlaybackService.OFF_MODE)
+        if(viewModel.modality.value!= OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
         while (true) {
             val nextSong = l.removeFirstOrNull()
@@ -654,14 +576,6 @@ class MainActivity : ComponentActivity() {
         if(controller?.currentPosition!! > 1000L)
             controller?.seekToDefaultPosition()
         else controller?.seekToPreviousMediaItem()
-    }
-
-    private fun incrementSpeed(value: Int) {
-        if (value > 0)
-            speed += 0.05f
-        else
-            speed -= 0.05f
-        controller?.setPlaybackSpeed(speed)
     }
 
     private fun onProgress(seekTo: Float) {

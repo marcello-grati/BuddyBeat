@@ -1,4 +1,4 @@
-package com.example.buddybeat.ui.audio
+package com.example.buddybeat.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -61,11 +61,8 @@ fun PlaylistScreen(
     prevSong: () -> Unit,
     nextSong: () -> Unit,
     progress: Float,
-    onProgress: (Float) -> Unit,
     isPlaying: Boolean,
     onStart: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit,
     text1: String,
     text2: String,
     text3: String,
@@ -93,7 +90,6 @@ fun PlaylistScreen(
                     prevSong = prevSong,
                     nextSong = nextSong,
                     progress = progress,
-                    onProgress = onProgress,
                     isPlaying = isPlaying,
                     onStart = onStart,
                     favoriteContains = favoriteContainsSong(song.id),
@@ -196,29 +192,10 @@ fun PlaylistScreen(
                     Spacer(modifier = Modifier.height(5.dp))
                 }
             }
-            /*LazyColumn(
-            contentPadding = it,
-            modifier = Modifier.weight(1.0f),
-        ) {
-            itemsIndexed(audioList) { index, audio ->
-                SongItem(
-                    audio = audio,
-                    onItemClick = {
-                        onItemClick(index)
-                    },
-                    isPlaying = isPlaying,
-                    addToFavorite = addToFavorite,
-                    removeFavorite = removeFavorite,
-                    favoriteContainsSong = favoriteContainsSong
-                )
-            }
-        }
-    }*/
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TopSection(
     modifier: Modifier,
