@@ -560,19 +560,15 @@ class MainActivity : ComponentActivity() {
         }
         Log.d("stepFreq before nextSong()", target.toString())
         val queueNext = queue.removeFirstOrNull()
-        Log.d("stepFreq before nextSong()", target.toString())
         if(queueNext!=null){
             val media = buildMediaItem(queueNext)
             setSongInPlaylist(media)
             return
         }
-        Log.d("stepFreq0 before nextSong()", target.toString())
         val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist
         if(viewModel.modality.value!= OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
-        Log.d("stepFreq1 before nextSong()", target.toString())
         while (true) {
-            Log.d("stepFreq2 before nextSong()", target.toString())
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)

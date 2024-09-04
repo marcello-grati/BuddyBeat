@@ -333,7 +333,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     break
                 }
 
-            }
+            }else return
         }
     }
 
