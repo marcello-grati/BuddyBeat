@@ -158,6 +158,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
         speedMode = OFF_MODE
         unbindService(connection)
+        handler.removeCallbacksAndMessages(null)
         mBound = false
         super.onDestroy()
     }
