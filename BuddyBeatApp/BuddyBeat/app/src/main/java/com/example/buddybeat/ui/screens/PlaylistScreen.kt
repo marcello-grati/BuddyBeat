@@ -8,17 +8,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -80,6 +88,7 @@ fun PlaylistScreen(
     allSongsId: Long,
     favoritesId: Long,
     colorUI : Color,
+    startFirstSong: () -> Unit,
     onNavigateUp: () -> Unit,
 ) {
     Scaffold(
@@ -168,7 +177,7 @@ fun PlaylistScreen(
                                         shouldShowDialogFive.value = true
                                     }
                                 ) else Modifier
-                        TopSection(modifier, it1.title)
+                        TopSection(modifier, it1.title, startFirstSong = startFirstSong)
                     }
                 }
                 allPlaylist.find { it.playlist.playlistId == currentId }?.let { it1 ->
@@ -198,11 +207,13 @@ fun PlaylistScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopSection(
     modifier: Modifier,
     title: String,
     resource: Int = R.drawable.mainimage,
+    startFirstSong:  () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -219,15 +230,35 @@ fun TopSection(
                 .padding(horizontal = 50.dp)
                 .clip(RoundedCornerShape(bottomStart = 130.dp, bottomEnd = 130.dp))
         )
-        Text(
-            text = title,
-            modifier = modifier
-                //.padding(bottom = 100.dp)
-                .align(Alignment.Center),
-            textAlign = TextAlign.Center,
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.W900,
-        )
+        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.align(Alignment.Center)) {
+            Text(
+                text = title,
+                modifier = modifier,
+                    //.padding(bottom = 100.dp)
+                textAlign = TextAlign.Center,
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.W900,
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Card(
+                onClick = {
+                    //isPlaying = !isPlaying
+                    startFirstSong()
+                },
+                shape = CircleShape,
+                modifier = Modifier
+                    .size(70.dp).align(Alignment.CenterHorizontally),
+                colors = CardDefaults.cardColors(containerColor = Color.Black)
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "",
+                        modifier = Modifier.size(35.dp), tint = Color.White
+                    )
+                }
+            }
+        }
     }
 }

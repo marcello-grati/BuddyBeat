@@ -121,6 +121,9 @@ class MyViewModel @Inject constructor(
     private val _showQueue = MutableStateFlow(false)
     val showQueue: StateFlow<Boolean> = _showQueue.asStateFlow()
 
+    private val _stepFreqQueue = MutableStateFlow(0.0)
+    val stepFreqQueue: StateFlow<Double> = _stepFreqQueue.asStateFlow()
+
 
     fun containsSong(idPlaylist: Long, idSong: Long): LiveData<Int> {
         return songRepo.containsSong(idPlaylist, idSong)
@@ -269,8 +272,15 @@ class MyViewModel @Inject constructor(
         _stepFreq.update {
             stepFreq
         }
+        /*if (showQueue.value)
+            getQueue()*/
+    }
+    fun updateFreqQueue(stepFreq: Double) {
+        _stepFreqQueue.update {
+            stepFreq
+        }
         if (showQueue.value)
-            getQueue()
+            getQueue(stepFreqQueue.value)
     }
 
     fun showQueue(value: Boolean) {
@@ -280,17 +290,17 @@ class MyViewModel @Inject constructor(
     }
 
     @OptIn(UnstableApi::class)
-    private fun getQueue() {
+    private fun getQueue(stepFreq: Double) {
         queueList1.clear()
         queueList1.addAll(queue)
         val target = when (modality.value) {
-            AUTO_MODE -> stepFreq.value.toDouble()
+            AUTO_MODE -> stepFreq.toDouble()
             MANUAL_MODE -> manualBpm.toDouble()
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
         val l = if (target != 0.0) orderSongs(
-            stepFreq.value.toDouble(),
+            target,
             audiolist
         ) else audiolist.toMutableList()
         l.removeAll { playlist.contains(it.uri) }
@@ -341,12 +351,12 @@ class MyViewModel @Inject constructor(
 
     fun removeFromQueue1(song: Song) {
         queue.remove(song)
-        getQueue()
+        getQueue(stepFreqQueue.value)
     }
 
     fun removeFromQueue2(song: Song) {
         audiolist.remove(song)
-        getQueue()
+        getQueue(stepFreqQueue.value)
     }
 
     fun updateSongs() {

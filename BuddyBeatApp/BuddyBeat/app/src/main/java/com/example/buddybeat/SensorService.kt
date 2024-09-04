@@ -73,9 +73,11 @@ class SensorService : Service(), SensorEventListener {
             1L -> { // walking
                 setWalkingMode()
             }
+
             2L -> { //running
                 setRunningMode()
             }
+
             0L -> {
                 reset()
             }
@@ -87,8 +89,8 @@ class SensorService : Service(), SensorEventListener {
     private var threshold: Float = 4f
     private var deltaTime: Long = 2000L
 
-    private val walkingThreshold = 1.3f
-    private val walkingDeltaTime = 350L
+    private val walkingThreshold = 2f//1.3f
+    private val walkingDeltaTime = 300L//350L
 
     private val runningThreshold = 2.25f
     private val runningDeltaTime = 250L
@@ -120,8 +122,10 @@ class SensorService : Service(), SensorEventListener {
     private var penultimateUpdateTime: Long = 0L //new
     private var deltaBetweenTwoSteps: Long = 0L //new
     private var stepFreqNow: Long = 0L //new: starting value of frequency steps
+
     //private val previousStepFrequency = mutableListOf<Int>()
     private val currentFrequency = mutableListOf<Long>()
+
     //private val frequency = mutableListOf<Int>()
     private var stepFrequency_2: Int = 0
     private val n = 15 //stabilization of frequency values
@@ -174,8 +178,8 @@ class SensorService : Service(), SensorEventListener {
 
     // variable read by other components
     val stepFreq: Int
-        get() = if(System.currentTimeMillis()-lastUpdate>3000) 0
-            else stepFrequency_2
+        get() = if (System.currentTimeMillis() - lastUpdate > 3000) 0
+        else stepFrequency_2
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -390,12 +394,21 @@ class SensorService : Service(), SensorEventListener {
                         currentFrequency.add(stepFreqNow)
 
                         //stabilization of frequency steps
-                        val lastNValues = if (currentFrequency.size >= n) {
+                        /*val lastNValues = if (currentFrequency.size >= n) {
                             currentFrequency.takeLast(n)
                         } else {
                             currentFrequency
+                        }*/
+                        if (currentFrequency.size >= 5) {
+                            val newFreq = currentFrequency.average()
+                            currentFrequency.clear()
+                            stepFrequency_2 = if (newFreq < 65)
+                                0
+                            else (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
+                            Log.d("stepFrequency_3", stepFrequency_2.toString())
+                            previousStepFrequency_3.add(stepFrequency_2)
                         }
-                        val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
+                        /*val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
                         val weightedSum =
                             lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
                         val weightedAverage = weightedSum / weights.sum()
@@ -403,7 +416,7 @@ class SensorService : Service(), SensorEventListener {
                         stepFrequency_2 = if (newFreq < 65)
                             0 else (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
                         Log.d("stepFrequency_3", stepFrequency_2.toString())
-                        previousStepFrequency_3.add(stepFrequency_2)
+                        previousStepFrequency_3.add(stepFrequency_2)*/
                     }
                 }
 

@@ -354,7 +354,31 @@ fun MusicPlayerNavHost(
                         shouldShowDialogFour = shouldShowDialogFour,
                         allSongsId = allSongs,
                         favoritesId = favorites,
-                        colorUI = colorUI
+                        colorUI = colorUI,
+                        startFirstSong = {
+                            if (audioListId.value != currentId.longValue) {
+                                audioListId.update {
+                                    currentId.longValue
+                                }
+                                audiolist.clear()
+                                audiolist.addAll(
+                                    allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
+                                        ?: mutableListOf()
+                                )
+                                Log.d("AUDIOLIST", audiolist.toList().toString())
+                            } else {
+                                val play =
+                                    allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
+                                        ?: mutableListOf()
+                                audiolist.replaceAll { it1 ->
+                                    if (it1.bpm == -1) play.find { it.songId == it1.songId }
+                                        ?: it1 else it1
+                                }
+                                Log.d("AUDIOLIST1", audiolist.toList().toString())
+                            }
+                            nextSong()
+                            playPause()
+                        }
                     ) { navController.navigateUp() }
                 }
             }

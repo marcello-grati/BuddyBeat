@@ -52,7 +52,10 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.ALPHA
+import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
+import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
@@ -140,6 +143,7 @@ class MainActivity : ComponentActivity() {
             controller?.let { viewModel.updateDuration(it.duration) }
             controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { /*mService.updateBpm(it)*/ }
             PlaybackService.ratio = 1.0f
+            controller?.setPlaybackSpeed(1.0f)
         }
     }
 
@@ -181,11 +185,15 @@ class MainActivity : ComponentActivity() {
             mService.changeMode(1L)
         }
         speedMode = (speedMode + 1) % 3
-        if(speedMode== OFF_MODE){
+        if(speedMode == OFF_MODE){
             viewModel.setMode(0L)
             mService.changeMode(0L)
         }
         viewModel.setModality(speedMode)
+        if(speedMode == MANUAL_MODE || speedMode == OFF_MODE)
+            ALPHA = 0.4F
+        else if (speedMode == AUTO_MODE)
+            ALPHA = 0.7f
 
         Log.d("MODALITY", speedMode.toString())
     }
@@ -387,6 +395,7 @@ class MainActivity : ComponentActivity() {
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(mService.stepFreq)
+            viewModel.updateFreqQueue( mService.previousStepFrequency_3.takeLast(5).average())
             _ratio.update { controller?.playbackParameters?.speed ?: 1f }
         }
     }
@@ -416,7 +425,12 @@ class MainActivity : ComponentActivity() {
         controller.currentPosition.let { viewModel.updateProgress(it) }
         viewModel.modality.value?.let { Log.d("modality value", it.toString())
             Log.d("modality value", speedMode.toString())
-            speedMode = it }
+            speedMode = it
+            if(it == MANUAL_MODE || it == OFF_MODE)
+                ALPHA = 0.4f
+            else if (it == AUTO_MODE)
+                ALPHA = 0.7f
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -531,8 +545,8 @@ class MainActivity : ComponentActivity() {
 
     private fun nextSong() {
         val target = when (speedMode) {
-            PlaybackService.AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLast(10)
+            AUTO_MODE -> run{
+                val d = mService.previousStepFrequency_3.takeLast(5)
                 Log.d("PreviousFreq nextSong mainActivity", d.toString())
                 var l = d.average()
                 if(l.isNaN()){
@@ -540,21 +554,25 @@ class MainActivity : ComponentActivity() {
                 }
                 l
             }
-            PlaybackService.MANUAL_MODE -> manualBpm.toDouble()
+            MANUAL_MODE -> manualBpm.toDouble()
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("stepFreq before nextSong()", target.toString())
         val queueNext = queue.removeFirstOrNull()
+        Log.d("stepFreq before nextSong()", target.toString())
         if(queueNext!=null){
             val media = buildMediaItem(queueNext)
             setSongInPlaylist(media)
             return
         }
+        Log.d("stepFreq0 before nextSong()", target.toString())
         val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist
         if(viewModel.modality.value!= OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
+        Log.d("stepFreq1 before nextSong()", target.toString())
         while (true) {
+            Log.d("stepFreq2 before nextSong()", target.toString())
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
@@ -568,7 +586,7 @@ class MainActivity : ComponentActivity() {
                     setSongInPlaylist(media)
                     break
                 }
-            }
+            }else return
         }
     }
 

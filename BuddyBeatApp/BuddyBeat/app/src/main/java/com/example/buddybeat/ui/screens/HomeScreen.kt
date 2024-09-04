@@ -73,6 +73,7 @@ import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
+import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.CurrentSong
@@ -166,12 +167,20 @@ fun HomeScreen(
                         changeMode(1L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
+                        if(speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
+                            PlaybackService.ALPHA = 0.4f
+                        else if (speedMode == AUTO_MODE)
+                            PlaybackService.ALPHA = 0.7f
                         //startWalkingMode(context) /* Handle Walking Mode */
                     })
                     ModeButton("Running", color = colorRunning, onClick = {
                         changeMode(2L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
+                        if(speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
+                            PlaybackService.ALPHA = 0.4f
+                        else if (speedMode == AUTO_MODE)
+                            PlaybackService.ALPHA = 0.7f
                         //startRunningMode(context)/* Handle Running Mode */
                     })
                     /*ModeButton(

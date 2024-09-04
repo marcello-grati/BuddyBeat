@@ -66,7 +66,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         const val MANUAL_MODE = 2L
 
         val DEFAULT_BPM = 100
-        val ALPHA = 0.6f
+        var ALPHA = 0.5f
         val BPM_STEP = 2
 
         var speedMode = OFF_MODE
@@ -188,7 +188,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         override fun run() {
             if (mBound) {
                 updateSpeedSong()
-                handler.postDelayed(this, interval*3) //every 3 seconds change ratio
+                handler.postDelayed(this, interval*4) //every 3 seconds change ratio
             }
         }
     }
@@ -211,13 +211,13 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                         if(System.currentTimeMillis()-mService.lastUpdate>3000)
                             0f
                         else {
-                            val d = mService.previousStepFrequency_3.takeLast(10)
-                            Log.d("PreviousFreq updateSpeed playbackService", d.toString())
+                            val d = mService.previousStepFrequency_3.takeLast(5).takeWhile { it > 65 }
+                            Log.d("PlaybackService - PreviousFreq updateSpeed playbackService", d.toString())
                             var l = d.average()
                             if (l.isNaN()) {
                                 l = 0.0
                             }
-                            Log.d("stepFreq when changing ratio", l.toString())
+                            Log.d("PlaybackService - stepFreq when changing ratio", l.toString())
                             l.toFloat()
                         }
                     }
@@ -254,12 +254,12 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     inRatio = inRatio.coerceAtMost(1.25f)
                 }
 
-                outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
+                outRatio = 0.9f * outRatio + (1 - 0.9f) * inRatio
 
                 ratio = outRatio
                 mService.updateBpm(ratio*bpm) //update Bpm in csv
             }
-            else {
+            /*else {
                 inRatio = 1f
                 outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
                 ratio = outRatio
@@ -268,8 +268,14 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             inRatio = 1f
             outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
             ratio = outRatio
+        }*/else {
+                ratio = 1f
+            }
+        } else {
+            ratio = 1f
         }
         mediaSession?.player?.setPlaybackSpeed(ratio)
+        Log.d("PlaybackService - ratio", ratio.toString())
 
     }
 
@@ -300,7 +306,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
         val target = when (speedMode) {
             AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLast(10)
+                val d = mService.previousStepFrequency_3.takeLast(5)
                 Log.d("PreviousFreq nextSong playbackService", d.toString())
                 var l = d.average()
                 if(l.isNaN()){
