@@ -93,7 +93,7 @@ class SensorService : Service(), SensorEventListener {
     private val walkingDeltaTime = 300L//350L
 
     private val runningThreshold = 2.25f
-    private val runningDeltaTime = 250L
+    private val runningDeltaTime = 150L
 
     private fun reset() {
         threshold = 4f
