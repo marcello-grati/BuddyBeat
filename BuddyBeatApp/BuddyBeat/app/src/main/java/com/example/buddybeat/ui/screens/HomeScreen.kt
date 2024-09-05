@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -217,7 +218,7 @@ fun HomeScreen(
                             modifier = Modifier.background(Color(0xFFF0F0F0)),
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Update songs") },
+                                text = { Text("Update songs", color = Color.DarkGray) },
                                 onClick = {
                                     expanded = false
                                     updateSongs()
@@ -330,7 +331,7 @@ fun TopPopup(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
-                .background(Color(0xFFE6E8E5), RoundedCornerShape(10.dp))
+                .background(color = if (isSystemInDarkTheme()) Color(0xFF3C3C3C) else Color(0xFFE6E8E5), RoundedCornerShape(10.dp))
                 .padding(16.dp)
         ) {
             Column(
@@ -368,7 +369,7 @@ fun TopPopup(
                     modifier = Modifier.align(Alignment.End),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
                 ) {
-                    Text("Help")
+                    Text("Help", color = Color.White)
                 }
             }
         }
