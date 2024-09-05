@@ -111,6 +111,7 @@ fun HomeScreen(
     colorUI: Color,
     changeShowHelp: (Boolean) -> Unit,
     closedHelp: Boolean,
+    setTargetBpm : (Int) -> Unit,
     shouldShowHelpScreen: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -173,6 +174,7 @@ fun HomeScreen(
                             PlaybackService.ALPHA = 0.4f
                         else if (speedMode == AUTO_MODE)
                             PlaybackService.ALPHA = 0.7f
+                        setTargetBpm(100)
                         //startWalkingMode(context) /* Handle Walking Mode */
                     })
                     ModeButton("Running", color = colorRunning,icon = Icons.Default.DirectionsRun, onClick = {
@@ -183,6 +185,7 @@ fun HomeScreen(
                             PlaybackService.ALPHA = 0.4f
                         else if (speedMode == AUTO_MODE)
                             PlaybackService.ALPHA = 0.7f
+                        setTargetBpm(160)
                         //startRunningMode(context)/* Handle Running Mode */
                     })
                     /*ModeButton(

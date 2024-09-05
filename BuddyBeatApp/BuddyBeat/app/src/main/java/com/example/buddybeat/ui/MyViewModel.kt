@@ -66,6 +66,9 @@ class MyViewModel @Inject constructor(
     val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
     val help = dataStoreManager.getPreference(HELP).asLiveData(Dispatchers.IO)
 
+    val _targetBpm = MutableStateFlow(-1)
+    val targetBpm: StateFlow<Int> = _targetBpm.asStateFlow()
+
     private val _lastMode = MutableStateFlow(-1L)
     val lastMode: StateFlow<Long> = _lastMode.asStateFlow()
 
@@ -421,6 +424,14 @@ class MyViewModel @Inject constructor(
 
     fun setModality(modality: Long) {
         setPreferenceLong(MODALITY, modality)
+    }
+
+    @OptIn(UnstableApi::class)
+    fun setTargetBpm(targetBpm: Int) {
+        _targetBpm.update{
+            targetBpm
+        }
+        manualBpm = targetBpm
     }
 
     fun changeShowHelp(help: Boolean) {

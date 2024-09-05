@@ -150,6 +150,8 @@ fun MusicPlayerNavHost(
     val modality by viewModel.modality.observeAsState(initial = 0L)
     val closedHelp by viewModel.help.observeAsState(initial = false)
 
+    val targetBpm by viewModel.targetBpm.collectAsState(100)
+
     val queue = viewModel.queueList1
     val audioList = viewModel.queueList2
 
@@ -277,6 +279,9 @@ fun MusicPlayerNavHost(
                     viewModel.changeShowHelp(it)
                 },
                 closedHelp = closedHelp,
+                setTargetBpm = {
+                    viewModel.setTargetBpm(it)
+                },
                 shouldShowHelpScreen = { navController.navigate(Destination.help) }
             )
         }
@@ -411,7 +416,7 @@ fun MusicPlayerNavHost(
                     viewModel.showQueue(true)
                     navController.navigate(Destination.queue)
                 },
-                target = manualBpm.toString(),
+                target = targetBpm.toString(),
                 modality = modality,
                 addToFavorite = {
                     viewModel.addToPlaylist(favorites, it)
