@@ -60,7 +60,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         const val AUTO_MODE = 1L
         const val MANUAL_MODE = 2L
 
-        val DEFAULT_BPM = 100
+        var DEFAULT_BPM = 100
         var ALPHA = 0.5f
         val BPM_STEP = 2
 
@@ -140,11 +140,14 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
     // Remember to release the player and media session in onDestroy
     override fun onDestroy() {
-        runBlocking {
-            dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
-        }
-        runBlocking {
-            dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
+        if (!mBound) {
+            runBlocking {
+                dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
+                mService.changeMode(0L)
+            }
+            runBlocking {
+                dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
+            }
         }
         mediaSession?.run {
             player.release()

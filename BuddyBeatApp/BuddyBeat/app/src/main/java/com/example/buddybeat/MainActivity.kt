@@ -159,7 +159,7 @@ class MainActivity : ComponentActivity() {
             val binder = service as SensorService.LocalBinder
             mService = binder.getService()
             mBound = true
-            viewModel.mode.value?.let { mService.changeMode(it) }
+            //viewModel.mode.value?.let{ mService.changeMode(it) }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -181,8 +181,13 @@ class MainActivity : ComponentActivity() {
     
     private fun toggleSpeedMode() {
         if(speedMode == OFF_MODE){
-            viewModel.setMode(1L)
-            mService.changeMode(1L)
+            if(viewModel.lastMode.value!=-1L) {
+                mService.changeMode(viewModel.lastMode.value)
+                viewModel.setMode(viewModel.lastMode.value)
+            }else{
+                viewModel.setMode(1L)
+                mService.changeMode(1L)
+            }
         }
         speedMode = (speedMode + 1) % 3
         if(speedMode == OFF_MODE){
@@ -197,11 +202,6 @@ class MainActivity : ComponentActivity() {
 
         Log.d("MODALITY", speedMode.toString())
     }
-
-//    fun setManualBpm(bpm : Int) {
-//        manualBpm = bpm
-//    }
-//
 
     private fun increaseManualBpm() {
         manualBpm += BPM_STEP
@@ -246,18 +246,6 @@ class MainActivity : ComponentActivity() {
                 } else {
                     rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
                 }
-                /*LaunchedEffect(Unit) {
-                    if(!state.allPermissionsGranted){
-                        state.launchMultiplePermissionRequest()
-                    }
-                }
-                LaunchedEffect(state.allPermissionsGranted) {
-                    if (state.allPermissionsGranted) {
-                        startSensorService()
-                        val list = ContentResolverHelper(applicationContext).getAudioData()
-                        viewModel.loadSongs(list)
-                    }
-                }*/
                 when {
                     state.allPermissionsGranted -> {
                         startSensorService()
@@ -271,7 +259,9 @@ class MainActivity : ComponentActivity() {
                         if (bpmUpdated == true) {
                             Log.d("IOOOO", "BPMs are updated")
                         }
-                        //PlayScreenDesign()
+                        if(viewModel.mode.value!=0L){
+                            viewModel.mode.value?.let { viewModel.setMode(it) }
+                        }
                         MusicPlayerApp(
                             showPlayer = showPlayer,
                             changeShow = {

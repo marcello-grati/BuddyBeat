@@ -25,6 +25,7 @@ import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.DEFAULT_BPM
 import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
@@ -65,6 +66,9 @@ class MyViewModel @Inject constructor(
     val mode = dataStoreManager.getPreferenceLong(MODE).asLiveData(Dispatchers.IO)
     val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
     val help = dataStoreManager.getPreference(HELP).asLiveData(Dispatchers.IO)
+
+    private val _lastMode = MutableStateFlow(-1L)
+    val lastMode: StateFlow<Long> = _lastMode.asStateFlow()
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
         viewModelScope.launch {
@@ -407,8 +411,20 @@ class MyViewModel @Inject constructor(
         setPreferenceLong(FAVORITES_KEY, d)
     }
 
+    @OptIn(UnstableApi::class)
     fun setMode(mode: Long) {
         setPreferenceLong(MODE, mode)
+        manualBpm = when (mode) {
+            1L -> 100
+            2L -> 160
+            else -> {
+                manualBpm
+            }
+        }
+        if(mode == 1L || mode == 2L)
+            _lastMode.update{
+                mode
+            }
     }
 
     fun setModality(modality: Long) {

@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -72,14 +73,17 @@ class SensorService : Service(), SensorEventListener {
         when (mode) {
             1L -> { // walking
                 setWalkingMode()
+                Log.d("SensorService", "setting Walking Mode")
             }
 
             2L -> { //running
                 setRunningMode()
+                Log.d("SensorService", "setting Running Mode")
             }
 
             0L -> {
                 reset()
+                Log.d("SensorService", "Reset Mode")
             }
         }
     }
@@ -325,21 +329,19 @@ class SensorService : Service(), SensorEventListener {
     }
 
     /*SILVIA*/
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
+
 
     @OptIn(UnstableApi::class)
     override fun onDestroy() {
         Log.d("SensorService", "Distruggo il service")
         writeToCsvFile(activityLogs)
-        scope.launch {
+        runBlocking {
             dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
             dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
         }
         handler.removeCallbacksAndMessages(null)
         sensorManager.unregisterListener(this, gyroSensor)
         sensorManager.unregisterListener(this, accelSensor)
-        job.cancelChildren()
         super.onDestroy()
     }
 
@@ -370,6 +372,7 @@ class SensorService : Service(), SensorEventListener {
                 */
                 if (acceleration > threshold) {
                     if ((now - lastUpdate) > deltaTime) {
+                        Log.d("SensorService", "deltaTime: $deltaTime + threshold: $threshold")
                         lastUpdate = now
                         steps++
                         //Log.d("steps", steps.toString())
