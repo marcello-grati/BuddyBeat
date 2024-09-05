@@ -36,7 +36,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -220,7 +220,7 @@ fun PlayScreenDesign(
             // Left side - BPM button
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = colorUI
                 ),
                 modifier = Modifier
                     .padding(horizontal = 5.dp)
@@ -249,7 +249,7 @@ fun PlayScreenDesign(
                         modifier = Modifier.size(30.dp)
                     )
                 }
-                NewButton(name = target, onClick = {}, enabled = enabled)
+                NewButton2(name = target, enabled = enabled, colorUI = colorUI)
                 IconButton(onClick = {
                     plus()
                 }, enabled = enabled) {
@@ -266,7 +266,7 @@ fun PlayScreenDesign(
                 name = text, onClick = {
                     toggleMode()
                     Log.d("Button", "Toggled to $text")
-                })
+                }, colorUI = colorUI)
         }
 
         // Play ROW
@@ -572,23 +572,106 @@ fun formatSecondsToDuration(milliseconds: Long): String {
 fun NewButton(
     name: String,
     onClick: () -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    colorUI : Color
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = colorUI,//.copy(alpha=0.6f),
+            disabledContainerColor = colorUI.copy(alpha=0.3f)
         ),
         modifier = Modifier
             .padding(horizontal = 5.dp)
-            .size(width = 70.dp, height = 50.dp),
+            .size(width = 70.dp, height = 50.dp)
+            .shadow( ambientColor = colorUI.copy(alpha=0.3f), spotColor =colorUI.copy(alpha=0.3f) , elevation = 2.dp, shape = CardDefaults.elevatedShape)
+            .background(colorUI.copy(alpha=0.3f)),
         onClick = onClick,
         enabled = enabled
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = name
+                text = name,
             )
         }
     }
 }
+
+@Composable
+fun NewButton2(
+    name: String,
+    enabled: Boolean = true,
+    colorUI : Color
+) {
+    val color = if(enabled) colorUI else colorUI.copy(alpha=0.3f)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = color,//.copy(alpha=0.6f),
+            disabledContainerColor = color.copy(alpha=0.3f)
+        ),
+        modifier = Modifier
+            .padding(horizontal = 5.dp)
+            .size(width = 70.dp, height = 50.dp)
+            .shadow( ambientColor = color, spotColor =color , elevation = 2.dp, shape = CardDefaults.elevatedShape)
+            .background(color),
+        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = name,
+                color = if(enabled) Color.Black else Color.Black.copy(alpha=0.5f)
+            )
+        }
+    }
+}
+
+
+/*OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewButton1(
+    name: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    colorUI : Color
+) {
+
+    var text by remember {
+        mutableStateOf(name)
+    }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    OutlinedTextField(
+            value = text,
+            enabled = enabled,
+            onValueChange = { text = it },
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .size(width = 70.dp, height = 50.dp).border(5.dp, colorUI, RoundedCornerShape(10.dp))
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                        focusRequester.freeFocus()
+                    })
+                }
+                //.shadow(ambientColor = colorUI, elevation = 2.dp, shape = CardDefaults.elevatedShape)
+                .background(colorUI, shape = RoundedCornerShape(10.dp)),
+            shape = RoundedCornerShape(10.dp),
+
+        textStyle = TextStyle.Default.copy(textAlign = TextAlign.Center, fontSize = 16.sp)
+        )
+
+    /*Card(
+        colors = CardDefaults.cardColors(
+            containerColor = colorUI//.copy(alpha=0.6f),
+        ),
+        modifier = Modifier
+            .padding(horizontal = 5.dp)
+            .size(width = 70.dp, height = 50.dp)
+            .shadow(ambientColor = colorUI, elevation = 2.dp, shape = CardDefaults.elevatedShape),
+        onClick = onClick,
+        enabled = enabled
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
+        }
+    }*/
+}*/
 

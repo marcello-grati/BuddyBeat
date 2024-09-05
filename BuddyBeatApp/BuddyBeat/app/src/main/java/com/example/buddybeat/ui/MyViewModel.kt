@@ -15,6 +15,7 @@ import com.example.buddybeat.DataStoreManager
 import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.BPM_UPDATED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
+import com.example.buddybeat.DataStoreManager.Companion.HELP
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.MODALITY
 import com.example.buddybeat.DataStoreManager.Companion.MODE
@@ -63,6 +64,7 @@ class MyViewModel @Inject constructor(
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
     val mode = dataStoreManager.getPreferenceLong(MODE).asLiveData(Dispatchers.IO)
     val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
+    val help = dataStoreManager.getPreference(HELP).asLiveData(Dispatchers.IO)
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
         viewModelScope.launch {
@@ -294,7 +296,7 @@ class MyViewModel @Inject constructor(
         queueList1.clear()
         queueList1.addAll(queue)
         val target = when (modality.value) {
-            AUTO_MODE -> stepFreq.toDouble()
+            AUTO_MODE -> stepFreq
             MANUAL_MODE -> manualBpm.toDouble()
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
@@ -346,7 +348,7 @@ class MyViewModel @Inject constructor(
             }
 
         }
-        return list.sortedWith(myCustomComparator).toMutableList()
+        return list.toMutableList().sortedWith(myCustomComparator).toMutableList()
     }
 
     fun removeFromQueue1(song: Song) {
@@ -411,6 +413,10 @@ class MyViewModel @Inject constructor(
 
     fun setModality(modality: Long) {
         setPreferenceLong(MODALITY, modality)
+    }
+
+    fun changeShowHelp(help: Boolean) {
+        setPreference(HELP, help)
     }
 }
 

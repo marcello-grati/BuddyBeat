@@ -278,9 +278,6 @@ class MainActivity : ComponentActivity() {
                                 changeShow()
                             },
                             viewModel = viewModel,
-                            onItemClick = {
-                                //setSong(it)
-                            },
                             nextSong = {
                                 nextSong()
                             },
@@ -565,7 +562,7 @@ class MainActivity : ComponentActivity() {
             setSongInPlaylist(media)
             return
         }
-        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist
+        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist.toMutableList()
         if(viewModel.modality.value!= OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
         while (true) {

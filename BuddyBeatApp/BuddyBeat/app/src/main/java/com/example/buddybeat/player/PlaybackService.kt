@@ -38,12 +38,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.math.abs
@@ -169,10 +164,11 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         mediaItems: MutableList<MediaItem>
     ): ListenableFuture<List<MediaItem>> {
         val updatedMediaItems = mediaItems.map { mediaitem -> mediaitem.buildUpon().setUri(mediaitem.requestMetadata.mediaUri).build() }
-        playlist.add(updatedMediaItems.last().mediaId)
-        if(playlist.size > ((audiolist.size.div(2))))
-            playlist.removeFirstOrNull()
         Log.d("onAddMediaItems", playlist.toString())
+        playlist.add(updatedMediaItems.last().mediaId)
+        if(playlist.size > ((audiolist.size.div(2)))) {
+            Log.d("Playlist remove", playlist.removeFirstOrNull().toString())
+        }
         Log.d("onAddMediaItems", playlist.toString())
         return Futures.immediateFuture(updatedMediaItems)
     }
@@ -320,7 +316,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("stepFreq before nextSong()", target.toString())
-        val l = if (target!=0.0) orderSongs(target) else audiolist
+        val l = if (target!=0.0) orderSongs(target) else audiolist.toMutableList()
         if(speedMode!=OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
         while(true){

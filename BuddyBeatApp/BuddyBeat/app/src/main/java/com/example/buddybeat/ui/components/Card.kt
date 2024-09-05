@@ -19,10 +19,12 @@ import androidx.compose.ui.unit.dp
 fun FilledCardExample(
     stepFreq: String,
     bpm: String,
-    ratio: String
+    ratio: String,
+    colorUI : Color,
+    mode : Long
 ) {
     Row {
-        val color = Color(0xFF82B0E6)
+        val color = colorUI.copy(alpha = 0.9f)
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = color
@@ -32,7 +34,7 @@ fun FilledCardExample(
                 .padding(top = 5.dp, bottom = 5.dp),
         ) {
             Text(
-                text = "StepFreq: \n $stepFreq",
+                text = if(mode==0L)"SPM:\n-" else "SPM:\n$stepFreq",
                 modifier = Modifier
                     .width(100.dp)
                     .height(60.dp)
@@ -49,7 +51,7 @@ fun FilledCardExample(
                 .padding(top = 5.dp, bottom = 5.dp, start = 5.dp, end = 5.dp),
         ) {
             Text(
-                text = "Bpm: \n ${if(bpm!="0" && bpm!="-1") bpm else "-"}",
+                text = "BPM:\n${if(bpm!="0" && bpm!="-1") bpm else "-"}",
                 modifier = Modifier
                     .width(100.dp)
                     .height(60.dp)
@@ -66,7 +68,7 @@ fun FilledCardExample(
                 .padding(top = 5.dp, bottom = 5.dp),
         ) {
             Text(
-                text = "Ratio: \n $ratio",
+                text = "Ratio:\n$ratio",
                 modifier = Modifier
                     .width(100.dp)
                     .height(60.dp)

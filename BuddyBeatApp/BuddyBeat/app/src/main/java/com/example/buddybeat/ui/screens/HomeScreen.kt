@@ -21,11 +21,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -72,13 +70,11 @@ import com.example.buddybeat.R
 import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
-import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
-import com.example.buddybeat.ui.components.SongItem
 
 @RequiresApi(Build.VERSION_CODES.O)
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -87,9 +83,7 @@ fun HomeScreen(
     showPlayer: Boolean,
     changeShow: () -> Unit,
     playlistClicked: (PlaylistWithSongs) -> Unit,
-    audioList: List<Song>,
     allPlaylist: List<PlaylistWithSongs>,
-    onItemClick: (Int) -> Unit,
     isPlaying: Boolean,
     song: CurrentSong,
     onBarClick: () -> Unit,
@@ -100,11 +94,7 @@ fun HomeScreen(
     addToFavorite: (Long) -> Unit,
     favoriteContainsSong: (Long) -> LiveData<Int>,
     removeFavorite: (Long) -> Unit,
-    shouldShowDialogTwo: MutableState<Boolean>,
     shouldShowDialogOne: MutableState<Boolean>,
-    shouldShowDialogThree: MutableState<Boolean>,
-    songClicked: MutableState<Long>,
-    addToQueue: (Song) -> Unit,
     showBottomSheet: MutableState<Boolean>,
     playlistLongClicked: MutableState<Playlist>,
     updateSongs: () -> Unit,
@@ -113,7 +103,9 @@ fun HomeScreen(
     setModality: (Long) -> Unit,
     changeMode: (Long) -> Unit,
     mode: Long,
-    colorUI : Color
+    colorUI: Color,
+    changeShowHelp: (Boolean) -> Unit,
+    showHelp: Boolean,
 ) {
     val context = LocalContext.current
     val colorWalking = if (mode == 1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
@@ -144,10 +136,13 @@ fun HomeScreen(
                     .padding(horizontal = 15.dp)
                     .fillMaxHeight()
             ) {
-                TopBar()
-                var expandedHelp by remember { mutableStateOf(true) }
-                if (expandedHelp)
-                    TopPopup(onClickClose = { expandedHelp = false })
+                TopBar(changeShowHelp = changeShowHelp)
+                TopPopup(
+                    showHelp = showHelp,
+                    onClickClose = {
+                        changeShowHelp(it)
+                    }
+                )
                 Text(
                     text = "CHOOSE YOUR MODE",
                     fontWeight = FontWeight.Bold,
@@ -167,7 +162,7 @@ fun HomeScreen(
                         changeMode(1L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
-                        if(speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
+                        if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
                             PlaybackService.ALPHA = 0.4f
                         else if (speedMode == AUTO_MODE)
                             PlaybackService.ALPHA = 0.7f
@@ -177,7 +172,7 @@ fun HomeScreen(
                         changeMode(2L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
-                        if(speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
+                        if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
                             PlaybackService.ALPHA = 0.4f
                         else if (speedMode == AUTO_MODE)
                             PlaybackService.ALPHA = 0.7f
@@ -243,29 +238,6 @@ fun HomeScreen(
                     favoritesId = favoritesId,
                     colorUI = colorUI
                 )
-                SongsOfTheWeek("RECOMMENDED:")
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    itemsIndexed(audioList) { index, audio ->
-                        SongItem(
-                            audio = audio,
-                            onItemClick = {
-                                onItemClick(index)
-                            },
-                            isPlaying = audio.songId == song.id,
-                            addToFavorite = addToFavorite,
-                            favoriteContainsSong = favoriteContainsSong,
-                            removeFavorite = removeFavorite,
-                            shouldShowDialogTwo = shouldShowDialogTwo,
-                            songClicked = songClicked,
-                            shouldShowDialogThree = shouldShowDialogThree,
-                            addToQueue = addToQueue,
-                            colorUI = colorUI
-                        )
-                    }
-                    item { Spacer(modifier = Modifier.height(10.dp)) }
-                }
             }
         }
 
@@ -320,6 +292,7 @@ fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) ->
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
+    changeShowHelp: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -334,7 +307,7 @@ fun TopBar(
                 .size(width = 120.dp, height = 60.dp),  // Set different width and height
         )
         Card(
-            onClick = { /*TODO Help Section*/ },
+            onClick = { changeShowHelp(true) },
             shape = RoundedCornerShape(50.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent)
         ) {
@@ -349,48 +322,54 @@ fun TopBar(
 
 @Composable
 fun TopPopup(
-    onClickClose: () -> Unit
+    onClickClose: (Boolean) -> Unit,
+    showHelp: Boolean
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .background(Color(0xFFE6E8E5), RoundedCornerShape(10.dp))
-            .padding(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+    if (showHelp) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .background(Color(0xFFE6E8E5), RoundedCornerShape(10.dp))
+                .padding(16.dp)
         ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Hi, user!",
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 10.dp, top = 8.dp),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                IconButton(
-                    onClick = { onClickClose() },
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "Close popup")
-                }
-            }
-            Text(
-                text = stringResource(R.string.help_section),
-                modifier = Modifier.padding(vertical = 8.dp),
-                fontSize = 14.sp,
-                lineHeight = 18.sp
-
-            )
-            Button(
-                onClick = { /*TODO help section */ },
-                modifier = Modifier.align(Alignment.End),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Help")
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Hi, user!",
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(start = 10.dp, top = 8.dp),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(
+                        modifier = Modifier.align(Alignment.TopEnd),
+                        onClick = {
+                            onClickClose(!showHelp)
+                        },
+
+                        ) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close popup")
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.help_section),
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp
+
+                )
+                Button(
+                    onClick = { /*TODO help section */ },
+                    modifier = Modifier.align(Alignment.End),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
+                ) {
+                    Text("Help")
+                }
             }
         }
     }
@@ -447,7 +426,7 @@ fun MainButtons(
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                colorUI.copy(red=0.6f),
+                                colorUI.copy(red = 0.5f),
                                 colorUI
                             ) // Green to Blue gradient
                         )
@@ -458,7 +437,8 @@ fun MainButtons(
 
                 allPlaylist.find {
                     it.playlist.playlistId == allSongsId
-                }?.playlist?.title?.let { Text(it, color = Color.White, fontSize = 16.sp) }
+                }?.playlist?.title?.let {
+                    Text(it, color = Color(0xFF111111), fontSize = 20.sp, fontWeight = FontWeight.W900) }
             }
         }
         val haptics = LocalHapticFeedback.current
@@ -484,7 +464,7 @@ fun MainButtons(
                     modifier = modifier
                         .fillMaxWidth()
                         .height(80.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                 ) {
                     Box(
                         modifier = Modifier
@@ -492,8 +472,7 @@ fun MainButtons(
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        colorUI.copy(red=0.6f),
-                                        colorUI
+                                        colorUI, colorUI.copy(red=0.5f)
                                     ) // Green to Blue gradient
                                 )
                             ),
@@ -501,8 +480,8 @@ fun MainButtons(
                     ) {
                         Text(
                             playlist.playlist.title,
-                            color = Color.White,
-                            fontSize = 16.sp
+                            color = Color(0xFF111111),
+                            fontSize = 18.sp, fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

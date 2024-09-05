@@ -58,7 +58,6 @@ fun MusicPlayerApp(
     showPlayer: Boolean,
     changeShow: () -> Unit,
     viewModel: MyViewModel,
-    onItemClick: (Int) -> Unit,
     prevSong: () -> Unit,
     nextSong: () -> Unit,
     onProgress: (Float) -> Unit,
@@ -79,7 +78,6 @@ fun MusicPlayerApp(
         changeShow = changeShow,
         navController = navController,
         viewModel = viewModel,
-        onItemClick = onItemClick,
         onProgress = onProgress,
         onStart = onStart,
         nextSong = nextSong,
@@ -105,7 +103,6 @@ fun MusicPlayerNavHost(
     changeShow: () -> Unit,
     navController: NavHostController,
     viewModel: MyViewModel,
-    onItemClick: (Int) -> Unit,
     prevSong: () -> Unit,
     nextSong: () -> Unit,
     onProgress: (Float) -> Unit,
@@ -149,13 +146,20 @@ fun MusicPlayerNavHost(
     // walking/running
     val mode by viewModel.mode.observeAsState(initial = 0L)
     val modality by viewModel.modality.observeAsState(initial = 0L)
+    val help by viewModel.help.observeAsState(initial = false)
 
     val queue = viewModel.queueList1
     val audioList = viewModel.queueList2
 
-    val colorUI = if (mode==1L) Color(0xFFB1B2FF) else if (mode==2L) Color(0xFFD0EB34) else Color(
-        0xFFA5D1E9
-    )
+
+
+    val colorUI = when (mode) {
+        1L -> Color(0xFFB1B2FF)
+        2L -> Color(0xFFD0EB34)
+        else -> Color(
+            0xFFA5D1E9
+        )
+    }
 
 
     if (shouldShowDialogOne.value) {
@@ -237,11 +241,7 @@ fun MusicPlayerNavHost(
                     navController.navigate(Destination.playlist)
                 },
                 isPlaying = isPlaying,
-                audioList = listOf(),
                 allPlaylist = allPlaylist,
-                onItemClick = {
-                    onItemClick(it)
-                },
                 onBarClick = { navController.navigate(Destination.songScreen) },
                 song = currentSong,
                 progress = progress,
@@ -257,11 +257,7 @@ fun MusicPlayerNavHost(
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
                 },
-                shouldShowDialogTwo = shouldShowDialogTwo,
                 shouldShowDialogOne = shouldShowDialogOne,
-                songClicked = songClicked,
-                shouldShowDialogThree = shouldShowDialogThree,
-                addToQueue = addToQueue,
                 showBottomSheet = showBottomSheet,
                 playlistLongClicked = playlistLongClicked,
                 updateSongs = {
@@ -276,7 +272,11 @@ fun MusicPlayerNavHost(
                     setMode(it)
                 },
                 mode = mode,
-                colorUI = colorUI
+                colorUI = colorUI,
+                changeShowHelp = {
+                    viewModel.changeShowHelp(it)
+                },
+                showHelp = help
             )
         }
         composable(route = Destination.playlist) {
@@ -378,7 +378,8 @@ fun MusicPlayerNavHost(
                             }
                             nextSong()
                             playPause()
-                        }
+                        },
+                        mode = mode
                     ) { navController.navigateUp() }
                 }
             }

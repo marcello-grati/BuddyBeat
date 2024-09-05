@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -87,8 +86,9 @@ fun PlaylistScreen(
     shouldShowDialogFour: MutableState<Boolean>,
     allSongsId: Long,
     favoritesId: Long,
-    colorUI : Color,
+    colorUI: Color,
     startFirstSong: () -> Unit,
+    mode: Long,
     onNavigateUp: () -> Unit,
 ) {
     Scaffold(
@@ -159,7 +159,7 @@ fun PlaylistScreen(
                 }
             }
             Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                FilledCardExample(text1, text2, text3)
+                FilledCardExample(text1, text2, text3, colorUI, mode)
             }
             LazyColumn(
                 modifier = Modifier
@@ -177,7 +177,7 @@ fun PlaylistScreen(
                                         shouldShowDialogFive.value = true
                                     }
                                 ) else Modifier
-                        TopSection(modifier, it1.title, startFirstSong = startFirstSong)
+                        TopSection(modifier, it1.title, startFirstSong = startFirstSong, colorUI = colorUI)
                     }
                 }
                 allPlaylist.find { it.playlist.playlistId == currentId }?.let { it1 ->
@@ -213,11 +213,13 @@ fun TopSection(
     modifier: Modifier,
     title: String,
     resource: Int = R.drawable.mainimage,
-    startFirstSong:  () -> Unit
+    startFirstSong: () -> Unit,
+    colorUI : Color
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
         AsyncImage(
             model = "",
@@ -230,34 +232,31 @@ fun TopSection(
                 .padding(horizontal = 50.dp)
                 .clip(RoundedCornerShape(bottomStart = 130.dp, bottomEnd = 130.dp))
         )
-        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.align(Alignment.Center)) {
-            Text(
-                text = title,
-                modifier = modifier,
-                    //.padding(bottom = 100.dp)
-                textAlign = TextAlign.Center,
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.W900,
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-            Card(
-                onClick = {
-                    //isPlaying = !isPlaying
-                    startFirstSong()
-                },
-                shape = CircleShape,
-                modifier = Modifier
-                    .size(70.dp).align(Alignment.CenterHorizontally),
-                colors = CardDefaults.cardColors(containerColor = Color.Black)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "",
-                        modifier = Modifier.size(35.dp), tint = Color.White
-                    )
-                }
+        Text(
+            text = title,
+            modifier = modifier.padding(bottom = 10.dp),
+            textAlign = TextAlign.Center,
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.W900,
+        )
+        Card(
+            onClick = {
+                //isPlaying = !isPlaying
+                startFirstSong()
+            },
+            shape = CircleShape,
+            modifier = Modifier
+                .size(80.dp).align(Alignment.BottomCenter).padding(10.dp)
+            ,colors =
+                CardDefaults.cardColors(containerColor = colorUI)
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "",
+                    modifier = Modifier.size(45.dp), tint = Color.DarkGray
+                )
             }
         }
     }
