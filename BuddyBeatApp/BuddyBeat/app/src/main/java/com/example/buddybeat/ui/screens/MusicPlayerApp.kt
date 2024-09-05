@@ -1,5 +1,6 @@
 package com.example.buddybeat.ui.screens
 
+import HelpScreen
 import PlayScreenDesign
 import android.os.Build
 import android.util.Log
@@ -50,6 +51,7 @@ object Destination {
     const val playlist = "playlist"
     const val songScreen = "songScreen"
     const val queue = "queue"
+    const val help = "help"
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -146,7 +148,7 @@ fun MusicPlayerNavHost(
     // walking/running
     val mode by viewModel.mode.observeAsState(initial = 0L)
     val modality by viewModel.modality.observeAsState(initial = 0L)
-    val help by viewModel.help.observeAsState(initial = false)
+    val closedHelp by viewModel.help.observeAsState(initial = false)
 
     val queue = viewModel.queueList1
     val audioList = viewModel.queueList2
@@ -276,8 +278,14 @@ fun MusicPlayerNavHost(
                 changeShowHelp = {
                     viewModel.changeShowHelp(it)
                 },
-                showHelp = help
+                closedHelp = closedHelp,
+                shouldShowHelpScreen = { navController.navigate(Destination.help) }
             )
+        }
+        composable(route = Destination.help) {
+                HelpScreen() {
+                    navController.navigateUp()
+                }
         }
         composable(route = Destination.playlist) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -416,7 +424,8 @@ fun MusicPlayerNavHost(
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
                 },
-                colorUI = colorUI
+                colorUI = colorUI,
+                shouldShowHelpScreen = { navController.navigate(Destination.help) }
             )
         }
         composable(route = Destination.queue,

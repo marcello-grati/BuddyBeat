@@ -106,7 +106,8 @@ fun HomeScreen(
     mode: Long,
     colorUI: Color,
     changeShowHelp: (Boolean) -> Unit,
-    showHelp: Boolean,
+    closedHelp: Boolean,
+    shouldShowHelpScreen: () -> Unit,
 ) {
     val context = LocalContext.current
     val colorWalking = if (mode == 1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
@@ -125,10 +126,10 @@ fun HomeScreen(
                 favoriteContains = favoriteContainsSong(song.id),
                 addToFavorite = {
                     addToFavorite(song.id)
-                }
-            ) {
-                removeFavorite(song.id)
-            }
+                },
+                removeFavorite = {
+                    removeFavorite(song.id)
+                })
     })
     { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
@@ -139,10 +140,11 @@ fun HomeScreen(
             ) {
                 TopBar(changeShowHelp = changeShowHelp)
                 TopPopup(
-                    showHelp = showHelp,
                     onClickClose = {
                         changeShowHelp(it)
-                    }
+                    },
+                    closedHelp = closedHelp,
+                    shouldShowHelpScreen = shouldShowHelpScreen
                 )
                 Text(
                     text = "CHOOSE YOUR MODE",
@@ -308,7 +310,7 @@ fun TopBar(
                 .size(width = 120.dp, height = 60.dp),  // Set different width and height
         )
         Card(
-            onClick = { changeShowHelp(true) },
+            onClick = { changeShowHelp(false) },
             shape = RoundedCornerShape(50.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Transparent)
         ) {
@@ -324,9 +326,10 @@ fun TopBar(
 @Composable
 fun TopPopup(
     onClickClose: (Boolean) -> Unit,
-    showHelp: Boolean
+    closedHelp: Boolean,
+    shouldShowHelpScreen : () -> Unit,
 ) {
-    if (showHelp) {
+    if (!closedHelp) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -350,7 +353,7 @@ fun TopPopup(
                     IconButton(
                         modifier = Modifier.align(Alignment.TopEnd),
                         onClick = {
-                            onClickClose(!showHelp)
+                            onClickClose(true)
                         },
 
                         ) {
@@ -365,7 +368,7 @@ fun TopPopup(
 
                 )
                 Button(
-                    onClick = { /*TODO help section */ },
+                    onClick = { shouldShowHelpScreen() },
                     modifier = Modifier.align(Alignment.End),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF000000))
                 ) {

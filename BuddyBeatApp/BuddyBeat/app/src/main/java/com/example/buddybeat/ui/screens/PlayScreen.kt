@@ -107,7 +107,8 @@ fun PlayScreenDesign(
     addToFavorite: (Long) -> Unit,
     removeFavorite: (Long) -> Unit,
     favoriteContainsSong: (Long) -> LiveData<Int>,
-    colorUI : Color
+    colorUI : Color,
+    shouldShowHelpScreen : () -> Unit
 ) {
     val text = when (modality) {
         OFF_MODE -> "off"
@@ -139,13 +140,13 @@ fun PlayScreenDesign(
                 IconButton(onClick = { onNavigateUp() }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIos,
-                        contentDescription = "",
+                        contentDescription = "back",
                     )
                 }
-                IconButton(onClick = { }) {
+                IconButton(onClick = { shouldShowHelpScreen() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.help),
-                        contentDescription = null,
+                        contentDescription = "help",
                     )
                 }
             }
