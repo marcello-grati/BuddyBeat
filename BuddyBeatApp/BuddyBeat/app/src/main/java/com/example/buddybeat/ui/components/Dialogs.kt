@@ -295,7 +295,7 @@ fun AddToPlaylist(
                     Button(
                         onClick = {shouldShowDialogOne.value = true},
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1551E9))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF030303))
                     ) {
                         Text("NEW PLAYLIST", color = Color.White)
                     }
