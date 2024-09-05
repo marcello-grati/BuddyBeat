@@ -2,6 +2,7 @@ package com.example.buddybeat.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.fonts.FontStyle
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,9 +23,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -416,14 +419,14 @@ fun MainButtons(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
-            .padding(top = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+            //.height(280.dp)
+            .padding(top = 5.dp, bottom = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
+    ){
         Card(
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
+                .height(120.dp)
                 .combinedClickable(
                     onClick = {
                         allPlaylist
@@ -451,14 +454,12 @@ fun MainButtons(
                 allPlaylist.find {
                     it.playlist.playlistId == allSongsId
                 }?.playlist?.title?.let {
-                    Text(it, color = Color(0xFF111111), fontSize = 20.sp, fontWeight = FontWeight.W900) }
+                    Text(it, color = Color(0xFF111111), fontSize = 20.sp, fontWeight = FontWeight.W900, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic) }
             }
         }
         val haptics = LocalHapticFeedback.current
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+        LazyColumn(
             verticalArrangement = Arrangement.spacedBy(5.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             itemsIndexed(allPlaylist.dropWhile { it.playlist.playlistId == allSongsId }) { index, playlist ->
                 val modifier = if (playlist.playlist.playlistId != favoritesId)

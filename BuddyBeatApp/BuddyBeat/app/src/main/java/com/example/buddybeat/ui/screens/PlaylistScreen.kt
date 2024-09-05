@@ -255,7 +255,7 @@ fun TopSection(
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = "",
-                    modifier = Modifier.size(45.dp), tint = Color.DarkGray
+                    modifier = Modifier.size(45.dp), tint = Color.Black
                 )
             }
         }
