@@ -28,6 +28,8 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -161,7 +164,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModeButton("Walking", color = colorWalking, onClick = {
+                    ModeButton("Walking", color = colorWalking, icon = Icons.Default.DirectionsWalk,onClick = {
                         changeMode(1L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
@@ -171,7 +174,7 @@ fun HomeScreen(
                             PlaybackService.ALPHA = 0.7f
                         //startWalkingMode(context) /* Handle Walking Mode */
                     })
-                    ModeButton("Running", color = colorRunning, onClick = {
+                    ModeButton("Running", color = colorRunning,icon = Icons.Default.DirectionsRun, onClick = {
                         changeMode(2L)
                         speedMode = AUTO_MODE
                         setModality(speedMode)
@@ -334,7 +337,11 @@ fun TopPopup(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
-                .background(color = if (isSystemInDarkTheme()) Color(0xFF3C3C3C) else Color(0xFFE6E8E5), RoundedCornerShape(10.dp))
+                .background(
+                    color = if (isSystemInDarkTheme()) Color(0xFF3C3C3C) else Color(
+                        0xFFE6E8E5
+                    ), RoundedCornerShape(10.dp)
+                )
                 .padding(16.dp)
         ) {
             Column(
@@ -380,14 +387,16 @@ fun TopPopup(
 }
 
 @Composable
-fun ModeButton(text: String, color: Color, onClick: () -> Unit) {
+fun ModeButton(text: String, color: Color, onClick: () -> Unit, icon : ImageVector) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .width(150.dp)
             .height(50.dp), // Removed Modifier.background
-        colors = ButtonDefaults.buttonColors(containerColor = color) // Set the background color via ButtonDefaults
+        colors = ButtonDefaults.buttonColors(containerColor = color), // Set the background color via ButtonDefaults
     ) {
+        Icon(imageVector = icon, contentDescription = "mode", tint = Color.Black)
+        Spacer(modifier = Modifier.width(10.dp))
         Text(text, color = Color.Black, fontSize = 16.sp)
     }
 }
@@ -476,7 +485,7 @@ fun MainButtons(
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        colorUI, colorUI.copy(red=0.5f)
+                                        colorUI, colorUI.copy(red = 0.5f)
                                     ) // Green to Blue gradient
                                 )
                             ),
