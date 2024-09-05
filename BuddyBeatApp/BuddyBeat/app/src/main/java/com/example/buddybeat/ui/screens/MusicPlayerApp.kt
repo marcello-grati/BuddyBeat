@@ -158,9 +158,7 @@ fun MusicPlayerNavHost(
     val colorUI = when (mode) {
         1L -> Color(0xFFB1B2FF)
         2L -> Color(0xFFD0EB34)
-        else -> Color(
-            0xFFA5D1E9
-        )
+        else -> Color(0xFFBEEBF2)
     }
 
 

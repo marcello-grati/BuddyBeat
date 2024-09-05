@@ -95,7 +95,7 @@ fun QueueItem(
                     expanded = expanded,
                     onDismissRequest = { expanded=false
                         showQueue(true)},
-                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                    modifier = Modifier.background(Color(0xFFF0F0F0))
                 ){
                     DropdownMenuItem(
                         text = { Text("Remove From Queue") },

@@ -122,7 +122,7 @@ fun SongItem(
                 DropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded=false },
-                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                    modifier = Modifier.background(Color(0xFFF0F0F0))
                 ){
                     DropdownMenuItem(
                         text = { Text("Add To Playlist") },
