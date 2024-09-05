@@ -204,12 +204,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun increaseManualBpm() {
-        manualBpm += BPM_STEP
-        manualBpm = manualBpm.coerceAtMost(220)
+        var bpm = viewModel.targetBpm.value + BPM_STEP
+        bpm = bpm.coerceAtMost(220)
+        viewModel.setTargetBpm(bpm)
+        manualBpm = bpm
     }
     private fun decreaseManualBpm() {
-        manualBpm -= BPM_STEP
-        manualBpm = manualBpm.coerceAtLeast(80)
+        var bpm = viewModel.targetBpm.value - BPM_STEP
+        bpm = bpm.coerceAtLeast(80)
+        viewModel.setTargetBpm(bpm)
+        manualBpm = bpm
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -264,6 +268,7 @@ class MainActivity : ComponentActivity() {
                         if(viewModel.mode.value!=0L){
                             viewModel.mode.value?.let { viewModel.setMode(it) }
                         }
+                        viewModel.setTargetBpm(manualBpm)
                         MusicPlayerApp(
                             showPlayer = showPlayer,
                             changeShow = {

@@ -155,6 +155,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             mediaSession = null
         }
         speedMode = OFF_MODE
+        manualBpm = DEFAULT_BPM
         unbindService(connection)
         handler.removeCallbacksAndMessages(null)
         mBound = false
@@ -221,7 +222,10 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                             l.toFloat()
                         }
                     }
-                    MANUAL_MODE -> manualBpm.toFloat()
+                    MANUAL_MODE -> {
+                        Log.d("Playback service", "manualBpm $manualBpm")
+                        manualBpm.toFloat()
+                    }
                     else -> throw Exception("Invalid speed mode")
                 }
 

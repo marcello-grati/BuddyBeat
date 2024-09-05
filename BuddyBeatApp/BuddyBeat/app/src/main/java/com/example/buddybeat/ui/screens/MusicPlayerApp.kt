@@ -37,7 +37,6 @@ import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService.Companion.audioListId
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
-import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.AddToPlaylist
 import com.example.buddybeat.ui.components.AreYouSure
@@ -149,6 +148,8 @@ fun MusicPlayerNavHost(
     val mode by viewModel.mode.observeAsState(initial = 0L)
     val modality by viewModel.modality.observeAsState(initial = 0L)
     val closedHelp by viewModel.help.observeAsState(initial = false)
+
+    val targetBpm by viewModel.targetBpm.collectAsState(100)
 
     val queue = viewModel.queueList1
     val audioList = viewModel.queueList2
@@ -277,6 +278,9 @@ fun MusicPlayerNavHost(
                     viewModel.changeShowHelp(it)
                 },
                 closedHelp = closedHelp,
+                setTargetBpm = {
+                    viewModel.setTargetBpm(it)
+                },
                 shouldShowHelpScreen = { navController.navigate(Destination.help) }
             )
         }
@@ -411,7 +415,7 @@ fun MusicPlayerNavHost(
                     viewModel.showQueue(true)
                     navController.navigate(Destination.queue)
                 },
-                target = manualBpm.toString(),
+                target = targetBpm.toString(),
                 modality = modality,
                 addToFavorite = {
                     viewModel.addToPlaylist(favorites, it)
