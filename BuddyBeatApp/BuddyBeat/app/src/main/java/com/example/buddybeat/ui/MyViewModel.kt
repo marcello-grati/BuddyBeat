@@ -25,7 +25,6 @@ import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.data.repository.AudioRepository
 import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
-import com.example.buddybeat.player.PlaybackService.Companion.DEFAULT_BPM
 import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
@@ -414,13 +413,6 @@ class MyViewModel @Inject constructor(
     @OptIn(UnstableApi::class)
     fun setMode(mode: Long) {
         setPreferenceLong(MODE, mode)
-        manualBpm = when (mode) {
-            1L -> 100
-            2L -> 160
-            else -> {
-                manualBpm
-            }
-        }
         if(mode == 1L || mode == 2L)
             _lastMode.update{
                 mode

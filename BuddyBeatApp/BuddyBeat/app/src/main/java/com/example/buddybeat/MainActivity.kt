@@ -205,9 +205,11 @@ class MainActivity : ComponentActivity() {
 
     private fun increaseManualBpm() {
         manualBpm += BPM_STEP
+        manualBpm = manualBpm.coerceAtMost(220)
     }
     private fun decreaseManualBpm() {
         manualBpm -= BPM_STEP
+        manualBpm = manualBpm.coerceAtLeast(80)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
