@@ -4,7 +4,6 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBackIos
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,9 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import com.example.buddybeat.R // Ensure this matches your actual package structure
+import com.example.buddybeat.R
 
 @Composable
 fun HelpScreen(onNavigateUp: () -> Unit) {
@@ -192,8 +189,3 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
     }
 }
 
-@Composable
-@Preview(showBackground = true)
-fun HelpScreenPreview() {
-    HelpScreen(onNavigateUp = {})
-}
