@@ -28,6 +28,9 @@ interface SongDao {
     @Query("SELECT * FROM song_table ORDER BY title ASC")
     suspend fun getSongs(): List<Song>
 
+    @Query("SELECT COUNT(*) FROM song_table WHERE bpm = -1")
+    fun getCountBpm() : LiveData<Int>
+
 
     @Query("SELECT songId FROM song_table")
     fun getAllIds():LiveData<List<Long>>

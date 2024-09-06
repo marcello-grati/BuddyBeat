@@ -217,7 +217,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                         if(System.currentTimeMillis()-mService.lastUpdate>3000)
                             0f
                         else {
-                            val d = mService.previousStepFrequency_3.takeLast(5).takeWhile { it > 65 }
+                            val d = mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }
                             Log.d("PlaybackService - PreviousFreq updateSpeed playbackService", d.toString())
                             var l = d.average()
                             if (l.isNaN()) {
@@ -319,7 +319,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
         val target = when (speedMode) {
             AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLast(5)
+                val d = mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }
                 Log.d("PreviousFreq nextSong playbackService", d.toString())
                 var l = d.average()
                 if(l.isNaN()){

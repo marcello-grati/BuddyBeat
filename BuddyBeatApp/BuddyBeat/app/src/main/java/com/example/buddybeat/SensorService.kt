@@ -67,9 +67,12 @@ class SensorService : Service(), SensorEventListener {
     /* parameters for steps calculation */
     private var unitTime = 60000  //60000 millisecond = 60 second
 
+    private var mode = 0L
+
 
     @OptIn(UnstableApi::class)
     fun changeMode(mode: Long) {
+        this@SensorService.mode = mode
         when (mode) {
             1L -> { // walking
                 setWalkingMode()
@@ -93,11 +96,11 @@ class SensorService : Service(), SensorEventListener {
     private var threshold: Float = 4f
     private var deltaTime: Long = 2000L
 
-    private val walkingThreshold = 2f//1.3f
+    private val walkingThreshold = 1.8f//1.3f
     private val walkingDeltaTime = 300L//350L
 
     private val runningThreshold = 2.25f
-    private val runningDeltaTime = 150L
+    private val runningDeltaTime = 600L
 
     private fun reset() {
         threshold = 4f
@@ -134,6 +137,10 @@ class SensorService : Service(), SensorEventListener {
     private var stepFrequency_2: Int = 0
     private val n = 15 //stabilization of frequency values
     val previousStepFrequency_3 = mutableListOf<Int>()
+
+    private var stepFrequency_3: Int = 0
+    private var stepFreq_3: Int = 0
+    private val currentFrequency_2 = mutableListOf<Long>()
 
 
     /* parameters for calculation stepFreq method 3 */
@@ -183,7 +190,7 @@ class SensorService : Service(), SensorEventListener {
     // variable read by other components
     val stepFreq: Int
         get() = if (System.currentTimeMillis() - lastUpdate > 3000) 0
-        else stepFrequency_2
+        else previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }.average().toInt()
 
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
@@ -395,31 +402,37 @@ class SensorService : Service(), SensorEventListener {
                         stepFreqNow = (60000 / deltaBetweenTwoSteps)
 
                         currentFrequency.add(stepFreqNow)
+                        currentFrequency_2.add(stepFreqNow)
+
+                        if (currentFrequency_2.size >= 5) {
+                            val newFreq = currentFrequency_2.average()
+                            currentFrequency_2.clear()
+                            /*stepFrequency_2 = if (newFreq < 65)
+                                0
+                            else (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()*/
+                            stepFreq_3 = if (newFreq < 65)
+                                0 else (alpha * stepFreq_3 + (1 - alpha) * newFreq).toInt()
+                            stepFrequency_2 = if(mode==1L) stepFreq_3 else if(mode==2L) (stepFreq_3*2) else stepFreq_3
+                            Log.d("stepFrequency_2", stepFrequency_2.toString())
+                            previousStepFrequency_3.add(stepFrequency_2)
+                        }
 
                         //stabilization of frequency steps
                         /*val lastNValues = if (currentFrequency.size >= n) {
                             currentFrequency.takeLast(n)
                         } else {
                             currentFrequency
-                        }*/
-                        if (currentFrequency.size >= 5) {
-                            val newFreq = currentFrequency.average()
-                            currentFrequency.clear()
-                            stepFrequency_2 = if (newFreq < 65)
-                                0
-                            else (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
-                            Log.d("stepFrequency_3", stepFrequency_2.toString())
-                            previousStepFrequency_3.add(stepFrequency_2)
                         }
-                        /*val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
+                        Log.d("stepFrequency last", lastNValues.toString())
+                        val weights = List(lastNValues.size) { it * 0.5 + 1.0 }.toDoubleArray()
                         val weightedSum =
                             lastNValues.zip(weights.toList()).sumOf { it.first * it.second }
                         val weightedAverage = weightedSum / weights.sum()
                         val newFreq = weightedAverage.toInt()
-                        stepFrequency_2 = if (newFreq < 65)
-                            0 else (alpha * stepFrequency_2 + (1 - alpha) * newFreq).toInt()
-                        Log.d("stepFrequency_3", stepFrequency_2.toString())
-                        previousStepFrequency_3.add(stepFrequency_2)*/
+                        stepFrequency_3 = if (newFreq < 65)
+                            0 else (alpha * stepFrequency_3 + (1 - alpha) * newFreq).toInt()
+                        Log.d("stepFrequency_3", stepFrequency_3.toString())*/
+                        //previousStepFrequency_3.add(stepFrequency_2)
                     }
                 }
 

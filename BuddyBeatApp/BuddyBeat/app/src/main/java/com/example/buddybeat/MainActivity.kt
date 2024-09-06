@@ -258,13 +258,17 @@ class MainActivity : ComponentActivity() {
                         startSensorService()
                         val isUploaded by viewModel.isUploaded.observeAsState()
                         val bpmUpdated by viewModel.bpmUpdated.observeAsState(initial = false)
+                        val bpmCount by viewModel.bpmCount.observeAsState(initial = 0)
                         val r by ratio.collectAsState()
                         if (isUploaded == true && !bpmUpdated) {
                             Log.d("IOOOO", "Songs are uploaded but bpm not updated")
                             viewModel.updateBpm()
                         }
                         if (bpmUpdated) {
-                            Log.d("IOOOO", "BPMs are updated")
+                            if(bpmCount>0)
+                                viewModel.setBpmUpdated(false)
+                            else
+                                Log.d("IOOOO", "BPMs are updated")
                         }
                         /*LaunchedEffect(bpmUpdated) {
                             Log.d("IOOOO", "BPMs updating...")
@@ -392,8 +396,9 @@ class MainActivity : ComponentActivity() {
 
     private fun updateDataTextView() {
         run {
-            viewModel.updateFreq(mService.stepFreq)
-            viewModel.updateFreqQueue( mService.previousStepFrequency_3.takeLast(5).average())
+            viewModel.updateFreq(if (System.currentTimeMillis() - mService.lastUpdate > 3000) 0
+            else mService.previousStepFrequency_3.takeLast(7).takeWhile{it>65}.average().toInt())
+            viewModel.updateFreqQueue( mService.previousStepFrequency_3.takeLast(7).takeWhile{it>65}.average())
             _ratio.update { controller?.playbackParameters?.speed ?: 1f }
         }
     }
@@ -554,7 +559,7 @@ class MainActivity : ComponentActivity() {
     private fun nextSong() {
         val target = when (speedMode) {
             AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLast(5)
+                val d = mService.previousStepFrequency_3.takeLast(7).takeWhile{it>65}
                 Log.d("PreviousFreq nextSong mainActivity", d.toString())
                 var l = d.average()
                 if(l.isNaN()){
