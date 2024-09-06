@@ -44,8 +44,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.io.File
-import java.net.URI
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -225,6 +223,7 @@ class MyViewModel @Inject constructor(
         //for each song in database calculate bpm and update
         for (i in songRepo.getSongs()) {
             if (songRepo.getBpm(i.songId) == -1) {
+                Log.d("CalculateBpm","calculating bpm song: $i")
                 val x = beatExtractor.beatDetection(
                     i.uri,
                     i.duration
