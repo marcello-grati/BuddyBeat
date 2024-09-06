@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -80,6 +81,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.FileNotFoundException
 
 
 @UnstableApi
@@ -195,10 +197,10 @@ class MainActivity : ComponentActivity() {
             mService.changeMode(0L)
         }
         viewModel.setModality(speedMode)
-        if(speedMode == MANUAL_MODE || speedMode == OFF_MODE)
+        if(speedMode == MANUAL_MODE)
             ALPHA = 0.4F
         else if (speedMode == AUTO_MODE)
-            ALPHA = 0.7f
+            ALPHA = 0.8f
 
         Log.d("MODALITY", speedMode.toString())
     }
@@ -265,6 +267,10 @@ class MainActivity : ComponentActivity() {
                         if (bpmUpdated == true) {
                             Log.d("IOOOO", "BPMs are updated")
                         }
+                        LaunchedEffect(bpmUpdated) {
+                            Log.d("IOOOO", "BPMs updating...")
+                            viewModel.updateBpm()
+                        }
                         if(viewModel.mode.value!=0L){
                             viewModel.mode.value?.let { viewModel.setMode(it) }
                         }
@@ -308,12 +314,11 @@ class MainActivity : ComponentActivity() {
                             },
                             setSongInPlaylist = {
                                 setSongInPlaylist(it)
-                            },
-                            setMode = {
-                                viewModel.setMode(it)
-                                mService.changeMode(it)
                             }
-                        )
+                        ) {
+                            viewModel.setMode(it)
+                            mService.changeMode(it)
+                        }
                     }
                     else -> RequiredPermission(state = state)
                 }
@@ -420,10 +425,10 @@ class MainActivity : ComponentActivity() {
         viewModel.modality.value?.let { Log.d("modality value", it.toString())
             Log.d("modality value", speedMode.toString())
             speedMode = it
-            if(it == MANUAL_MODE || it == OFF_MODE)
+            if(it == MANUAL_MODE)
                 ALPHA = 0.4f
             else if (it == AUTO_MODE)
-                ALPHA = 0.7f
+                ALPHA = 0.8f
         }
     }
 
@@ -504,7 +509,17 @@ class MainActivity : ComponentActivity() {
         }
     }*/
 
-    private fun buildMediaItem(audio: Song): MediaItem {
+    private fun buildMediaItem(audio: Song): MediaItem? {
+        try {
+            contentResolver.openInputStream(audio.uri.toUri())?.close()
+        } catch (e: FileNotFoundException) {
+            Log.d("buildMediaItem", e.toString())
+            viewModel.removeFromPlaylist(viewModel.allSongsId.value!!, audio.songId)
+            audiolist.remove(audio)
+            playlist.remove(audio.uri)
+            queue.remove(audio)
+            return null
+        }
         Log.d("IOOOO bpm" , audio.bpm.toString())
         return MediaItem.Builder()
             .setMediaId(audio.uri)
@@ -553,11 +568,15 @@ class MainActivity : ComponentActivity() {
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("stepFreq before nextSong()", target.toString())
-        val queueNext = queue.removeFirstOrNull()
-        if(queueNext!=null){
-            val media = buildMediaItem(queueNext)
-            setSongInPlaylist(media)
-            return
+        while (true) {
+            val queueNext = queue.removeFirstOrNull()
+            if (queueNext != null) {
+                val media = buildMediaItem(queueNext)
+                if (media != null) {
+                    setSongInPlaylist(media)
+                    return
+                }
+            } else break
         }
         val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist.toMutableList()
         if(viewModel.modality.value!= OFF_MODE)
@@ -566,15 +585,17 @@ class MainActivity : ComponentActivity() {
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
-                Log.d("IOOOO","From MainActivity, next song ${media.mediaId}?")
-                Log.d("playlist before adding", playlist.toString())
-                if (!playlist.contains(media.mediaId)) {
-                    Log.d("IOOOO","From MainActivity, it does not contain ${media.mediaId}")
-                    //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
-                    Log.d("media", media.toString())
-                    Log.d("playlist", playlist.toString())
-                    setSongInPlaylist(media)
-                    break
+                if(media!=null) {
+                    Log.d("IOOOO", "From MainActivity, next song ${media.mediaId}?")
+                    Log.d("playlist before adding", playlist.toString())
+                    if (!playlist.contains(media.mediaId)) {
+                        Log.d("IOOOO", "From MainActivity, it does not contain ${media.mediaId}")
+                        //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
+                        Log.d("media", media.toString())
+                        Log.d("playlist", playlist.toString())
+                        setSongInPlaylist(media)
+                        break
+                    }
                 }
             }else return
         }

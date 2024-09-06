@@ -40,6 +40,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
+import java.io.FileNotFoundException
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -156,6 +157,10 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         }
         speedMode = OFF_MODE
         manualBpm = DEFAULT_BPM
+        audiolist.clear()
+        audioListId.value = 0L
+        playlist.clear()
+        queue.clear()
         unbindService(connection)
         handler.removeCallbacksAndMessages(null)
         mBound = false
@@ -258,7 +263,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     inRatio = inRatio.coerceAtMost(1.25f)
                 }
 
-                outRatio = 0.9f * outRatio + (1 - 0.9f) * inRatio
+                outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
 
                 ratio = outRatio
                 mService.updateBpm(ratio*bpm) //update Bpm in csv
@@ -302,11 +307,15 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     private fun nextSong() {
-        val queueNext = queue.removeFirstOrNull()
-        if(queueNext!=null){
-            val media = buildMediaItem(queueNext)
-            setSongInPlaylist(media)
-            return
+        while (true) {
+            val queueNext = queue.removeFirstOrNull()
+            if (queueNext != null) {
+                val media = buildMediaItem(queueNext)
+                if (media != null) {
+                    setSongInPlaylist(media)
+                    return
+                }
+            } else break
         }
         val target = when (speedMode) {
             AUTO_MODE -> run{
@@ -330,13 +339,17 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             val nextSong = l.removeFirstOrNull()
             if(nextSong != null) {
                 val media = buildMediaItem(nextSong)
-                Log.d("IOOOO","From Playback service, next song ${media.mediaId}?")
-                if (!playlist.contains(media.mediaId)) {
-                    Log.d("IOOOO","From Playback service, it does not contain ${media.mediaId}")
-                    setSongInPlaylist(media)
-                    break
+                if(media!=null) {
+                    Log.d("IOOOO", "From Playback service, next song ${media.mediaId}?")
+                    if (!playlist.contains(media.mediaId)) {
+                        Log.d(
+                            "IOOOO",
+                            "From Playback service, it does not contain ${media.mediaId}"
+                        )
+                        setSongInPlaylist(media)
+                        break
+                    }
                 }
-
             }else return
         }
     }
@@ -384,7 +397,16 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         return list.sortedWith(myCustomComparator).toMutableList()
     }
 
-    private fun buildMediaItem(audio: Song): MediaItem {
+    private fun buildMediaItem(audio: Song): MediaItem? {
+        try {
+            contentResolver.openInputStream(audio.uri.toUri())?.close()
+        } catch (e: FileNotFoundException) {
+            Log.d("buildMediaItem", e.toString())
+            audiolist.remove(audio)
+            playlist.remove(audio.uri)
+            queue.remove(audio)
+            return null
+        }
         return MediaItem.Builder()
             .setMediaId(audio.uri)
             .setUri(audio.uri.toUri())

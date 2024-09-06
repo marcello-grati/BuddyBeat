@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,8 +87,7 @@ fun Queue(
                             if (section.isNotEmpty()) {
                                 Column(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color.White)
+                                        .fillMaxWidth().background(MaterialTheme.colorScheme.background)
                                 ) {
                                     Text(
                                         text = if (section == queue) "Next in queue selected by you:" else "Next in queue:",

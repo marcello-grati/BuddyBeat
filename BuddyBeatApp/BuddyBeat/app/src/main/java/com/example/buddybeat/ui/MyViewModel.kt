@@ -44,6 +44,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.io.File
+import java.net.URI
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.floor
@@ -368,6 +370,15 @@ class MyViewModel @Inject constructor(
     }
 
     fun updateSongs() {
+        /*viewModelScope.launch {
+            for(i in songRepo.getSongs()) {
+                val file =
+                    File(URI.create(i.uri).getPath())
+                if (!file.exists()) {
+                    removeFromPlaylist(allSongsId.value!!, i.songId)
+                }
+            }
+        }*/
         val list = songRepo.getData()
         viewModelScope.launch(Dispatchers.IO) {
             updateSong(list).collect { value ->
@@ -375,9 +386,11 @@ class MyViewModel @Inject constructor(
                 Log.d("setting psc", psc.toString())
                 songRepo.insert(psc)
             }
+
         }
         setPreference(IS_UPLOADED_KEY, true)
         setPreference(BPM_UPDATED_KEY, false)
+        updateBpm()
     }
 
     //with IGNORE

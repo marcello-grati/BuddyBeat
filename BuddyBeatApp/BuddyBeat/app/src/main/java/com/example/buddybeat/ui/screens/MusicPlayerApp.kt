@@ -69,7 +69,7 @@ fun MusicPlayerApp(
     text3: String,
     addToQueue: (Song) -> Unit,
     playPause: () -> Unit,
-    buildMediaItem: (Song) -> MediaItem,
+    buildMediaItem: (Song) -> MediaItem?,
     setSongInPlaylist: (MediaItem) -> Unit,
     setMode: (Long) -> Unit
 ) {
@@ -114,7 +114,7 @@ fun MusicPlayerNavHost(
     text3: String,
     addToQueue: (Song) -> Unit,
     playPause: () -> Unit,
-    buildMediaItem: (Song) -> MediaItem,
+    buildMediaItem: (Song) -> MediaItem?,
     setSongInPlaylist: (MediaItem) -> Unit,
     setMode: (Long) -> Unit
 ) {
@@ -309,10 +309,12 @@ fun MusicPlayerNavHost(
                                 val play =
                                     allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
                                         ?: mutableListOf()
-                                audiolist.replaceAll { it1 ->
+                                audiolist.clear()
+                                audiolist.addAll(play)
+                                /*audiolist.replaceAll { it1 ->
                                     if (it1.bpm == -1) play.find { it.songId == it1.songId }
                                         ?: it1 else it1
-                                }
+                                }*/
                                 Log.d("AUDIOLIST1", audiolist.toList().toString())
                             }
                             val song =
@@ -324,8 +326,10 @@ fun MusicPlayerNavHost(
                             } else {
                                 Log.d("IOOOO", "not same id, new id: ${song.songId}")
                                 val media = buildMediaItem(song)
-                                setSongInPlaylist(media)
-                                playPause()
+                                if(media!=null) {
+                                    setSongInPlaylist(media)
+                                    playPause()
+                                }
                             }
                         },
                         // indicator of progress of bpm calculation
