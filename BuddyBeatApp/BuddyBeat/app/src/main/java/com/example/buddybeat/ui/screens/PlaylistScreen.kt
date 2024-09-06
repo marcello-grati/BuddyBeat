@@ -1,4 +1,4 @@
-package com.example.buddybeat.ui.audio
+package com.example.buddybeat.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -8,17 +8,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -61,11 +69,8 @@ fun PlaylistScreen(
     prevSong: () -> Unit,
     nextSong: () -> Unit,
     progress: Float,
-    onProgress: (Float) -> Unit,
     isPlaying: Boolean,
     onStart: () -> Unit,
-    incrementSpeed: () -> Unit,
-    decrementSpeed: () -> Unit,
     text1: String,
     text2: String,
     text3: String,
@@ -82,7 +87,10 @@ fun PlaylistScreen(
     shouldShowDialogFour: MutableState<Boolean>,
     allSongsId: Long,
     favoritesId: Long,
-    onNavigateUp: () -> Unit
+    colorUI: Color,
+    startFirstSong: () -> Unit,
+    mode: Long,
+    onNavigateUp: () -> Unit,
 ) {
     Scaffold(
         bottomBar = {
@@ -93,11 +101,8 @@ fun PlaylistScreen(
                     prevSong = prevSong,
                     nextSong = nextSong,
                     progress = progress,
-                    onProgress = onProgress,
                     isPlaying = isPlaying,
                     onStart = onStart,
-                    incrementSpeed = incrementSpeed,
-                    decrementSpeed = decrementSpeed,
                     favoriteContains = favoriteContainsSong(song.id),
                     addToFavorite = {
                         addToFavorite(song.id)
@@ -127,13 +132,13 @@ fun PlaylistScreen(
                         var expanded by remember { mutableStateOf(false) }
                         IconButton(onClick = { expanded = !expanded }) {
                             Icon(
-                                imageVector = Icons.Default.Menu,
+                                imageVector = Icons.Default.MoreVert,
                                 contentDescription = "",
                             )
                             DropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
-                                modifier = Modifier.background(Color(0xFFB9C1CA)),
+                                modifier = Modifier.background(Color(0xFFF0F0F0)),
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("Rename Playlist") },
@@ -155,7 +160,7 @@ fun PlaylistScreen(
                 }
             }
             Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                FilledCardExample(text1, text2, text3)
+                FilledCardExample(text1, text2, text3, colorUI, mode)
             }
             LazyColumn(
                 modifier = Modifier
@@ -173,7 +178,7 @@ fun PlaylistScreen(
                                         shouldShowDialogFive.value = true
                                     }
                                 ) else Modifier
-                        TopSection(modifier, it1.title)
+                        TopSection(modifier, it1.title, startFirstSong = startFirstSong, colorUI = colorUI)
                     }
                 }
                 allPlaylist.find { it.playlist.playlistId == currentId }?.let { it1 ->
@@ -190,7 +195,8 @@ fun PlaylistScreen(
                             shouldShowDialogTwo = shouldShowDialogTwo,
                             songClicked = songClicked,
                             shouldShowDialogThree = shouldShowDialogThree,
-                            addToQueue = addToQueue
+                            addToQueue = addToQueue,
+                            colorUI = colorUI
                         )
                     }
                 }
@@ -198,38 +204,23 @@ fun PlaylistScreen(
                     Spacer(modifier = Modifier.height(5.dp))
                 }
             }
-            /*LazyColumn(
-            contentPadding = it,
-            modifier = Modifier.weight(1.0f),
-        ) {
-            itemsIndexed(audioList) { index, audio ->
-                SongItem(
-                    audio = audio,
-                    onItemClick = {
-                        onItemClick(index)
-                    },
-                    isPlaying = isPlaying,
-                    addToFavorite = addToFavorite,
-                    removeFavorite = removeFavorite,
-                    favoriteContainsSong = favoriteContainsSong
-                )
-            }
-        }
-    }*/
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopSection(
     modifier: Modifier,
     title: String,
     resource: Int = R.drawable.mainimage,
+    startFirstSong: () -> Unit,
+    colorUI : Color
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
         AsyncImage(
             model = "",
@@ -244,13 +235,30 @@ fun TopSection(
         )
         Text(
             text = title,
-            modifier = modifier
-                //.padding(bottom = 100.dp)
-                .align(Alignment.Center),
+            modifier = modifier.padding(bottom = 10.dp),
             textAlign = TextAlign.Center,
             color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.W900,
         )
+        Card(
+            onClick = {
+                //isPlaying = !isPlaying
+                startFirstSong()
+            },
+            shape = CircleShape,
+            modifier = Modifier
+                .size(80.dp).align(Alignment.BottomCenter).padding(10.dp)
+            ,colors =
+                CardDefaults.cardColors(containerColor = colorUI)
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "",
+                    modifier = Modifier.size(45.dp), tint = Color.Black
+                )
+            }
+        }
     }
 }

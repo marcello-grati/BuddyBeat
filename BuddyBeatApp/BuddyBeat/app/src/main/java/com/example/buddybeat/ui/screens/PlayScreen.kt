@@ -1,4 +1,3 @@
-
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -37,7 +36,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,9 +48,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -61,6 +63,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -81,9 +84,8 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 
-@androidx.annotation.OptIn(UnstableApi::class) @OptIn(ExperimentalMaterial3Api::class)
-
-
+@androidx.annotation.OptIn(UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayScreenDesign(
     onNavigateUp: () -> Unit,
@@ -92,23 +94,21 @@ fun PlayScreenDesign(
     isPlaying: Boolean,
     progress: Float,
     onProgress: (Float) -> Unit,
-    //playpause
     onStart: () -> Unit,
-    //next prev
     nextSong: () -> Unit,
     prevSong: () -> Unit,
-    toggleMode : () -> Unit,
-    plus : () -> Unit,
-    minus : () -> Unit,
-    step : String,
-    bpm : String,
-    ratio : String,
-    queue : () -> Unit,
-    target : String,
-    modality : Long,
+    toggleMode: () -> Unit,
+    plus: () -> Unit,
+    minus: () -> Unit,
+    bpm: String,
+    queue: () -> Unit,
+    target: String,
+    modality: Long,
     addToFavorite: (Long) -> Unit,
     removeFavorite: (Long) -> Unit,
     favoriteContainsSong: (Long) -> LiveData<Int>,
+    colorUI : Color,
+    shouldShowHelpScreen : () -> Unit
 ) {
     val text = when (modality) {
         OFF_MODE -> "off"
@@ -118,17 +118,6 @@ fun PlayScreenDesign(
     }
 
     val img by favoriteContainsSong(song.id).observeAsState(initial = 0)
-
-    /*LaunchedEffect(isPlaying, currentTime) {
-        if (isPlaying) {
-            while (currentTime < duration) {
-                delay(1000L)
-                currentTime += 1f
-            }
-            isPlaying = false
-        }
-    }*/
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -148,34 +137,55 @@ fun PlayScreenDesign(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onNavigateUp()} ) {
+                IconButton(onClick = { onNavigateUp() }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIos,
-                        contentDescription = "",
+                        contentDescription = "back",
                     )
                 }
-                IconButton(onClick = {  }) {
+                IconButton(onClick = { shouldShowHelpScreen() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.help),
-                        contentDescription = null,
+                        contentDescription = "help",
                     )
                 }
             }
             Column(
                 modifier = Modifier
-                    .padding(bottom = 100.dp)
+                    .padding(bottom = 150.dp)
+                    .padding(horizontal = 70.dp)
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
             ) {
                 Text(
                     text = song.title,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.W900
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFFFDFEFF),
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.W900,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        shadow = Shadow(
+                            color = Color.DarkGray, offset = Offset(5f, 5f), blurRadius = 2f
+                        )
+                    )
                 )
                 Text(
                     text = song.artist,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center, color = Color.White, fontSize = 16.sp
+                    maxLines = 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 5.dp),
+                    textAlign = TextAlign.Center, color = Color(0xFFFDFEFF), fontSize = 20.sp,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        shadow = Shadow(
+                            color = Color.DarkGray, offset = Offset(5.0f, 5.0f), blurRadius = 1f
+                        )
+                    )
                 )
             }
 
@@ -186,18 +196,14 @@ fun PlayScreenDesign(
                     .fillMaxWidth()
                     .height(350.dp),
                 progress = progress
-            ) { //newProgress ->
-                //currentTime = newProgress * duration
-                //if (currentTime == 0f) {
-                //    isPlaying = false
-                //}
-                onProgress(it*100)
+            ) {
+                onProgress(it * 100)
             }
 
         }
         Text(
-            text = if(progress*duration<=duration)
-                formatSecondsToDuration((progress*duration).toLong()) else "00:00",
+            text = if (progress * duration <= duration)
+                formatSecondsToDuration((progress * duration).toLong()) else "00:00",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center, color = Color.Gray, fontSize = 19.sp
         )
@@ -213,7 +219,20 @@ fun PlayScreenDesign(
             verticalAlignment = Alignment.CenterVertically // Align items vertically centered
         ) {
             // Left side - BPM button
-            NewButton(name = bpm, onClick = {})
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = colorUI
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 5.dp)
+                    .size(width = 70.dp, height = 50.dp),
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if (bpm != "0" && bpm != "-1") bpm else "-",
+                    )
+                }
+            }
 
             // Center - Plus and Minus buttons
 
@@ -231,7 +250,7 @@ fun PlayScreenDesign(
                         modifier = Modifier.size(30.dp)
                     )
                 }
-                NewButton(name = target, onClick = {}, enabled = enabled)
+                NewButton2(name = target, enabled = enabled, colorUI = colorUI)
                 IconButton(onClick = {
                     plus()
                 }, enabled = enabled) {
@@ -245,10 +264,10 @@ fun PlayScreenDesign(
 
             // Right side - Manual and Auto buttons
             NewButton(
-                    name = text, onClick = {
-                        toggleMode()
-                        Log.d("Button", "Toggled to $text")
-                    })
+                name = text, onClick = {
+                    toggleMode()
+                    Log.d("Button", "Toggled to $text")
+                }, colorUI = colorUI)
         }
 
         // Play ROW
@@ -262,17 +281,16 @@ fun PlayScreenDesign(
         ) {
 
             IconButton(onClick = {
-                if(img==0) {
+                if (img == 0) {
                     addToFavorite(song.id)
-                }
-                else{
+                } else {
                     removeFavorite(song.id)
                 }
             }) {
                 Icon(
-                    imageVector = if(img!=0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = if (img != 0) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "",
-                    modifier = Modifier.size(25.dp),
+                    modifier = Modifier.size(30.dp),
                     tint = Color.Black
                 )
             }
@@ -285,7 +303,7 @@ fun PlayScreenDesign(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFB1B2FF), RoundedCornerShape(40.dp)),
+                        .background(colorUI, RoundedCornerShape(40.dp)),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
 
@@ -310,7 +328,7 @@ fun PlayScreenDesign(
                 Card(
                     onClick = {
                         //isPlaying = !isPlaying
-                              onStart()
+                        onStart()
                     },
                     shape = CircleShape,
                     modifier = Modifier.size(70.dp),
@@ -329,7 +347,7 @@ fun PlayScreenDesign(
                 Icon(
                     imageVector = Icons.Default.QueueMusic,
                     contentDescription = "",
-                    modifier = Modifier.size(25.dp),
+                    modifier = Modifier.size(30.dp),
                     tint = Color.Black
                 )
             }
@@ -343,13 +361,13 @@ fun PlayScreenDesign(
 @Composable
 fun CoverPicture(
     song: CurrentSong
-){
+) {
     var art: Bitmap? = BitmapFactory.decodeResource(Resources.getSystem(), R.drawable.bblogo)
     var bitmap = art?.asImageBitmap()
     //Log.d("cover", song.title + song.uri)
     val mmr = MediaMetadataRetriever()
     val bfo = BitmapFactory.Options()
-    if(song.uri!="") {
+    if (song.uri != "") {
         mmr.setDataSource(LocalContext.current, song.uri.toUri())
     }
     val rawArt: ByteArray? = mmr.embeddedPicture
@@ -358,7 +376,7 @@ fun CoverPicture(
     if (art != null) {
         bitmap = art.asImageBitmap()
     }
-    if(bitmap!=null){
+    if (bitmap != null) {
         Image(
             bitmap = bitmap,
             //model = File(filePath),
@@ -367,12 +385,13 @@ fun CoverPicture(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight(0.9f)
+                .fillMaxHeight(0.85f)
                 .padding(horizontal = 70.dp)
-                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp)),
+            //.alpha(0.7f),
+            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.5f) })
         )
-    }
-    else
+    } else
         Image(
             painter = painterResource(id = R.drawable.scaled),
             //model = File(filePath),
@@ -381,9 +400,11 @@ fun CoverPicture(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxHeight(0.9f)
+                .fillMaxHeight(0.85f)
                 .padding(horizontal = 70.dp)
-                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp))
+                .clip(RoundedCornerShape(bottomStart = 150.dp, bottomEnd = 150.dp)),
+            //.alpha(0.7f),
+            //colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0.5f) })
         )
 }
 
@@ -541,7 +562,7 @@ fun durationToSeconds(duration: String): Float {
 }
 
 fun formatSecondsToDuration(milliseconds: Long): String {
-    val seconds : Int = milliseconds.toInt() / 1000
+    val seconds: Int = milliseconds.toInt() / 1000
     val minutes = seconds / 60
     val remainingSeconds = seconds % 60
     return String.format("%02d:%02d", minutes, remainingSeconds)
@@ -551,70 +572,107 @@ fun formatSecondsToDuration(milliseconds: Long): String {
 @Composable
 fun NewButton(
     name: String,
-    onClick : () -> Unit,
-    enabled : Boolean = true){
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    colorUI : Color
+) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = colorUI,//.copy(alpha=0.6f),
+            disabledContainerColor = colorUI.copy(alpha=0.3f)
         ),
         modifier = Modifier
             .padding(horizontal = 5.dp)
-            .size(width = 70.dp, height = 50.dp),
+            .size(width = 70.dp, height = 50.dp)
+            .shadow( ambientColor = colorUI.copy(alpha=0.3f), spotColor =colorUI.copy(alpha=0.3f) , elevation = 2.dp, shape = CardDefaults.elevatedShape)
+            .background(colorUI.copy(alpha=0.3f)),
         onClick = onClick,
         enabled = enabled
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = name
+                text = name,
             )
         }
     }
 }
 
-//@androidx.annotation.OptIn(UnstableApi::class)
-//private fun toggleSpeedMode() {
-//    PlaybackService.speedMode = (PlaybackService.speedMode + 1) % 3
-//}
-
-//@androidx.annotation.OptIn(UnstableApi::class)
-//fun setManualBpm(bpm : Int) {
-//    PlaybackService.manualBpm = bpm
-//}
-//@androidx.annotation.OptIn(UnstableApi::class)
-//fun increaseManualBpm() {
-//    PlaybackService.manualBpm += PlaybackService.BPM_STEP
-//}
-//@androidx.annotation.OptIn(UnstableApi::class)
-//fun decreaseManualBpm() {
-//    PlaybackService.manualBpm -= PlaybackService.BPM_STEP
-//}
-/*
-@Preview(showBackground = true)
 @Composable
-fun PlayScreenDesignPreview() {
-    PlayScreenDesign(
-        onNavigateUp = {},
-        song = CurrentSong(
-            id= 1L,
-            title = "Sample Song Title",
-            artist = "Sample Artist",
-            uri = "" // Empty URI for preview purposes
+fun NewButton2(
+    name: String,
+    enabled: Boolean = true,
+    colorUI : Color
+) {
+    val color = if(enabled) colorUI else colorUI.copy(alpha=0.3f)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = color,//.copy(alpha=0.6f),
+            disabledContainerColor = color.copy(alpha=0.3f)
         ),
-        duration = 300000L,
-        isPlaying = false,
-        progress = 0.5f,
-        onProgress = {},
-        onStart = {},
-        nextSong = {},
-        prevSong = {},
-        toggleMode = {},
-        plus = {},
-        minus = {},
-        step = "Step",
-        bpm = "120 BPM",
-        ratio = "1:1",
-        queue = {}
-    )
+        modifier = Modifier
+            .padding(horizontal = 5.dp)
+            .size(width = 70.dp, height = 50.dp)
+            .shadow( ambientColor = color, spotColor =color , elevation = 2.dp, shape = CardDefaults.elevatedShape)
+            .background(color),
+        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = name,
+                color = if(enabled) Color.Black else Color.Black.copy(alpha=0.5f)
+            )
+        }
+    }
 }
-*/
+
+
+/*OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewButton1(
+    name: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    colorUI : Color
+) {
+
+    var text by remember {
+        mutableStateOf(name)
+    }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    OutlinedTextField(
+            value = text,
+            enabled = enabled,
+            onValueChange = { text = it },
+            modifier = Modifier
+                .padding(horizontal = 5.dp)
+                .size(width = 70.dp, height = 50.dp).border(5.dp, colorUI, RoundedCornerShape(10.dp))
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                        focusRequester.freeFocus()
+                    })
+                }
+                //.shadow(ambientColor = colorUI, elevation = 2.dp, shape = CardDefaults.elevatedShape)
+                .background(colorUI, shape = RoundedCornerShape(10.dp)),
+            shape = RoundedCornerShape(10.dp),
+
+        textStyle = TextStyle.Default.copy(textAlign = TextAlign.Center, fontSize = 16.sp)
+        )
+
+    /*Card(
+        colors = CardDefaults.cardColors(
+            containerColor = colorUI//.copy(alpha=0.6f),
+        ),
+        modifier = Modifier
+            .padding(horizontal = 5.dp)
+            .size(width = 70.dp, height = 50.dp)
+            .shadow(ambientColor = colorUI, elevation = 2.dp, shape = CardDefaults.elevatedShape),
+        onClick = onClick,
+        enabled = enabled
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
+        }
+    }*/
+}*/
 

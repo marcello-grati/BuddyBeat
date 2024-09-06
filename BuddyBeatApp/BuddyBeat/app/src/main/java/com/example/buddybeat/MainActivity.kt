@@ -38,8 +38,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,14 +52,18 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.player.PlaybackService
+import com.example.buddybeat.player.PlaybackService.Companion.ALPHA
+import com.example.buddybeat.player.PlaybackService.Companion.AUTO_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.BPM_STEP
+import com.example.buddybeat.player.PlaybackService.Companion.MANUAL_MODE
+import com.example.buddybeat.player.PlaybackService.Companion.OFF_MODE
 import com.example.buddybeat.player.PlaybackService.Companion.audiolist
 import com.example.buddybeat.player.PlaybackService.Companion.manualBpm
 import com.example.buddybeat.player.PlaybackService.Companion.playlist
 import com.example.buddybeat.player.PlaybackService.Companion.queue
 import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.MyViewModel
-import com.example.buddybeat.ui.audio.MusicPlayerApp
+import com.example.buddybeat.ui.screens.MusicPlayerApp
 import com.example.buddybeat.ui.theme.BuddyBeatTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
@@ -78,6 +80,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.FileNotFoundException
 
 
 @UnstableApi
@@ -95,8 +98,6 @@ class MainActivity : ComponentActivity() {
             if (controllerFuture.isDone && !controllerFuture.isCancelled) controllerFuture.get() else null
 
     private var job: Job? = Job()
-
-    var speed: Float = 1f
 
     var _ratio: MutableStateFlow<Float> = MutableStateFlow(1f)
     val ratio: StateFlow<Float> = _ratio.asStateFlow()
@@ -143,6 +144,7 @@ class MainActivity : ComponentActivity() {
             controller?.let { viewModel.updateDuration(it.duration) }
             controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { /*mService.updateBpm(it)*/ }
             PlaybackService.ratio = 1.0f
+            controller?.setPlaybackSpeed(1.0f)
         }
     }
 
@@ -158,7 +160,7 @@ class MainActivity : ComponentActivity() {
             val binder = service as SensorService.LocalBinder
             mService = binder.getService()
             mBound = true
-            viewModel.mode.value?.let { mService.changeMode(it) }
+            //viewModel.mode.value?.let{ mService.changeMode(it) }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -179,21 +181,40 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun toggleSpeedMode() {
+        if(speedMode == OFF_MODE){
+            if(viewModel.lastMode.value!=-1L) {
+                mService.changeMode(viewModel.lastMode.value)
+                viewModel.setMode(viewModel.lastMode.value)
+            }else{
+                viewModel.setMode(1L)
+                mService.changeMode(1L)
+            }
+        }
         speedMode = (speedMode + 1) % 3
+        if(speedMode == OFF_MODE){
+            viewModel.setMode(0L)
+            mService.changeMode(0L)
+        }
         viewModel.setModality(speedMode)
+        if(speedMode == MANUAL_MODE)
+            ALPHA = 0.4F
+        else if (speedMode == AUTO_MODE)
+            ALPHA = 0.8f
+
         Log.d("MODALITY", speedMode.toString())
     }
 
-//    fun setManualBpm(bpm : Int) {
-//        manualBpm = bpm
-//    }
-//
-
     private fun increaseManualBpm() {
-        manualBpm += BPM_STEP
+        var bpm = viewModel.targetBpm.value + BPM_STEP
+        bpm = bpm.coerceAtMost(220)
+        viewModel.setTargetBpm(bpm)
+        manualBpm = bpm
     }
     private fun decreaseManualBpm() {
-        manualBpm -= BPM_STEP
+        var bpm = viewModel.targetBpm.value - BPM_STEP
+        bpm = bpm.coerceAtLeast(80)
+        viewModel.setTargetBpm(bpm)
+        manualBpm = bpm
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -220,8 +241,6 @@ class MainActivity : ComponentActivity() {
             showPlayer = true
 
         setContent {
-            val permissionsRequested by remember { mutableStateOf(false) }
-
             BuddyBeatTheme {
                 val state = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     rememberMultiplePermissionsState(
@@ -234,52 +253,38 @@ class MainActivity : ComponentActivity() {
                 } else {
                     rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
                 }
-                /*LaunchedEffect(Unit) {
-                    if(!state.allPermissionsGranted){
-                        state.launchMultiplePermissionRequest()
-                    }
-                }
-                LaunchedEffect(state.allPermissionsGranted) {
-                    if (state.allPermissionsGranted) {
-                        startSensorService()
-                        val list = ContentResolverHelper(applicationContext).getAudioData()
-                        viewModel.loadSongs(list)
-                    }
-                }*/
                 when {
                     state.allPermissionsGranted -> {
                         startSensorService()
                         val isUploaded by viewModel.isUploaded.observeAsState()
-                        val bpmUpdated by viewModel.bpmUpdated.observeAsState()
+                        val bpmUpdated by viewModel.bpmUpdated.observeAsState(initial = false)
                         val r by ratio.collectAsState()
-                        if (isUploaded == true && bpmUpdated == false) {
+                        if (isUploaded == true && !bpmUpdated) {
                             Log.d("IOOOO", "Songs are uploaded but bpm not updated")
                             viewModel.updateBpm()
                         }
-                        if (bpmUpdated == true) {
+                        if (bpmUpdated) {
                             Log.d("IOOOO", "BPMs are updated")
                         }
-                        //PlayScreenDesign()
+                        /*LaunchedEffect(bpmUpdated) {
+                            Log.d("IOOOO", "BPMs updating...")
+                            viewModel.updateBpm()
+                        }*/
+                        if(viewModel.mode.value!=0L){
+                            viewModel.mode.value?.let { viewModel.setMode(it) }
+                        }
+                        viewModel.setTargetBpm(manualBpm)
                         MusicPlayerApp(
                             showPlayer = showPlayer,
                             changeShow = {
                                 changeShow()
                             },
                             viewModel = viewModel,
-                            onItemClick = {
-                                //setSong(it)
-                            },
                             nextSong = {
                                 nextSong()
                             },
                             onStart = {
                                 playPause()
-                            },
-                            incrementSpeed = {
-                                incrementSpeed(+1)
-                            },
-                            decrementSpeed = {
-                                incrementSpeed(-1)
                             },
                             onProgress = {
                                 onProgress(it)
@@ -308,16 +313,12 @@ class MainActivity : ComponentActivity() {
                             },
                             setSongInPlaylist = {
                                 setSongInPlaylist(it)
-                            },
-                            setMode = {
-                                viewModel.setMode(it)
-                                //mService.changeMode(it)
                             }
-                        )
+                        ) {
+                            viewModel.setMode(it)
+                            mService.changeMode(it)
+                        }
                     }
-//                    else -> RequiredPermission(state = state) {
-//                        state.launchMultiplePermissionRequest()
-//                    }
                     else -> RequiredPermission(state = state)
                 }
             }
@@ -389,58 +390,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /*@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-    @OptIn(ExperimentalPermissionsApi::class, DelicateCoroutinesApi::class)
-    @Composable
-    fun RequiredPermission(
-        state: MultiplePermissionsState,
-        onRequestPermission: () -> Unit
-    ) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Column(Modifier.padding(vertical = 120.dp, horizontal = 16.dp)) {
-                Icon(
-                    Icons.Rounded.LibraryMusic,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Read external storage permission required",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Spacer(Modifier.height(4.dp))
-                Text("This is required in order for the app to collect the songs")
-            }
-            val context = LocalContext.current
-            Button(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                onClick = {
-                    if (state.shouldShowRationale) {
-                        onRequestPermission()
-                    } else {
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                        context.startActivity(intent)
-                    }
-                }
-            ) {
-                Text(if (state.shouldShowRationale) "Request Permission" else "Go to settings")
-            }
-        }
-    }*/
-
-
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(mService.stepFreq)
+            viewModel.updateFreqQueue( mService.previousStepFrequency_3.takeLast(5).average())
             _ratio.update { controller?.playbackParameters?.speed ?: 1f }
         }
     }
@@ -468,7 +421,14 @@ class MainActivity : ComponentActivity() {
         controller.isPlaying.let { viewModel.updateIsPlaying(it) }
         controller.duration.let { viewModel.updateDuration(it) }
         controller.currentPosition.let { viewModel.updateProgress(it) }
-        viewModel.modality.value?.let { speedMode = it }
+        viewModel.modality.value?.let { Log.d("modality value", it.toString())
+            Log.d("modality value", speedMode.toString())
+            speedMode = it
+            if(it == MANUAL_MODE)
+                ALPHA = 0.4f
+            else if (it == AUTO_MODE)
+                ALPHA = 0.8f
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -507,20 +467,6 @@ class MainActivity : ComponentActivity() {
 
 
     //used in UI
-
-    /*private fun setPlaylist() {
-//        Log.d("IOOOO", "setting playlist..." )
-////        viewModel.audioList.value?.forEach { audio ->
-////            val media = buildMediaItem(audio)
-////            controller?.addMediaItem(media)
-////        }
-//        val mediaItems = viewModel.audioList.value?.map { mediaitem -> buildMediaItem(mediaitem)}
-//        if (mediaItems != null) {
-//            controller?.addMediaItems(mediaItems)
-//        }
-//        //controller?.clearMediaItems()
-//        Log.d("IOOOO", "Playlist set " + controller?.mediaItemCount.toString() )
-    }*/
 
     private fun setSongInPlaylist(media: MediaItem) {
         Log.d("IOOOO", "setting media: ${media.mediaId}")
@@ -562,7 +508,17 @@ class MainActivity : ComponentActivity() {
         }
     }*/
 
-    private fun buildMediaItem(audio: Song): MediaItem {
+    private fun buildMediaItem(audio: Song): MediaItem? {
+        try {
+            contentResolver.openInputStream(audio.uri.toUri())?.close()
+        } catch (e: FileNotFoundException) {
+            Log.d("buildMediaItem", e.toString())
+            viewModel.removeFromPlaylist(viewModel.allSongsId.value!!, audio.songId)
+            audiolist.remove(audio)
+            playlist.remove(audio.uri)
+            queue.remove(audio)
+            return null
+        }
         Log.d("IOOOO bpm" , audio.bpm.toString())
         return MediaItem.Builder()
             .setMediaId(audio.uri)
@@ -597,56 +553,57 @@ class MainActivity : ComponentActivity() {
 
     private fun nextSong() {
         val target = when (speedMode) {
-            PlaybackService.AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLastWhile { it > 50 }.takeLast(5)
+            AUTO_MODE -> run{
+                val d = mService.previousStepFrequency_3.takeLast(5)
+                Log.d("PreviousFreq nextSong mainActivity", d.toString())
                 var l = d.average()
                 if(l.isNaN()){
                     l=0.0
                 }
                 l
             }
-            PlaybackService.MANUAL_MODE -> manualBpm.toDouble()
-            PlaybackService.OFF_MODE -> 0.0
+            MANUAL_MODE -> manualBpm.toDouble()
+            OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("stepFreq before nextSong()", target.toString())
-        val queueNext = queue.removeFirstOrNull()
-        if(queueNext!=null){
-            val media = buildMediaItem(queueNext)
-            setSongInPlaylist(media)
-            return
+        while (true) {
+            val queueNext = queue.removeFirstOrNull()
+            if (queueNext != null) {
+                val media = buildMediaItem(queueNext)
+                if (media != null) {
+                    setSongInPlaylist(media)
+                    return
+                }
+            } else break
         }
-        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist
-        if(viewModel.modality.value!= PlaybackService.OFF_MODE)
+        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist.toMutableList()
+        if(viewModel.modality.value!= OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
         while (true) {
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
-                Log.d("IOOOO","From MainActivity, next song ${media.mediaId}?")
-                Log.d("playlist before adding", playlist.toString())
-                if (!playlist.contains(media.mediaId)) {
-                    Log.d("IOOOO","From MainActivity, it does not contain ${media.mediaId}")
-                    //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
-                    Log.d("media", media.toString())
-                    Log.d("playlist", playlist.toString())
-                    setSongInPlaylist(media)
-                    break
+                if(media!=null) {
+                    Log.d("IOOOO", "From MainActivity, next song ${media.mediaId}?")
+                    Log.d("playlist before adding", playlist.toString())
+                    if (!playlist.contains(media.mediaId)) {
+                        Log.d("IOOOO", "From MainActivity, it does not contain ${media.mediaId}")
+                        //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
+                        Log.d("media", media.toString())
+                        Log.d("playlist", playlist.toString())
+                        setSongInPlaylist(media)
+                        break
+                    }
                 }
-            }
+            }else return
         }
     }
 
     private fun prevSong() {
-        controller?.seekToPreviousMediaItem()
-    }
-
-    private fun incrementSpeed(value: Int) {
-        if (value > 0)
-            speed += 0.05f
-        else
-            speed -= 0.05f
-        controller?.setPlaybackSpeed(speed)
+        if(controller?.currentPosition!! > 1000L)
+            controller?.seekToDefaultPosition()
+        else controller?.seekToPreviousMediaItem()
     }
 
     private fun onProgress(seekTo: Float) {

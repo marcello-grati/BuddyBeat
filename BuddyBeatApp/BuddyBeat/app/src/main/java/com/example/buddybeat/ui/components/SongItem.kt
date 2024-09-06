@@ -39,84 +39,6 @@ import androidx.lifecycle.LiveData
 import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.data.models.Song
-import kotlin.math.floor
-
-
-@Composable
-fun QueueItem(
-    audio: Song,
-    removeFromQueue : (Song) -> Unit,
-    showQueue : (Boolean) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(6.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFFEAEAEA), shape = RoundedCornerShape(8.dp))
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Card(
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0x00ffffff)),
-                modifier = Modifier.size(45.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AsyncImage(
-                        model = "",
-                        contentDescription = "Now Playing",
-                        placeholder = painterResource(id = R.drawable.musicicon),
-                        error = painterResource(id = R.drawable.musicicon),
-                        modifier = Modifier.width(45.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(modifier = Modifier.weight(1.2f)) {
-                Text(
-                    text = if (audio.title.length > 15) "${audio.title.take(15)}..." else audio.title,
-                    color = Color.Black
-                )
-                Text(
-                    text = if (audio.artist.length > 15) "${audio.artist.take(15)}..." else audio.artist,
-                    color = Color.DarkGray
-                )
-            }
-            Column(modifier = Modifier.weight(0.5f)) {
-                Text(text = audio.bpm.toString())
-            }
-            var expanded by remember { mutableStateOf(false) }
-            IconButton(onClick = {
-                expanded = !expanded
-                showQueue(!expanded)
-            }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More options",
-                    tint = Color.Black
-                )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded=false
-                        showQueue(true)},
-                    modifier = Modifier.background(Color(0xFFB9C1CA)),
-                ){
-                    DropdownMenuItem(
-                        text = { Text("Remove From Queue") },
-                        onClick = {
-                            removeFromQueue(audio)
-                            expanded=false
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun SongItem(
@@ -129,10 +51,11 @@ fun SongItem(
     shouldShowDialogTwo : MutableState<Boolean>,
     shouldShowDialogThree : MutableState<Boolean>,
     songClicked : MutableState<Long>,
-    addToQueue : (Song) -> Unit
+    addToQueue : (Song) -> Unit,
+    colorUI : Color
 ) {
     val img by favoriteContainsSong(audio.songId).observeAsState(initial = 0)
-    val backgroundColor = if (isPlaying) Color(0xFF82B0E6) else Color(0xFFD6E1E7)
+    val backgroundColor = if (isPlaying) colorUI else colorUI.copy(alpha=0.2f)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -199,7 +122,7 @@ fun SongItem(
                 DropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded=false },
-                    modifier = Modifier.background(Color(0xFFB9C1CA)),
+                    modifier = Modifier.background(Color(0xFFF0F0F0))
                 ){
                     DropdownMenuItem(
                         text = { Text("Add To Playlist") },
@@ -227,11 +150,4 @@ fun SongItem(
 
         }
     }
-}
-private fun timeStampToDuration(position: Long): String {
-    val totalSecond = floor(position / 1E3).toInt()
-    val minutes = totalSecond / 60
-    val remainingSeconds = totalSecond - (minutes * 60)
-    return if (position < 0) "--:--"
-    else "%02d:%02d".format(minutes, remainingSeconds)
 }

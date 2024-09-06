@@ -15,6 +15,7 @@ import com.example.buddybeat.DataStoreManager
 import com.example.buddybeat.DataStoreManager.Companion.ALL_SONGS_KEY
 import com.example.buddybeat.DataStoreManager.Companion.BPM_UPDATED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.FAVORITES_KEY
+import com.example.buddybeat.DataStoreManager.Companion.HELP
 import com.example.buddybeat.DataStoreManager.Companion.IS_UPLOADED_KEY
 import com.example.buddybeat.DataStoreManager.Companion.MODALITY
 import com.example.buddybeat.DataStoreManager.Companion.MODE
@@ -63,7 +64,13 @@ class MyViewModel @Inject constructor(
     val favoritesId = dataStoreManager.getPreferenceLong(FAVORITES_KEY).asLiveData(Dispatchers.IO)
     val mode = dataStoreManager.getPreferenceLong(MODE).asLiveData(Dispatchers.IO)
     val modality = dataStoreManager.getPreferenceLong(MODALITY).asLiveData(Dispatchers.IO)
-    //val manualBpm = dataStoreManager.getPreferenceLong(MANUAL_BPM).asLiveData(Dispatchers.IO)
+    val help = dataStoreManager.getPreference(HELP).asLiveData(Dispatchers.IO)
+
+    val _targetBpm = MutableStateFlow(-1)
+    val targetBpm: StateFlow<Int> = _targetBpm.asStateFlow()
+
+    private val _lastMode = MutableStateFlow(-1L)
+    val lastMode: StateFlow<Long> = _lastMode.asStateFlow()
 
     private fun setPreference(key: Preferences.Key<Boolean>, value: Boolean) {
         viewModelScope.launch {
@@ -95,9 +102,6 @@ class MyViewModel @Inject constructor(
     private val _currentSong = MutableStateFlow(CurrentSong(0L, "", "", "", -1))
     val currentSong: StateFlow<CurrentSong> = _currentSong.asStateFlow()
 
-    /*private val _currentId = MutableStateFlow(-1L)
-    val currentId: StateFlow<Long> = _currentId.asStateFlow()*/
-
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
@@ -107,12 +111,8 @@ class MyViewModel @Inject constructor(
     private val _duration = MutableStateFlow(0L)
     val duration: StateFlow<Long> = _duration.asStateFlow()
 
-    /*private val _currentBpm = MutableStateFlow(0)
-    val currentBpm: StateFlow<Int> = _currentBpm.asStateFlow()*/
-
     //CURRENT PLAYLIST
 
-    //val currentPlaylist = MutableStateFlow(PlaylistWithSongs(Playlist(title = "", description = ""), mutableListOf()))
     val currentPlaylistId = MutableStateFlow(0L)
 
 
@@ -120,9 +120,6 @@ class MyViewModel @Inject constructor(
     private val _allPlaylist: LiveData<MutableList<PlaylistWithSongs>> = songRepo.getAllPlaylist()
     val allPlaylist = _allPlaylist
 
-    //ALL SONGS
-    private val _audioList = songRepo.getAllSongs()
-    val allSongs = _audioList
 
     //QUEUE
     var queueList1 = mutableStateListOf<Song>()
@@ -131,6 +128,9 @@ class MyViewModel @Inject constructor(
 
     private val _showQueue = MutableStateFlow(false)
     val showQueue: StateFlow<Boolean> = _showQueue.asStateFlow()
+
+    private val _stepFreqQueue = MutableStateFlow(0.0)
+    val stepFreqQueue: StateFlow<Double> = _stepFreqQueue.asStateFlow()
 
 
     fun containsSong(idPlaylist: Long, idSong: Long): LiveData<Int> {
@@ -159,12 +159,6 @@ class MyViewModel @Inject constructor(
     fun setVisiblePlaylist(playlist: PlaylistWithSongs) {
         currentPlaylistId.value = playlist.playlist.playlistId
         //currentPlaylist.value = playlist
-    }
-
-
-
-    fun addPlaylist(playlist: Playlist) = viewModelScope.launch {
-        songRepo.insert(playlist)
     }
 
     fun removePlaylist(playlist: Playlist) = viewModelScope.launch {
@@ -208,7 +202,7 @@ class MyViewModel @Inject constructor(
     fun updateBpm() = viewModelScope.launch(Dispatchers.IO) {
         calculateBpm().collect { value ->
             songRepo.updateBpm(value.first, value.second)
-            if(value.first == currentSong.value.id){
+            if (value.first == currentSong.value.id) {
                 _currentSong.update {
                     it.copy(
                         id = it.id,
@@ -219,7 +213,7 @@ class MyViewModel @Inject constructor(
                     )
                 }
             }
-            if(audiolist.find { it.songId == value.first }!=null) {
+            if (audiolist.find { it.songId == value.first } != null) {
                 audiolist.find { it.songId == value.first }!!.bpm = value.second
             }
         }
@@ -229,6 +223,7 @@ class MyViewModel @Inject constructor(
         //for each song in database calculate bpm and update
         for (i in songRepo.getSongs()) {
             if (songRepo.getBpm(i.songId) == -1) {
+                Log.d("CalculateBpm","calculating bpm song: $i")
                 val x = beatExtractor.beatDetection(
                     i.uri,
                     i.duration
@@ -286,8 +281,15 @@ class MyViewModel @Inject constructor(
         _stepFreq.update {
             stepFreq
         }
+        /*if (showQueue.value)
+            getQueue()*/
+    }
+    fun updateFreqQueue(stepFreq: Double) {
+        _stepFreqQueue.update {
+            stepFreq
+        }
         if (showQueue.value)
-            getQueue()
+            getQueue(stepFreqQueue.value)
     }
 
     fun showQueue(value: Boolean) {
@@ -297,18 +299,21 @@ class MyViewModel @Inject constructor(
     }
 
     @OptIn(UnstableApi::class)
-    private fun getQueue() {
+    private fun getQueue(stepFreq: Double) {
         queueList1.clear()
         queueList1.addAll(queue)
         val target = when (modality.value) {
-            AUTO_MODE -> stepFreq.value.toDouble()
+            AUTO_MODE -> stepFreq
             MANUAL_MODE -> manualBpm.toDouble()
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
-        val l = if (target!=0.0) orderSongs(stepFreq.value.toDouble(), audiolist) else audiolist
+        val l = if (target != 0.0) orderSongs(
+            target,
+            audiolist
+        ) else audiolist.toMutableList()
         l.removeAll { playlist.contains(it.uri) }
-        if(modality.value!=OFF_MODE)
+        if (modality.value != OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
         /*l.forEach {
             Log.d(it.toString(), it.bpm.toString())
@@ -350,20 +355,29 @@ class MyViewModel @Inject constructor(
             }
 
         }
-        return list.sortedWith(myCustomComparator).toMutableList()
+        return list.toMutableList().sortedWith(myCustomComparator).toMutableList()
     }
 
     fun removeFromQueue1(song: Song) {
         queue.remove(song)
-        getQueue()
+        getQueue(stepFreqQueue.value)
     }
 
     fun removeFromQueue2(song: Song) {
         audiolist.remove(song)
-        getQueue()
+        getQueue(stepFreqQueue.value)
     }
 
     fun updateSongs() {
+        /*viewModelScope.launch {
+            for(i in songRepo.getSongs()) {
+                val file =
+                    File(URI.create(i.uri).getPath())
+                if (!file.exists()) {
+                    removeFromPlaylist(allSongsId.value!!, i.songId)
+                }
+            }
+        }*/
         val list = songRepo.getData()
         viewModelScope.launch(Dispatchers.IO) {
             updateSong(list).collect { value ->
@@ -371,8 +385,11 @@ class MyViewModel @Inject constructor(
                 Log.d("setting psc", psc.toString())
                 songRepo.insert(psc)
             }
+
         }
         setPreference(IS_UPLOADED_KEY, true)
+        setPreference(BPM_UPDATED_KEY, false)
+        updateBpm()
     }
 
     //with IGNORE
@@ -408,16 +425,39 @@ class MyViewModel @Inject constructor(
         setPreferenceLong(FAVORITES_KEY, d)
     }
 
+    @OptIn(UnstableApi::class)
     fun setMode(mode: Long) {
         setPreferenceLong(MODE, mode)
+        if(mode == 1L || mode == 2L)
+            _lastMode.update{
+                mode
+            }
     }
 
     fun setModality(modality: Long) {
         setPreferenceLong(MODALITY, modality)
     }
+
+    @OptIn(UnstableApi::class)
+    fun setTargetBpm(targetBpm: Int) {
+        _targetBpm.update{
+            targetBpm
+        }
+        manualBpm = targetBpm
+    }
+
+    fun changeShowHelp(help: Boolean) {
+        setPreference(HELP, help)
+    }
 }
 
-data class CurrentSong(val id: Long, val title: String, val artist: String, val uri: String, val bpm : Int)
+data class CurrentSong(
+    val id: Long,
+    val title: String,
+    val artist: String,
+    val uri: String,
+    val bpm: Int
+)
 
 
 
