@@ -92,6 +92,9 @@ class MyViewModel @Inject constructor(
     private val _itemCount = songRepo.getCount()
     val itemCount: LiveData<Int> = _itemCount
 
+    private val _bpmCount = songRepo.getCountBpm()
+    val bpmCount: LiveData<Int> = _bpmCount
+
     //STEP FREQ
 
     private val _stepFreq = MutableStateFlow(0)
@@ -221,19 +224,28 @@ class MyViewModel @Inject constructor(
 
     private fun calculateBpm(): Flow<Pair<Long, Int>> = flow {
         //for each song in database calculate bpm and update
-        for (i in songRepo.getSongs()) {
-            if (songRepo.getBpm(i.songId) == -1) {
-                Log.d("CalculateBpm","calculating bpm song: $i")
-                val x = beatExtractor.beatDetection(
-                    i.uri,
-                    i.duration
-                )
-                emit(Pair(i.songId, x)) // emit next value
+        do{
+            for (i in songRepo.getSongs()) {
+                Log.d("CalculateBpm","song: $i")
+                if (songRepo.getBpm(i.songId) == -1) {
+                    Log.d("CalculateBpm","calculating bpm song: $i")
+                    val x = beatExtractor.beatDetection(
+                        i.uri,
+                        i.duration
+                    )
+                    emit(Pair(i.songId, x)) // emit next value
+                }
+                _progressLoading.update {
+                    _progressLoading.value + 1
+                }
             }
-            _progressLoading.update {
-                _progressLoading.value + 1
+        } while (
+            if(bpmCount.value!=null) {
+                Log.d("bpmCount", bpmCount.value.toString())
+                bpmCount.value!! > 0
             }
-        }
+            else false
+        )
         setPreference(BPM_UPDATED_KEY, true)
     }
 
@@ -448,6 +460,10 @@ class MyViewModel @Inject constructor(
 
     fun changeShowHelp(help: Boolean) {
         setPreference(HELP, help)
+    }
+
+    fun setBpmUpdated(b: Boolean) {
+        setPreference(BPM_UPDATED_KEY, b)
     }
 }
 

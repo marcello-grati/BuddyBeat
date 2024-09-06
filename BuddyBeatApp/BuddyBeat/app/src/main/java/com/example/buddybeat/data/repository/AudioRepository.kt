@@ -25,6 +25,10 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         return allSongs
     }
 
+    fun getCountBpm(): LiveData<Int> {
+        return database.songDao().getCountBpm()
+    }
+
     fun getAllPlaylist() : LiveData<MutableList<PlaylistWithSongs>>{
         return allPlaylists
     }

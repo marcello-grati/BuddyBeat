@@ -258,13 +258,17 @@ class MainActivity : ComponentActivity() {
                         startSensorService()
                         val isUploaded by viewModel.isUploaded.observeAsState()
                         val bpmUpdated by viewModel.bpmUpdated.observeAsState(initial = false)
+                        val bpmCount by viewModel.bpmCount.observeAsState(initial = 0)
                         val r by ratio.collectAsState()
                         if (isUploaded == true && !bpmUpdated) {
                             Log.d("IOOOO", "Songs are uploaded but bpm not updated")
                             viewModel.updateBpm()
                         }
                         if (bpmUpdated) {
-                            Log.d("IOOOO", "BPMs are updated")
+                            if(bpmCount>0)
+                                viewModel.setBpmUpdated(false)
+                            else
+                                Log.d("IOOOO", "BPMs are updated")
                         }
                         /*LaunchedEffect(bpmUpdated) {
                             Log.d("IOOOO", "BPMs updating...")
