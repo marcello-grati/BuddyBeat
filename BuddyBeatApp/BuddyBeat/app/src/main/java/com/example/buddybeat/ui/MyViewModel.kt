@@ -277,9 +277,9 @@ class MyViewModel @Inject constructor(
         }
     }
 
-    fun updateFreq(stepFreq: Int) {
+    fun updateFreq(sf: Int) {
         _stepFreq.update {
-            stepFreq
+            sf
         }
         /*if (showQueue.value)
             getQueue()*/
