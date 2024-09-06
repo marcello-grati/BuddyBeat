@@ -258,19 +258,19 @@ class MainActivity : ComponentActivity() {
                     state.allPermissionsGranted -> {
                         startSensorService()
                         val isUploaded by viewModel.isUploaded.observeAsState()
-                        val bpmUpdated by viewModel.bpmUpdated.observeAsState()
+                        val bpmUpdated by viewModel.bpmUpdated.observeAsState(initial = false)
                         val r by ratio.collectAsState()
-                        if (isUploaded == true && bpmUpdated == false) {
+                        if (isUploaded == true && !bpmUpdated) {
                             Log.d("IOOOO", "Songs are uploaded but bpm not updated")
                             viewModel.updateBpm()
                         }
-                        if (bpmUpdated == true) {
+                        if (bpmUpdated) {
                             Log.d("IOOOO", "BPMs are updated")
                         }
-                        LaunchedEffect(bpmUpdated) {
+                        /*LaunchedEffect(bpmUpdated) {
                             Log.d("IOOOO", "BPMs updating...")
                             viewModel.updateBpm()
-                        }
+                        }*/
                         if(viewModel.mode.value!=0L){
                             viewModel.mode.value?.let { viewModel.setMode(it) }
                         }

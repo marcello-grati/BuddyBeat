@@ -225,6 +225,7 @@ class MyViewModel @Inject constructor(
         //for each song in database calculate bpm and update
         for (i in songRepo.getSongs()) {
             if (songRepo.getBpm(i.songId) == -1) {
+                Log.d("CalculateBpm","calculating bpm song: $i")
                 val x = beatExtractor.beatDetection(
                     i.uri,
                     i.duration
