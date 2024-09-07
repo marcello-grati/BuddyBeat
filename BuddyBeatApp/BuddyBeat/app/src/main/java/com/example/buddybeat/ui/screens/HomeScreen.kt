@@ -340,7 +340,7 @@ fun TopPopup(
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
                 .background(
-                    color = if (isSystemInDarkTheme()) Color(0xFF3C3C3C) else Color(
+                    color = Color(
                         0xFFE6E8E5
                     ), RoundedCornerShape(10.dp)
                 )
