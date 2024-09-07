@@ -39,7 +39,6 @@ import com.example.buddybeat.ui.MyViewModel
 import com.example.buddybeat.ui.components.AddToPlaylist
 import com.example.buddybeat.ui.components.AreYouSure
 import com.example.buddybeat.ui.components.NewPlaylist
-import com.example.buddybeat.ui.components.Queue
 import com.example.buddybeat.ui.components.RenamePlaylist
 import kotlinx.coroutines.flow.update
 
@@ -250,7 +249,6 @@ fun MusicPlayerNavHost(
                 favoritesId = favorites,
                 //click playlist
                 playlistClicked = {
-                    viewModel.setVisiblePlaylist(it)
                     currentId.longValue = it.playlist.playlistId
                     playlistLongClicked.value = it.playlist
                     navController.navigate(Destination.playlist)

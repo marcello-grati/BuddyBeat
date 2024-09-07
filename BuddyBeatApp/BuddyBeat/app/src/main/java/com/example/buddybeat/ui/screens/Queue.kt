@@ -1,4 +1,4 @@
-package com.example.buddybeat.ui.components
+package com.example.buddybeat.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
+import com.example.buddybeat.ui.components.QueueItem
 
 /*Queue showing the next songs selected by the user and the next songs suggested by the system*/
 @OptIn(ExperimentalFoundationApi::class)
