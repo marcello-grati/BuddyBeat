@@ -12,68 +12,43 @@ import com.example.buddybeat.data.models.PlaylistSongCrossRef
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 
+/*Data Access Object*/
 @Dao
 interface SongDao {
 
     @Query("SELECT bpm FROM song_table WHERE songId LIKE :id")
-    fun getBpm(id:Long): Int
+    fun getBpm(id: Long): Int
+
     @Query("SELECT COUNT(*) FROM song_table")
-    fun getItemCount() : LiveData<Int>
+    fun getItemCount(): LiveData<Int>
+
     @Query("UPDATE song_table SET bpm = :bpm WHERE songId = :id")
     suspend fun updateBpm(id: Long, bpm: Int)
-    @Query("SELECT * FROM song_table ORDER BY title ASC")
-    fun getAllSongs(): LiveData<MutableList<Song>>
-    @Query("SELECT * FROM song_table ORDER BY bpm DESC")
-    fun getSongsOrdered(): LiveData<MutableList<Song>>
+
     @Query("SELECT * FROM song_table ORDER BY title ASC")
     suspend fun getSongs(): List<Song>
 
     @Query("SELECT COUNT(*) FROM song_table WHERE bpm = -1")
-    fun getCountBpm() : LiveData<Int>
-
-
-    @Query("SELECT songId FROM song_table")
-    fun getAllIds():LiveData<List<Long>>
-
-    @Query("SELECT * FROM playlist_table")
-    fun getAllPlaylists(): LiveData<MutableList<Playlist>>
-
-    @Transaction
-    @Query("SELECT * FROM song_table JOIN playlistsongcrossref ON song_table.songId = playlistsongcrossref.songId WHERE playlistsongcrossref.playlistId=:id ORDER BY title ASC")
-    fun getSongsFromPlaylist(id:Long): LiveData<MutableList<Song>>
+    fun getCountBpm(): LiveData<Int>
 
     @Transaction
     @Query("SELECT * FROM playlist_table")
     fun getPlaylistsWithSongs(): LiveData<MutableList<PlaylistWithSongs>>
 
-    @Query("SELECT * FROM song_table WHERE songId LIKE :id")
-    suspend fun findSongById(id: Long): Song
-
-    @Query("SELECT * FROM playlist_table WHERE playlistId LIKE :id")
-    suspend fun findPlaylistById(id: Long): Playlist
-
-    @Query("SELECT songId FROM song_table WHERE uri LIKE :uri")
-    suspend fun getIdSong(uri: String): Long
-
     @Query("SELECT COUNT(*) FROM PlaylistSongCrossRef WHERE playlistId LIKE :idPlaylist AND songId LIKE :idSong")
-    fun containsSong(idPlaylist : Long, idSong : Long) : LiveData<Int>
-
+    fun containsSong(idPlaylist: Long, idSong: Long): LiveData<Int>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSong(song: Song) : Long
+    suspend fun insertSong(song: Song): Long
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(song: Song) : Long
-
+    suspend fun insert(song: Song): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(ref: PlaylistSongCrossRef)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(playlist: Playlist)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertPlaylist(playlist: Playlist) : Long
+    suspend fun insertPlaylist(playlist: Playlist): Long
 
     @Delete
     suspend fun delete(song: Song)
@@ -86,8 +61,4 @@ interface SongDao {
 
     @Query("UPDATE playlist_table SET title=:title WHERE playlistId = :id")
     suspend fun update(title: String, id: Long)
-
-    /*
-    * TODO : add useful queries
-    */
 }

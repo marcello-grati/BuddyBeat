@@ -10,6 +10,7 @@ import com.example.buddybeat.data.models.Song
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
+/*Content Resolver for retrieving song in storage*/
 class ContentResolverHelper @Inject
 constructor(@ApplicationContext val context: Context) {
     private var mCursor: Cursor? = null
@@ -23,7 +24,8 @@ constructor(@ApplicationContext val context: Context) {
 
     //private var selectionClause: String? = "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0"
     // if we want to remove "<unknown>" artist
-    private var selectionClause: String? = "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0" + " AND ${MediaStore.Audio.AudioColumns.ARTIST} != '<unknown>'"
+    private var selectionClause: String? =
+        "${MediaStore.Audio.AudioColumns.IS_MUSIC} != 0" + " AND ${MediaStore.Audio.AudioColumns.ARTIST} != '<unknown>'"
 
     private val sortOrder = "${MediaStore.Audio.AudioColumns.DISPLAY_NAME} ASC"
 
@@ -32,7 +34,6 @@ constructor(@ApplicationContext val context: Context) {
     fun getAudioData(): MutableList<Song> {
         return getCursorData()
     }
-
 
     private fun getCursorData(): MutableList<Song> {
         val audioList = mutableListOf<Song>()
@@ -69,12 +70,12 @@ constructor(@ApplicationContext val context: Context) {
                             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                             id
                         )
-
-                        audioList.add(Song(
-                            title = title, artist = artist, duration = duration,
-                            uri = uri.toString(), description = "$title $artist"
-                        ))
-
+                        audioList.add(
+                            Song(
+                                title = title, artist = artist, duration = duration,
+                                uri = uri.toString(), description = "$title $artist"
+                            )
+                        )
                     }
                 }
             }

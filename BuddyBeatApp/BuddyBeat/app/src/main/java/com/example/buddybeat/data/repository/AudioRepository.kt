@@ -14,15 +14,10 @@ class AudioRepository @Inject
 constructor(private val contentResolverHelper: ContentResolverHelper,
             private val database: SongDatabase) {
 
-
-    private val allSongs: LiveData<MutableList<Song>> = database.songDao().getAllSongs()
     private val allPlaylists : LiveData<MutableList<PlaylistWithSongs>> = database.songDao().getPlaylistsWithSongs()
 
     fun getData() : List<Song>{
         return contentResolverHelper.getAudioData()
-    }
-    fun getAllSongs() : LiveData<MutableList<Song>> {
-        return allSongs
     }
 
     fun getCountBpm(): LiveData<Int> {
@@ -41,20 +36,12 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
         return database.songDao().containsSong(playlistId,songId)
     }
 
-    fun getSongsFromPlaylist(id: Long): LiveData<MutableList<Song>> {
-        return database.songDao().getSongsFromPlaylist(id)
-    }
-
     suspend fun delete(playlist: Playlist){
         return database.songDao().delete(playlist)
     }
 
     suspend fun updatePlaylist(title:String, id:Long){
         return database.songDao().update(title, id)
-    }
-
-    fun getSongsOrdered() : LiveData<MutableList<Song>> {
-        return database.songDao().getSongsOrdered()
     }
 
     fun getBpm(id: Long) : Int {
@@ -72,11 +59,6 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
     @WorkerThread
     suspend fun insert(song: Song) : Long {
         return database.songDao().insert(song)
-    }
-
-    @WorkerThread
-    suspend fun insert(playlist : Playlist) {
-        database.songDao().insert(playlist)
     }
 
     @WorkerThread
@@ -103,6 +85,4 @@ constructor(private val contentResolverHelper: ContentResolverHelper,
     suspend fun delete(song : Song) {
         database.songDao().delete(song)
     }
-
-
 }

@@ -8,7 +8,7 @@ import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
-
+/*Entities of Room Database*/
 @Entity(tableName = "song_table", indices = [Index(value=["uri"], unique = true)])
 data class Song(
     @PrimaryKey(autoGenerate = true)
@@ -30,7 +30,7 @@ data class Song(
 }
 
 
-@Entity(tableName = "playlist_table") //, indices = [Index(value=["uri"], unique = true)])
+@Entity(tableName = "playlist_table")
 data class Playlist(
     @PrimaryKey(autoGenerate = true)
     val playlistId : Long = 0,

@@ -1,15 +1,14 @@
 package com.example.buddybeat.data
 
+import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import android.content.Context
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistSongCrossRef
-import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 
-// Annotates class to be a Room Database with a table (entity) of the Song class
+// Room Database with entities Song, Playlist, PlaylistSongCrossRef
 @Database(entities = [Song::class, Playlist::class, PlaylistSongCrossRef::class], version = 5, exportSchema = false)
 public abstract class SongDatabase : RoomDatabase() {
 

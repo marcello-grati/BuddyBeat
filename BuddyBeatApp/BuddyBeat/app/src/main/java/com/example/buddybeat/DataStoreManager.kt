@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
+/*DataStoreManager for keeping some settings saved*/
 class DataStoreManager(
     val context: Context
 ) {
@@ -27,8 +28,6 @@ class DataStoreManager(
         val MODE = longPreferencesKey("MODE")
         val MODALITY = longPreferencesKey("MODALITY")
         val HELP = booleanPreferencesKey("HELP_SECTION")
-        //val I_AM_RUNNING = booleanPreferencesKey("RUNNING")
-        //val MANUAL_BPM = longPreferencesKey("MANUAL_BPM")
     }
 
     suspend fun setPreference(key: Preferences.Key<Boolean>, value:Boolean){
