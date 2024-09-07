@@ -178,7 +178,7 @@ fun HomeScreen(
                             if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
                                 PlaybackService.ALPHA = 0.4f
                             else if (speedMode == AUTO_MODE)
-                                PlaybackService.ALPHA = 0.7f
+                                PlaybackService.ALPHA = 0.8f
                             setTargetBpm(100)
                         })
                     //run mode
@@ -193,7 +193,7 @@ fun HomeScreen(
                             if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
                                 PlaybackService.ALPHA = 0.4f
                             else if (speedMode == AUTO_MODE)
-                                PlaybackService.ALPHA = 0.7f
+                                PlaybackService.ALPHA = 0.8f
                             setTargetBpm(160)
                         })
                 }

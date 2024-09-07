@@ -82,27 +82,32 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 
-
+/*MainActivity that manages all the components (UI, Services)*/
 @UnstableApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
 
+    //viewModel
     private val viewModel: MyViewModel by viewModels()
 
-    var showPlayer = false
-
+    //controller media3
     private lateinit var controllerFuture: ListenableFuture<MediaController>
     private val controller: MediaController?
         get() =
             if (controllerFuture.isDone && !controllerFuture.isCancelled) controllerFuture.get() else null
 
-    private var job: Job? = Job()
+    //ratio
+    private var _ratio: MutableStateFlow<Float> = MutableStateFlow(1f)
+    private val ratio: StateFlow<Float> = _ratio.asStateFlow()
 
-    var _ratio: MutableStateFlow<Float> = MutableStateFlow(1f)
-    val ratio: StateFlow<Float> = _ratio.asStateFlow()
+    //if notification is clicked it shows the player
+    private var showPlayer = false
+    private fun changeShow() {
+        showPlayer = false
+    }
 
-    //to check
+    //player listener for controller media3
     private var listener = object : Player.Listener {
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -127,7 +132,6 @@ class MainActivity : ComponentActivity() {
                     //
                 }
             }
-
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -137,12 +141,11 @@ class MainActivity : ComponentActivity() {
         //changing song
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             Log.d(
-                "IOOOO",
-                "onMediaItemTransition with media " + mediaItem?.mediaMetadata?.title.toString()
+                "onMediaItemTransition with media:", mediaItem?.mediaMetadata?.title.toString()
             )
             controller?.currentMediaItem?.let { viewModel.changeSong(it) }
             controller?.let { viewModel.updateDuration(it.duration) }
-            controller?.currentMediaItem?.mediaMetadata?.extras?.getInt("bpm")?.let { /*mService.updateBpm(it)*/ }
+            //setting ratio back to 1
             PlaybackService.ratio = 1.0f
             controller?.setPlaybackSpeed(1.0f)
         }
@@ -152,15 +155,11 @@ class MainActivity : ComponentActivity() {
     private lateinit var mService: SensorService
     private var mBound: Boolean = false
 
-
     private val connection = object : ServiceConnection {
-
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance.
             val binder = service as SensorService.LocalBinder
             mService = binder.getService()
             mBound = true
-            //viewModel.mode.value?.let{ mService.changeMode(it) }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -168,8 +167,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    //every second update text view with SPM taken from SensorService and with ratio from PlaybackService
     private val handler = Handler(Looper.getMainLooper())
     private val interval: Long = 1000
+
 
     private val sensorDataRunnable = object : Runnable {
         override fun run() {
@@ -179,69 +180,43 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    
-    private fun toggleSpeedMode() {
-        if(speedMode == OFF_MODE){
-            if(viewModel.lastMode.value!=-1L) {
-                mService.changeMode(viewModel.lastMode.value)
-                viewModel.setMode(viewModel.lastMode.value)
-            }else{
-                viewModel.setMode(1L)
-                mService.changeMode(1L)
-            }
+
+    private fun updateDataTextView() {
+        run {
+            viewModel.updateFreq(if (System.currentTimeMillis() - mService.lastUpdate > 3000) 0
+            else mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }.average()
+                .toInt()
+            )
+            viewModel.updateFreqQueue(
+                mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }.average()
+            )
+            _ratio.update { controller?.playbackParameters?.speed ?: 1f }
         }
-        speedMode = (speedMode + 1) % 3
-        if(speedMode == OFF_MODE){
-            viewModel.setMode(0L)
-            mService.changeMode(0L)
-        }
-        viewModel.setModality(speedMode)
-        if(speedMode == MANUAL_MODE)
-            ALPHA = 0.4F
-        else if (speedMode == AUTO_MODE)
-            ALPHA = 0.8f
-
-        Log.d("MODALITY", speedMode.toString())
     }
 
-    private fun increaseManualBpm() {
-        var bpm = viewModel.targetBpm.value + BPM_STEP
-        bpm = bpm.coerceAtMost(220)
-        viewModel.setTargetBpm(bpm)
-        manualBpm = bpm
-    }
-    private fun decreaseManualBpm() {
-        var bpm = viewModel.targetBpm.value - BPM_STEP
-        bpm = bpm.coerceAtLeast(80)
-        viewModel.setTargetBpm(bpm)
-        manualBpm = bpm
-    }
-
+    //start SensorService
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startSensorService() {
         startForegroundService(Intent(this, SensorService::class.java))
         Intent(this, SensorService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
-        handler.postDelayed(sensorDataRunnable, interval)
+        handler.postDelayed(sensorDataRunnable, interval) //start updating view every second
     }
 
-    private fun changeShow(){
-        showPlayer = false
-    }
-
-
-
+    //onCreate()
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val intent : String? = intent.extras?.getString("DESTINATION")
-        if(intent == "player")
+        //if notification clicked
+        val intent: String? = intent.extras?.getString("DESTINATION")
+        if (intent == "player")
             showPlayer = true
 
         setContent {
             BuddyBeatTheme {
+                //permissions
                 val state = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     rememberMultiplePermissionsState(
                         permissions = listOf(
@@ -254,30 +229,32 @@ class MainActivity : ComponentActivity() {
                     rememberMultiplePermissionsState(permissions = listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
                 }
                 when {
+                    //if all permission are granted
                     state.allPermissionsGranted -> {
+
                         startSensorService()
+
+                        //uploading song and calculation of BPMs
                         val isUploaded by viewModel.isUploaded.observeAsState()
                         val bpmUpdated by viewModel.bpmUpdated.observeAsState(initial = false)
                         val bpmCount by viewModel.bpmCount.observeAsState(initial = 0)
-                        val r by ratio.collectAsState()
                         if (isUploaded == true && !bpmUpdated) {
-                            Log.d("IOOOO", "Songs are uploaded but bpm not updated")
+                            Log.d("MainActivity", "Songs are uploaded but bpm not updated")
                             viewModel.updateBpm()
                         }
                         if (bpmUpdated) {
-                            if(bpmCount>0)
+                            if (bpmCount > 0) //if there are still BPM to calculate
                                 viewModel.setBpmUpdated(false)
                             else
-                                Log.d("IOOOO", "BPMs are updated")
+                                Log.d("MainActivity", "BPMs are updated")
                         }
-                        /*LaunchedEffect(bpmUpdated) {
-                            Log.d("IOOOO", "BPMs updating...")
-                            viewModel.updateBpm()
-                        }*/
-                        if(viewModel.mode.value!=0L){
+                        //managing state when reopening app
+                        if (viewModel.mode.value != 0L) {
                             viewModel.mode.value?.let { viewModel.setMode(it) }
                         }
                         viewModel.setTargetBpm(manualBpm)
+
+                        val ratioValue by ratio.collectAsState()
                         MusicPlayerApp(
                             showPlayer = showPlayer,
                             changeShow = {
@@ -296,7 +273,7 @@ class MainActivity : ComponentActivity() {
                             prevSong = {
                                 prevSong()
                             },
-                            text3 = r.toString(),
+                            text3 = ratioValue.toString(),
                             toggleMode = {
                                 toggleSpeedMode()
                             },
@@ -317,22 +294,20 @@ class MainActivity : ComponentActivity() {
                             },
                             setSongInPlaylist = {
                                 setSongInPlaylist(it)
-                            }
-                        ) {
-                            viewModel.setMode(it)
-                            mService.changeMode(it)
-                        }
+                            },
+                            setMode = {
+                                viewModel.setMode(it)
+                                mService.changeMode(it)
+                            })
                     }
+                    //if permission not granted, it will ask
                     else -> RequiredPermission(state = state)
                 }
             }
         }
     }
 
-    private fun addToQueue(song: Song) {
-        queue.add(song)
-    }
-
+    //require permission
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalPermissionsApi::class)
@@ -342,10 +317,10 @@ class MainActivity : ComponentActivity() {
             DisposableEffect(state) {
                 state.launchMultiplePermissionRequest()
                 onDispose {
+                    //permission given, insert all songs
                     viewModel.insertAllSongs()
                 }
             }
-
             Box(
                 Modifier
                     .fillMaxSize()
@@ -394,16 +369,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun updateDataTextView() {
-        run {
-            viewModel.updateFreq(if (System.currentTimeMillis() - mService.lastUpdate > 3000) 0
-            else mService.previousStepFrequency_3.takeLast(7).takeWhile{it>65}.average().toInt())
-            viewModel.updateFreqQueue( mService.previousStepFrequency_3.takeLast(7).takeWhile{it>65}.average())
-            _ratio.update { controller?.playbackParameters?.speed ?: 1f }
-        }
-    }
-
-
+    //setting controller
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onStart() {
         super.onStart()
@@ -411,7 +377,6 @@ class MainActivity : ComponentActivity() {
             SessionToken(this, ComponentName(this, PlaybackService::class.java))
         controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
         controllerFuture.addListener({ setController() }, ContextCompat.getMainExecutor(this))
-        //controllerFuture.addListener({ setController() }, MoreExecutors.directExecutor())
     }
 
     private fun setController() {
@@ -421,15 +386,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initController(controller: MediaController) {
-        Log.d("IOOOO", "initController")
         controller.currentMediaItem?.let { viewModel.changeSong(it) }
         controller.isPlaying.let { viewModel.updateIsPlaying(it) }
         controller.duration.let { viewModel.updateDuration(it) }
         controller.currentPosition.let { viewModel.updateProgress(it) }
-        viewModel.modality.value?.let { Log.d("modality value", it.toString())
-            Log.d("modality value", speedMode.toString())
+        viewModel.modality.value?.let {
             speedMode = it
-            if(it == MANUAL_MODE)
+            if (it == MANUAL_MODE)
                 ALPHA = 0.4f
             else if (it == AUTO_MODE)
                 ALPHA = 0.8f
@@ -439,11 +402,13 @@ class MainActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onResume() {
         super.onResume()
+        //progress update
         GlobalScope.launch(Dispatchers.Main) { startProgressUpdate() }
     }
 
     override fun onStop() {
         super.onStop()
+        //release controller
         MediaController.releaseFuture(controllerFuture)
     }
 
@@ -454,6 +419,8 @@ class MainActivity : ComponentActivity() {
         mBound = false
     }
 
+    //progress update
+    private var job: Job? = Job()
     private suspend fun startProgressUpdate() {
         job?.run {
             while (isActive) {
@@ -465,55 +432,67 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
     private fun stopProgressUpdate() {
         job?.cancel()
     }
 
-
-    //used in UI
-
-    private fun setSongInPlaylist(media: MediaItem) {
-        Log.d("IOOOO", "setting media: ${media.mediaId}")
-        //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString())
-        controller?.addMediaItem(controller!!.currentMediaItemIndex+1, media)
-        //Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +controller?.currentMediaItemIndex.toString() + "   " + controller?.getMediaItemAt(controller!!.currentMediaItemIndex).toString())
-        controller?.seekToDefaultPosition(controller!!.currentMediaItemIndex + 1)
-        //controller?.seekToDefaultPosition(controller!!.mediaItemCount+1)
-        Log.d(
-            "IOOOO",
-            "currentMediaItemIndex + currentMediaItem" + controller?.currentMediaItemIndex.toString() + "   " + controller?.currentMediaItem.toString()
-        )
-        //controller?.removeMediaItems(controller!!.currentMediaItemIndex+2, controller!!.mediaItemCount)
-        Log.d("IOOOO", "mediaItemCount: " + controller?.mediaItemCount.toString())
+    //useful functions
+    private fun addToQueue(song: Song) {
+        queue.add(song)
     }
 
-    /*private fun setSong(index: Int) {
-        Log.d("IOOOO", "index clicked: $index")
-        if(audioListId.value!=viewModel.currentPlaylistId.value) {
-            audioListId.update {
-                viewModel.currentPlaylistId.value
-            }
-            audiolist.update{
-                viewModel.allPlaylist.value?.find { it.playlist.playlistId == viewModel.currentPlaylistId.value }?.songs
-                    ?: mutableListOf()
+    //change mode (auto/manual)
+    private fun toggleSpeedMode() {
+        //if previous speed is off it will set the mode to the last mode saved (if any) or set walking mode
+        if (speedMode == OFF_MODE) {
+            if (viewModel.lastMode.value != -1L) {
+                mService.changeMode(viewModel.lastMode.value)
+                viewModel.setMode(viewModel.lastMode.value)
+            } else {
+                viewModel.setMode(1L)
+                mService.changeMode(1L)
             }
         }
-        val song = viewModel.allPlaylist.value?.find { it.playlist.playlistId == viewModel.currentPlaylistId.value }?.songs?.sortedBy{it.title}
-            ?.get(index)
-        Log.d("IOOOO", "Song clicked: $song")
-        if (song.songId == viewModel.currentId.value) {
-            Log.d("IOOOO", "same id: ${song.songId}")
-            playPause()
-        } else {
-            Log.d("IOOOO", "not same id, new id: ${song.songId}")
-            val media = buildMediaItem(song)
-            setSongInPlaylist(media)
-            playPause()
+        //changing modality in PlaybackService and in viewModel
+        speedMode = (speedMode + 1) % 3
+        if (speedMode == OFF_MODE) {
+            viewModel.setMode(0L)
+            mService.changeMode(0L)
         }
-    }*/
+        viewModel.setModality(speedMode)
+        //changing ALPHA according to modality
+        if (speedMode == MANUAL_MODE)
+            ALPHA = 0.4F
+        else if (speedMode == AUTO_MODE)
+            ALPHA = 0.8f
+        Log.d("MODALITY", speedMode.toString())
+    }
+
+    //increase target Bpm in PlaybackService and in viewModel
+    private fun increaseManualBpm() {
+        var bpm = viewModel.targetBpm.value + BPM_STEP
+        bpm = bpm.coerceAtMost(230)
+        viewModel.setTargetBpm(bpm)
+        manualBpm = bpm
+    }
+
+    //decrease target Bpm in PlaybackService and in viewModel
+    private fun decreaseManualBpm() {
+        var bpm = viewModel.targetBpm.value - BPM_STEP
+        bpm = bpm.coerceAtLeast(70)
+        viewModel.setTargetBpm(bpm)
+        manualBpm = bpm
+    }
+
+    private fun setSongInPlaylist(media: MediaItem) {
+        Log.d("Setting media:", media.mediaMetadata.title.toString() + ", " + media.mediaId)
+        controller?.addMediaItem(controller!!.currentMediaItemIndex + 1, media)
+        controller?.seekToDefaultPosition(controller!!.currentMediaItemIndex + 1)
+    }
+
 
     private fun buildMediaItem(audio: Song): MediaItem? {
+        //check if audio file exists before creating mediaItem otherwise return null
         try {
             contentResolver.openInputStream(audio.uri.toUri())?.close()
         } catch (e: FileNotFoundException) {
@@ -524,7 +503,6 @@ class MainActivity : ComponentActivity() {
             queue.remove(audio)
             return null
         }
-        Log.d("IOOOO bpm" , audio.bpm.toString())
         return MediaItem.Builder()
             .setMediaId(audio.uri)
             .setRequestMetadata(
@@ -556,14 +534,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun prevSong() {
+        if (controller?.currentPosition!! > 1000L)
+            controller?.seekToDefaultPosition()
+        else controller?.seekToPreviousMediaItem()
+    }
+
+    private fun onProgress(seekTo: Float) {
+        controller?.seekTo((controller?.duration?.times(seekTo.toLong()) ?: 0) / 100)
+    }
+
     private fun nextSong() {
+        //get target Bpm according to the modality
         val target = when (speedMode) {
-            AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLast(7).takeWhile{it>65}
-                Log.d("PreviousFreq nextSong mainActivity", d.toString())
+            AUTO_MODE -> run {
+                //take the SPM from the Service making an average of the last values
+                val d = mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }
                 var l = d.average()
-                if(l.isNaN()){
-                    l=0.0
+                if (l.isNaN()) {
+                    l = 0.0
                 }
                 l
             }
@@ -571,7 +560,8 @@ class MainActivity : ComponentActivity() {
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
-        Log.d("stepFreq before nextSong()", target.toString())
+        Log.d("SPM for choosing next Song", target.toString())
+        //search for songs in queue (inserted by user)
         while (true) {
             val queueNext = queue.removeFirstOrNull()
             if (queueNext != null) {
@@ -582,38 +572,27 @@ class MainActivity : ComponentActivity() {
                 }
             } else break
         }
-        val l = if (target!=0.0) viewModel.orderSongs(target, audiolist) else audiolist.toMutableList()
-        if(viewModel.modality.value!= OFF_MODE)
+        //orderSongs according to targetBpm
+        val l = if (target != 0.0) viewModel.orderSongs(
+            target,
+            audiolist
+        ) else audiolist.toMutableList()
+        //removing songs without bpm
+        if (viewModel.modality.value != OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
+        //insert most fitting song in queue
         while (true) {
             val nextSong = l.removeFirstOrNull()
             if (nextSong != null) {
                 val media = buildMediaItem(nextSong)
-                if(media!=null) {
-                    Log.d("IOOOO", "From MainActivity, next song ${media.mediaId}?")
-                    Log.d("playlist before adding", playlist.toString())
+                if (media != null) {
+                    //check if already played recently
                     if (!playlist.contains(media.mediaId)) {
-                        Log.d("IOOOO", "From MainActivity, it does not contain ${media.mediaId}")
-                        //Log.d("playlist contains media? ", playlist.contains(media.mediaId).toString())
-                        Log.d("media", media.toString())
-                        Log.d("playlist", playlist.toString())
                         setSongInPlaylist(media)
                         break
                     }
                 }
-            }else return
+            } else return
         }
     }
-
-    private fun prevSong() {
-        if(controller?.currentPosition!! > 1000L)
-            controller?.seekToDefaultPosition()
-        else controller?.seekToPreviousMediaItem()
-    }
-
-    private fun onProgress(seekTo: Float) {
-        controller?.seekTo((controller?.duration?.times(seekTo.toLong()) ?: 0) / 100)
-    }
-
 }
-
