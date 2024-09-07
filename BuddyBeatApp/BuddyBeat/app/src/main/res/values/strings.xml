@@ -1,15 +1,8 @@
 <resources>
     <string name="app_name">BuddyBeat</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="playlistimage">PlaylistImage</string>
-    <string name="play">Play</string>
-    <string name="shuffle">Shuffle</string>
-    <string name="workout_playlist">Workout Playlist</string>
-    <string name="album_6_songs_2024">Playlist - 2024</string>
-    <string name="author">Author</string>
-    <string name="now_playing">Now playing</string>
-    <string name="add_playlist">Add Playlist</string>
-    <string name="add_song">Add Song</string>
     <string name="help_section">Welcome to Buddy Beat! In this app, your music moves with you—literally. Whether you\'re walking or running, the speed of your songs adjusts to match your activity, keeping you in the perfect rhythm. You can create your playlists and let the app automatically reorder your tracks based on your pace. If you need help, you can always refer to the help section!</string>
+    <string name="help_intro">Welcome to BuddyBeat! This app moves with you, adjusting the speed of your music to match your workout intensity. This short tutorial will guide you through the basic features.</string>
+    <string name="help_bpm">BPM represents the tempo of the song. Higher BPM means a faster song, and lower BPM means a slower one. You can adjust the BPM to match the pace of your workout, or it will be done automatically for you.</string>
+    <string name="help_buttons">Use the \'+\' button to increase the BPM of the current song. Use the \'-\' button to decrease the BPM. These adjustments allow you to match the tempo of the song with your workout intensity.</string>
+    <string name="help_auto">Toggle between Manual and Auto modes. In Manual mode, you control the BPM with the \'+\' and \'-\' buttons. In Auto mode, the app adjusts the BPM automatically based on your activity.</string>
 </resources>
