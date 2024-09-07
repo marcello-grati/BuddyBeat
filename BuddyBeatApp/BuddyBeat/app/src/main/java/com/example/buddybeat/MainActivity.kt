@@ -184,11 +184,11 @@ class MainActivity : ComponentActivity() {
     private fun updateDataTextView() {
         run {
             viewModel.updateFreq(if (System.currentTimeMillis() - mService.lastUpdate > 3000) 0
-            else mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }.average()
+            else mService.previousStepFrequency.takeLast(7).takeWhile { it > 65 }.average()
                 .toInt()
             )
             viewModel.updateFreqQueue(
-                mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }.average()
+                mService.previousStepFrequency.takeLast(7).takeWhile { it > 65 }.average()
             )
             _ratio.update { controller?.playbackParameters?.speed ?: 1f }
         }
@@ -549,7 +549,7 @@ class MainActivity : ComponentActivity() {
         val target = when (speedMode) {
             AUTO_MODE -> run {
                 //take the SPM from the Service making an average of the last values
-                val d = mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }
+                val d = mService.previousStepFrequency.takeLast(7).takeWhile { it > 65 }
                 var l = d.average()
                 if (l.isNaN()) {
                     l = 0.0
