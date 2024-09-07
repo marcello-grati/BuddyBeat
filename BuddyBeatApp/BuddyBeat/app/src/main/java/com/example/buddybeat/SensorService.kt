@@ -379,7 +379,7 @@ class SensorService : Service(), SensorEventListener {
                 */
                 if (acceleration > threshold) {
                     if ((now - lastUpdate) > deltaTime) {
-                        Log.d("SensorService", "deltaTime: $deltaTime + threshold: $threshold")
+                        Log.d("SensorService", "deltaTime: $deltaTime + threshold: $threshold + mode: $mode")
                         lastUpdate = now
                         steps++
                         //Log.d("steps", steps.toString())
@@ -475,8 +475,8 @@ class SensorService : Service(), SensorEventListener {
     private fun startForegroundService() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
-            .setContentText("Steps: $steps \nStep Frequency: $stepFreq")
-            .setSmallIcon(R.drawable.ic_play)
+            .setContentText("Steps: $steps \nStep Frequency: ${if(mode!=0L) stepFreq else "-"}")
+            .setSmallIcon(R.drawable.icona_1)
             .setContentIntent(
                 PendingIntent.getActivity(
                     this, 0,
@@ -492,8 +492,8 @@ class SensorService : Service(), SensorEventListener {
     private fun updateNotification() {
         val notification: Notification = Notification.Builder(this, CHANNEL_ID)
             .setContentTitle("Sport Activity")
-            .setContentText("Steps: $steps\nStep Frequency: $stepFreq")
-            .setSmallIcon(R.drawable.ic_play)
+            .setContentText("Steps: $steps\nStep Frequency: ${if(mode!=0L) stepFreq else "-"}")
+            .setSmallIcon(R.drawable.icona_1)
             .setContentIntent(
                 PendingIntent.getActivity(
                     this, 0,
