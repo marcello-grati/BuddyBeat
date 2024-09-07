@@ -243,7 +243,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     var logHalfBPM = log2(bpm.toFloat() / 2.0f)
                     var logDoubleBPM = log2(bpm.toFloat() * 2.0f)
 
-                    // We update BPM if one of its multiples has a smaller distance value
+                    // We update BPM if one of its multiples has a smaller com.example.buddybeat.ui.screens.distance value
                     while (abs(logStepFreq - logBpm) > abs(logStepFreq - logHalfBPM)) {
                         bpm /= 2
                         logBpm = logHalfBPM

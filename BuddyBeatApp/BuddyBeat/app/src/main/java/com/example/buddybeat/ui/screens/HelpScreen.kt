@@ -1,3 +1,5 @@
+package com.example.buddybeat.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,10 +28,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.buddybeat.R
 
+/*HELP SCREEN*/
 @Composable
 fun HelpScreen(onNavigateUp: () -> Unit) {
     Scaffold() {
@@ -43,23 +49,26 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                 IconButton(onClick = { onNavigateUp() }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIos,
-                        contentDescription = "",
+                        contentDescription = "back",
                     )
                 }
             }
-
             Text(
                 text = "Help & Instructions",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp).padding(horizontal = 15.dp)
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 15.dp)
             )
             // Introduction to the App
             Text(
-                text = "Welcome to BuddyBeat! This app moves with you, adjusting the speed of your music to match your workout intensity. This short tutorial will guide you through the basic features.",
+                text = stringResource(R.string.help_intro),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(bottom = 16.dp).padding(horizontal = 15.dp)
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 15.dp)
             )
             LazyColumn(
                 modifier = Modifier
@@ -84,15 +93,13 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "BPM represents the tempo of the song. Higher BPM means a faster song, and lower BPM means a slower one. You can adjust the BPM to match the pace of your workout, or it will be done automatically for you.",
+                                text = stringResource(R.string.help_bpm),
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                         }
                     }
                 }
-
-
                 // Explanation of the + and - buttons
                 item {
                     Card(
@@ -110,7 +117,7 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Use the '+' button to increase the BPM of the current song. Use the '-' button to decrease the BPM. These adjustments allow you to match the tempo of the song with your workout intensity.",
+                                text = stringResource(R.string.help_buttons),
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 8.dp)
                             )
@@ -119,14 +126,26 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                                 horizontalArrangement = Arrangement.SpaceAround,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                IconButton(onClick = {}) {
+                                IconButton(
+                                    onClick = {},
+                                    enabled = false,
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        disabledContentColor = Color.Black
+                                    )
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.RemoveCircleOutline,
                                         contentDescription = "Minus",
                                         modifier = Modifier.size(30.dp)
                                     )
                                 }
-                                IconButton(onClick = {}) {
+                                IconButton(
+                                    onClick = {},
+                                    enabled = false,
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        disabledContentColor = Color.Black
+                                    )
+                                ) {
                                     Icon(
                                         imageVector = Icons.Default.AddCircleOutline,
                                         contentDescription = "Plus",
@@ -137,7 +156,6 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                         }
                     }
                 }
-
                 // Explanation of the Manual/Auto Mode Button
                 item {
                     Card(
@@ -155,7 +173,7 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Toggle between Manual and Auto modes. In Manual mode, you control the BPM with the '+' and '-' buttons. In Auto mode, the app adjusts the BPM automatically based on your activity.",
+                                text = stringResource(R.string.help_auto),
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 8.dp)
                             )
@@ -170,14 +188,14 @@ fun HelpScreen(onNavigateUp: () -> Unit) {
                                 Button(
                                     onClick = {},
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                                    shape = MaterialTheme.shapes.small // Less rounded corners
+                                    shape = MaterialTheme.shapes.small
                                 ) {
                                     Text(text = "Manual", color = Color.White)
                                 }
                                 Button(
                                     onClick = {},
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                                    shape = MaterialTheme.shapes.small // Less rounded corners
+                                    shape = MaterialTheme.shapes.small
                                 ) {
                                     Text(text = "Auto", color = Color.White)
                                 }

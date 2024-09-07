@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
@@ -53,11 +52,12 @@ import com.example.buddybeat.R
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
-import com.example.buddybeat.ui.components.FilledCardExample
 import com.example.buddybeat.ui.components.HomeBottomBar
 import com.example.buddybeat.ui.components.LinearDeterminateIndicator
 import com.example.buddybeat.ui.components.SongItem
+import com.example.buddybeat.ui.components.ValuesCard
 
+/*PLAYLIST SCREEN*/
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PlaylistScreen(
@@ -93,6 +93,7 @@ fun PlaylistScreen(
     onNavigateUp: () -> Unit,
 ) {
     Scaffold(
+        //bottomBar player
         bottomBar = {
             if (song.title.isNotEmpty())
                 HomeBottomBar(
@@ -106,12 +107,13 @@ fun PlaylistScreen(
                     favoriteContains = favoriteContainsSong(song.id),
                     addToFavorite = {
                         addToFavorite(song.id)
-                    }
-                ) {
-                    removeFavorite(song.id)
-                }
+                    },
+                    removeFavorite = {
+                        removeFavorite(song.id)
+                    })
         }) {
         Column {
+            //progress calculation of bpm
             if (!loading)
                 LinearDeterminateIndicator(currentProgress, Color.Black, Color.White)
             Row(
@@ -124,16 +126,17 @@ fun PlaylistScreen(
                 IconButton(onClick = { onNavigateUp() }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIos,
-                        contentDescription = "",
+                        contentDescription = "back",
                     )
                 }
+                //if playlist different from all_songs and favorites -> show menu
                 allPlaylist.find { it.playlist.playlistId == currentId }?.playlist?.let { it1 ->
                     if (it1.playlistId != allSongsId && it1.playlistId != favoritesId) {
                         var expanded by remember { mutableStateOf(false) }
                         IconButton(onClick = { expanded = !expanded }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
-                                contentDescription = "",
+                                contentDescription = "menu",
                             )
                             DropdownMenu(
                                 expanded = expanded,
@@ -159,15 +162,18 @@ fun PlaylistScreen(
                     }
                 }
             }
+            //SPM, BPM, ratio boxes
             Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                FilledCardExample(text1, text2, text3, colorUI, mode)
+                ValuesCard(text1, text2, text3, colorUI, mode)
             }
+            //scrollable list of songs in playlist
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
                     .padding(it),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                //Top section
                 item {
                     allPlaylist.find { it.playlist.playlistId == currentId }?.playlist?.let { it1 ->
                         val modifier =
@@ -178,11 +184,17 @@ fun PlaylistScreen(
                                         shouldShowDialogFive.value = true
                                     }
                                 ) else Modifier
-                        TopSection(modifier, it1.title, startFirstSong = startFirstSong, colorUI = colorUI)
+                        TopSection(
+                            modifier,
+                            it1.title,
+                            startFirstSong = startFirstSong,
+                            colorUI = colorUI
+                        )
                     }
                 }
+                //list of songs
                 allPlaylist.find { it.playlist.playlistId == currentId }?.let { it1 ->
-                    itemsIndexed(/*playlistLive.songs.sortedBy { it.title }*/ it1.songs.sortedBy { it.title }) { index, audio ->
+                    itemsIndexed(it1.songs.sortedBy { it.title }) { index, audio ->
                         SongItem(
                             audio = audio,
                             onItemClick = {
@@ -215,7 +227,7 @@ fun TopSection(
     title: String,
     resource: Int = R.drawable.mainimage,
     startFirstSong: () -> Unit,
-    colorUI : Color
+    colorUI: Color
 ) {
     Box(
         modifier = Modifier
@@ -226,7 +238,7 @@ fun TopSection(
             model = "",
             placeholder = painterResource(id = resource),
             error = painterResource(id = resource),
-            contentDescription = null,
+            contentDescription = "image_playlist",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .height(250.dp)
@@ -243,14 +255,14 @@ fun TopSection(
         )
         Card(
             onClick = {
-                //isPlaying = !isPlaying
                 startFirstSong()
             },
             shape = CircleShape,
             modifier = Modifier
-                .size(80.dp).align(Alignment.BottomCenter).padding(10.dp)
-            ,colors =
-                CardDefaults.cardColors(containerColor = colorUI)
+                .size(80.dp)
+                .align(Alignment.BottomCenter)
+                .padding(10.dp), colors =
+            CardDefaults.cardColors(containerColor = colorUI)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Icon(

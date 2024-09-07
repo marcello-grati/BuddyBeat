@@ -1,7 +1,5 @@
 package com.example.buddybeat.ui.screens
 
-import HelpScreen
-import PlayScreenDesign
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -45,6 +43,7 @@ import com.example.buddybeat.ui.components.Queue
 import com.example.buddybeat.ui.components.RenamePlaylist
 import kotlinx.coroutines.flow.update
 
+/*Possible screens*/
 object Destination {
     const val home = "home"
     const val playlist = "playlist"
@@ -53,6 +52,7 @@ object Destination {
     const val help = "help"
 }
 
+/*Main Composable that keeps track of the navigation*/
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MusicPlayerApp(
@@ -119,57 +119,70 @@ fun MusicPlayerNavHost(
     setMode: (Long) -> Unit
 ) {
 
+    //variables for showing calculation bpm
     val isLoading by viewModel.bpmUpdated.observeAsState(initial = false)
     val progressLoading by viewModel.progressLoading.collectAsState(initial = 0)
-    val allPlaylist by viewModel.allPlaylist.observeAsState(initial = listOf())
-    val currentSong by viewModel.currentSong.collectAsState()
-    val duration by viewModel.duration.collectAsState()
     val count by viewModel.itemCount.observeAsState(initial = 1)
-    val isPlaying by viewModel.isPlaying.collectAsState()
-    val progress by viewModel.progress.collectAsState()
-    val stepFreq by viewModel.stepFreq.collectAsState(0)
-    //val bpm by viewModel.currentBpm.collectAsState(0)
 
+    //all playlist
+    val allPlaylist by viewModel.allPlaylist.observeAsState(initial = listOf())
+
+    //id known playlists
     val favorites by viewModel.favoritesId.observeAsState(initial = 0L)
     val allSongs by viewModel.allSongsId.observeAsState(initial = 0L)
 
+    //current song
+    val currentSong by viewModel.currentSong.collectAsState()
+    val duration by viewModel.duration.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val progress by viewModel.progress.collectAsState()
+
+    //id playlist clicked
     val currentId = remember { mutableLongStateOf(0L) }
 
+    //songClicked when showing options
+    val songClicked = remember { mutableLongStateOf(-1L) }
+
+    //playlist longClicked for options
+    val playlistLongClicked = remember { mutableStateOf(Playlist(title = "", description = "")) }
+
+    //variables for managing dialogs
     val shouldShowDialogOne = remember { mutableStateOf(false) }
     val shouldShowDialogTwo = remember { mutableStateOf(false) }
     val shouldShowDialogThree = remember { mutableStateOf(false) }
     val shouldShowDialogFour = remember { mutableStateOf(false) }
     val shouldShowDialogFive = remember { mutableStateOf(false) }
     val showBottomSheet = remember { mutableStateOf(false) }
-    val songClicked = remember { mutableLongStateOf(-1L) }
-    val playlistLongClicked = remember { mutableStateOf(Playlist(title = "", description = "")) }
 
-    // walking/running
-    val mode by viewModel.mode.observeAsState(initial = 0L)
-    val modality by viewModel.modality.observeAsState(initial = 0L)
+    //show HelpSection
     val closedHelp by viewModel.help.observeAsState(initial = false)
 
+    //list of songs for queue
+    val queue = viewModel.queueList1 //inserted by user
+    val audioList = viewModel.queueList2 //selected by system
+
+    // off/walking/running
+    val mode by viewModel.mode.observeAsState(initial = 0L)
+    // off/auto/manual
+    val modality by viewModel.modality.observeAsState(initial = 0L)
+    //stepFreq
+    val stepFreq by viewModel.stepFreq.collectAsState(0)
+    //manualBpm
     val targetBpm by viewModel.targetBpm.collectAsState(100)
 
-    val queue = viewModel.queueList1
-    val audioList = viewModel.queueList2
-
-
-
+    //colorUI according to mode
     val colorUI = when (mode) {
         1L -> Color(0xFFB1B2FF)
         2L -> Color(0xFFD0EB34)
         else -> Color(0xFFBEEBF2)
     }
 
-
+    //DIALOGS
     if (shouldShowDialogOne.value) {
         NewPlaylist(shouldShowDialog = shouldShowDialogOne,
             insertPlaylist = { viewModel.insertPlaylist(Playlist(title = it, description = it)) })
     }
-
     if (shouldShowDialogTwo.value) {
-        Log.d("idsong", songClicked.longValue.toString())
         AddToPlaylist(shouldShowDialogTwo = shouldShowDialogTwo,
             shouldShowDialogOne = shouldShowDialogOne,
             allPlaylist = allPlaylist,
@@ -177,7 +190,6 @@ fun MusicPlayerNavHost(
                 viewModel.addToPlaylist(it, songClicked.longValue)
             })
     }
-
     if (shouldShowDialogThree.value) {
         AreYouSure(
             shouldShowDialog = shouldShowDialogThree,
@@ -188,21 +200,18 @@ fun MusicPlayerNavHost(
             text = "Do you want to remove the song from the playlist?"
         )
     }
-
     if (shouldShowDialogFour.value) {
         AreYouSure(shouldShowDialog = shouldShowDialogFour, onClick = {
             viewModel.removePlaylist(playlistLongClicked.value)
             showBottomSheet.value = false
         }, title = "Remove playlist", text = "Do you want to remove the playlist?")
     }
-
     if (shouldShowDialogFive.value) {
         RenamePlaylist(shouldShowDialogFive = shouldShowDialogFive, updatePlaylist = {
             viewModel.updatePlaylist(it, playlistLongClicked.value.playlistId)
             showBottomSheet.value = false
         }, title = playlistLongClicked.value.title)
     }
-
     if (showBottomSheet.value) {
         ModalBottomSheet(
             onDismissRequest = {
@@ -228,28 +237,34 @@ fun MusicPlayerNavHost(
         }
     }
 
-
-
     NavHost(navController = navController, startDestination = Destination.home) {
+        //HOMESCREEN
         composable(route = Destination.home) {
             HomeScreen(
+                //showing player
                 showPlayer = showPlayer,
                 changeShow = changeShow,
+                //variables for displaying playlists
+                allPlaylist = allPlaylist,
+                allSongsId = allSongs,
+                favoritesId = favorites,
+                //click playlist
                 playlistClicked = {
                     viewModel.setVisiblePlaylist(it)
                     currentId.longValue = it.playlist.playlistId
                     playlistLongClicked.value = it.playlist
                     navController.navigate(Destination.playlist)
                 },
+                //bottomBar
                 isPlaying = isPlaying,
-                allPlaylist = allPlaylist,
                 onBarClick = { navController.navigate(Destination.songScreen) },
                 song = currentSong,
                 progress = progress,
                 onStart = onStart,
                 nextSong = nextSong,
                 prevSong = prevSong,
-                                addToFavorite = {
+                //managing favorites functionality
+                addToFavorite = {
                     viewModel.addToPlaylist(favorites, it)
                 },
                 favoriteContainsSong = {
@@ -258,43 +273,54 @@ fun MusicPlayerNavHost(
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
                 },
+                //dialogs
                 shouldShowDialogOne = shouldShowDialogOne,
                 showBottomSheet = showBottomSheet,
                 playlistLongClicked = playlistLongClicked,
+                //update songs
                 updateSongs = {
                     viewModel.updateSongs()
                 },
-                allSongsId = allSongs,
-                favoritesId = favorites,
+                // mode and modality functionality
                 setModality = {
                     viewModel.setModality(it)
+                },
+                setTargetBpm = {
+                    viewModel.setTargetBpm(it)
                 },
                 changeMode = {
                     setMode(it)
                 },
                 mode = mode,
+                //color according to mode
                 colorUI = colorUI,
+                //help section
                 changeShowHelp = {
                     viewModel.changeShowHelp(it)
                 },
                 closedHelp = closedHelp,
-                setTargetBpm = {
-                    viewModel.setTargetBpm(it)
-                },
                 shouldShowHelpScreen = { navController.navigate(Destination.help) }
             )
         }
+        //HELPSCREEN
         composable(route = Destination.help) {
-                HelpScreen() {
+            HelpScreen(
+                onNavigateUp = {
                     navController.navigateUp()
-                }
+                })
         }
+        //PLAYLISTSCREEN
         composable(route = Destination.playlist) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column {
                     PlaylistScreen(
+                        //variables for displaying playlist
+                        allPlaylist = allPlaylist,
+                        currentId = currentId.longValue,
+                        allSongsId = allSongs,
+                        favoritesId = favorites,
+                        //clicking songItem
                         onItemClick = { index ->
-                            Log.d("IOOOO", "index clicked: $index")
                             if (audioListId.value != currentId.longValue) {
                                 audioListId.update {
                                     currentId.longValue
@@ -304,29 +330,23 @@ fun MusicPlayerNavHost(
                                     allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
                                         ?: mutableListOf()
                                 )
-                                Log.d("AUDIOLIST", audiolist.toList().toString())
                             } else {
                                 val play =
                                     allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
                                         ?: mutableListOf()
                                 audiolist.clear()
                                 audiolist.addAll(play)
-                                /*audiolist.replaceAll { it1 ->
-                                    if (it1.bpm == -1) play.find { it.songId == it1.songId }
-                                        ?: it1 else it1
-                                }*/
-                                Log.d("AUDIOLIST1", audiolist.toList().toString())
                             }
+                            Log.d("AUDIOLIST", audiolist.toList().toString())
                             val song =
                                 allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs!!.sortedBy { it.title }[index]
-                            Log.d("IOOOO", "Song clicked: $song")
+                            Log.d("Song selected", "$song")
                             if (song.songId == currentSong.id) {
-                                Log.d("IOOOO", "same id: ${song.songId}")
                                 playPause()
                             } else {
-                                Log.d("IOOOO", "not same id, new id: ${song.songId}")
                                 val media = buildMediaItem(song)
-                                if(media!=null) {
+                                //if Uri is valid
+                                if (media != null) {
                                     setSongInPlaylist(media)
                                     playPause()
                                 }
@@ -349,6 +369,7 @@ fun MusicPlayerNavHost(
                         text1 = stepFreq.toString(),
                         text2 = currentSong.bpm.toString(),
                         text3 = text3,
+                        //managing favorites playlist
                         addToFavorite = {
                             viewModel.addToPlaylist(favorites, it)
                         },
@@ -358,17 +379,17 @@ fun MusicPlayerNavHost(
                         removeFavorite = {
                             viewModel.removeFromPlaylist(favorites, it)
                         },
-                        shouldShowDialogTwo = shouldShowDialogTwo,
+                        //dialogs
                         songClicked = songClicked,
+                        shouldShowDialogTwo = shouldShowDialogTwo,
                         shouldShowDialogThree = shouldShowDialogThree,
-                        allPlaylist = allPlaylist,
-                        currentId = currentId.longValue,
-                        addToQueue = addToQueue,
                         shouldShowDialogFive = shouldShowDialogFive,
                         shouldShowDialogFour = shouldShowDialogFour,
-                        allSongsId = allSongs,
-                        favoritesId = favorites,
+                        addToQueue = addToQueue,
+                        //colorUI according to mode
                         colorUI = colorUI,
+                        mode = mode,
+                        //starting first song
                         startFirstSong = {
                             if (audioListId.value != currentId.longValue) {
                                 audioListId.update {
@@ -379,48 +400,51 @@ fun MusicPlayerNavHost(
                                     allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
                                         ?: mutableListOf()
                                 )
-                                Log.d("AUDIOLIST", audiolist.toList().toString())
                             } else {
                                 val play =
                                     allPlaylist.find { it.playlist.playlistId == currentId.longValue }?.songs
                                         ?: mutableListOf()
-                                audiolist.replaceAll { it1 ->
-                                    if (it1.bpm == -1) play.find { it.songId == it1.songId }
-                                        ?: it1 else it1
-                                }
-                                Log.d("AUDIOLIST1", audiolist.toList().toString())
+                                audiolist.clear()
+                                audiolist.addAll(play)
                             }
+                            Log.d("AUDIOLIST", audiolist.toList().toString())
                             nextSong()
                             playPause()
                         },
-                        mode = mode
-                    ) { navController.navigateUp() }
+                        onNavigateUp = { navController.navigateUp() }
+                    )
                 }
             }
         }
+        //PLAYSCREEN
         composable(route = Destination.songScreen) {
             PlayScreenDesign(
                 onNavigateUp = { navController.navigateUp() },
+                shouldShowHelpScreen = { navController.navigate(Destination.help) },
+                //currentSong
                 song = currentSong,
                 isPlaying = isPlaying,
                 progress = progress / 100,
                 onProgress = onProgress,
+                duration = duration,
                 //playpause
                 onStart = onStart,
                 //next prev
                 nextSong = nextSong,
                 prevSong = prevSong,
-                duration = duration,
+                //modality functionality
                 toggleMode = toggleMode,
                 plus = plus,
                 minus = minus,
+                target = targetBpm.toString(),
                 bpm = currentSong.bpm.toString(),
+                modality = modality,
+                //showing Queue
                 queue = {
                     viewModel.showQueue(true)
                     navController.navigate(Destination.queue)
                 },
-                target = targetBpm.toString(),
-                modality = modality,
+                //managing favorites playlist
                 addToFavorite = {
                     viewModel.addToPlaylist(favorites, it)
                 },
@@ -430,10 +454,11 @@ fun MusicPlayerNavHost(
                 removeFavorite = {
                     viewModel.removeFromPlaylist(favorites, it)
                 },
-                colorUI = colorUI,
-                shouldShowHelpScreen = { navController.navigate(Destination.help) }
+                //colorUI according to mode
+                colorUI = colorUI
             )
         }
+        //QUEUE
         composable(route = Destination.queue,
             enterTransition = {
                 slideIntoContainer(
@@ -448,8 +473,9 @@ fun MusicPlayerNavHost(
                 )
             }) {
             Queue(
-                queue = queue,
-                audioList = audioList,
+                //list of songs for queue
+                queue = queue, //selected by user
+                audioList = audioList, //selected by system
                 removeFromQueue1 = {
                     viewModel.removeFromQueue1(it)
                 },

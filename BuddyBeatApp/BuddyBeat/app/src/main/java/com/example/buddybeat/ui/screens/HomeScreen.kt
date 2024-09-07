@@ -1,7 +1,5 @@
 package com.example.buddybeat.ui.screens
 
-import android.content.Context
-import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -9,7 +7,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,11 +53,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,7 +67,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.media3.common.util.UnstableApi
 import com.example.buddybeat.R
-import com.example.buddybeat.SensorService
 import com.example.buddybeat.data.models.Playlist
 import com.example.buddybeat.data.models.PlaylistWithSongs
 import com.example.buddybeat.player.PlaybackService
@@ -79,6 +75,7 @@ import com.example.buddybeat.player.PlaybackService.Companion.speedMode
 import com.example.buddybeat.ui.CurrentSong
 import com.example.buddybeat.ui.components.HomeBottomBar
 
+/*HOME SCREEN*/
 @RequiresApi(Build.VERSION_CODES.O)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -109,31 +106,33 @@ fun HomeScreen(
     colorUI: Color,
     changeShowHelp: (Boolean) -> Unit,
     closedHelp: Boolean,
-    setTargetBpm : (Int) -> Unit,
+    setTargetBpm: (Int) -> Unit,
     shouldShowHelpScreen: () -> Unit,
 ) {
-    val context = LocalContext.current
+    //color according to mode
     val colorWalking = if (mode == 1L) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f)
     val colorRunning = if (mode == 2L) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f)
 
-    Scaffold(bottomBar = {
-        if (song.title != "")
-            HomeBottomBar(
-                song = song,
-                onBarClick = onBarClick,
-                isPlaying = isPlaying,
-                progress = progress,
-                onStart = onStart,
-                nextSong = nextSong,
-                prevSong = prevSong,
-                favoriteContains = favoriteContainsSong(song.id),
-                addToFavorite = {
-                    addToFavorite(song.id)
-                },
-                removeFavorite = {
-                    removeFavorite(song.id)
-                })
-    })
+    Scaffold(
+        // bottomBar player
+        bottomBar = {
+            if (song.title != "")
+                HomeBottomBar(
+                    song = song,
+                    onBarClick = onBarClick,
+                    isPlaying = isPlaying,
+                    progress = progress,
+                    onStart = onStart,
+                    nextSong = nextSong,
+                    prevSong = prevSong,
+                    favoriteContains = favoriteContainsSong(song.id),
+                    addToFavorite = {
+                        addToFavorite(song.id)
+                    },
+                    removeFavorite = {
+                        removeFavorite(song.id)
+                    })
+        })
     { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             Column(
@@ -141,7 +140,9 @@ fun HomeScreen(
                     .padding(horizontal = 15.dp)
                     .fillMaxHeight()
             ) {
+                //top bar
                 TopBar(changeShowHelp = changeShowHelp)
+                //help popUp
                 TopPopup(
                     onClickClose = {
                         changeShowHelp(it)
@@ -149,6 +150,7 @@ fun HomeScreen(
                     closedHelp = closedHelp,
                     shouldShowHelpScreen = shouldShowHelpScreen
                 )
+                //Mode
                 Text(
                     text = "CHOOSE YOUR MODE",
                     fontWeight = FontWeight.Bold,
@@ -164,37 +166,38 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ModeButton("Walking", color = colorWalking, icon = Icons.Default.DirectionsWalk,onClick = {
-                        changeMode(1L)
-                        speedMode = AUTO_MODE
-                        setModality(speedMode)
-                        if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
-                            PlaybackService.ALPHA = 0.4f
-                        else if (speedMode == AUTO_MODE)
-                            PlaybackService.ALPHA = 0.7f
-                        setTargetBpm(100)
-                        //startWalkingMode(context) /* Handle Walking Mode */
-                    })
-                    ModeButton("Running", color = colorRunning,icon = Icons.Default.DirectionsRun, onClick = {
-                        changeMode(2L)
-                        speedMode = AUTO_MODE
-                        setModality(speedMode)
-                        if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
-                            PlaybackService.ALPHA = 0.4f
-                        else if (speedMode == AUTO_MODE)
-                            PlaybackService.ALPHA = 0.7f
-                        setTargetBpm(160)
-                        //startRunningMode(context)/* Handle Running Mode */
-                    })
-                    /*ModeButton(
+                    //walking mode
+                    ModeButton(
                         "Walking",
-                        color = if (!running) Color(0xFFB1B2FF) else Color(0xFF80809C).copy(alpha = 0.5f),
-                        onClick = { changeMode(0) })
+                        color = colorWalking,
+                        icon = Icons.Default.DirectionsWalk,
+                        onClick = {
+                            changeMode(1L)
+                            speedMode = AUTO_MODE
+                            setModality(speedMode)
+                            if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
+                                PlaybackService.ALPHA = 0.4f
+                            else if (speedMode == AUTO_MODE)
+                                PlaybackService.ALPHA = 0.7f
+                            setTargetBpm(100)
+                        })
+                    //run mode
                     ModeButton(
                         "Running",
-                        color = if (running) Color(0xFFD0EB34) else Color(0xFF8B8F73).copy(alpha = 0.5f),
-                        onClick = { changeMode(1) })*/
+                        color = colorRunning,
+                        icon = Icons.Default.DirectionsRun,
+                        onClick = {
+                            changeMode(2L)
+                            speedMode = AUTO_MODE
+                            setModality(speedMode)
+                            if (speedMode == PlaybackService.MANUAL_MODE || speedMode == PlaybackService.OFF_MODE)
+                                PlaybackService.ALPHA = 0.4f
+                            else if (speedMode == AUTO_MODE)
+                                PlaybackService.ALPHA = 0.7f
+                            setTargetBpm(160)
+                        })
                 }
+                //PLAYLISTS
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -202,14 +205,18 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End
                 ) {
-                    SongsOfTheWeek("YOUR PLAYLISTS")
+                    Text(
+                        "YOUR PLAYLISTS",
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
                     IconButton(
                         onClick = { shouldShowDialogOne.value = true },
                         modifier = Modifier.size(20.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.add_to_playlist),
+                            painter = painterResource(id = R.drawable.add_playlist),
                             contentDescription = "Add playlist",
                         )
                     }
@@ -217,7 +224,7 @@ fun HomeScreen(
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "",
+                            contentDescription = "Refresh",
                         )
                         DropdownMenu(
                             expanded = expanded,
@@ -233,8 +240,8 @@ fun HomeScreen(
                             )
                         }
                     }
-
                 }
+                //PLAYLIST BUTTONS
                 MainButtons(
                     playlistClicked = {
                         playlistClicked(it)
@@ -250,7 +257,8 @@ fun HomeScreen(
         }
 
     }
-    OnLifecycleEvent { owner, event ->
+    //show player if notification clicked
+    OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
                 if (showPlayer) {
@@ -265,31 +273,15 @@ fun HomeScreen(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
-private fun startWalkingMode(context: Context) {
-    val intent = Intent(context, SensorService::class.java)
-    intent.action = "SET_WALKING_MODE"
-    context.startForegroundService(intent)
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-private fun startRunningMode(context: Context) {
-    val intent = Intent(context, SensorService::class.java)
-    intent.action = "SET_RUNNING_MODE"
-    context.startForegroundService(intent)
-}
-
 @Composable
 fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {
     val eventHandler = rememberUpdatedState(onEvent)
     val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
-
     DisposableEffect(lifecycleOwner.value) {
         val lifecycle = lifecycleOwner.value.lifecycle
         val observer = LifecycleEventObserver { owner, event ->
             eventHandler.value(owner, event)
         }
-
         lifecycle.addObserver(observer)
         onDispose {
             lifecycle.removeObserver(observer)
@@ -312,7 +304,7 @@ fun TopBar(
             painter = painterResource(id = R.drawable.bblogo),
             contentDescription = "Buddy Beat Logo",
             modifier = Modifier
-                .size(width = 120.dp, height = 60.dp),  // Set different width and height
+                .size(width = 120.dp, height = 60.dp),
         )
         Card(
             onClick = { changeShowHelp(false) },
@@ -332,7 +324,7 @@ fun TopBar(
 fun TopPopup(
     onClickClose: (Boolean) -> Unit,
     closedHelp: Boolean,
-    shouldShowHelpScreen : () -> Unit,
+    shouldShowHelpScreen: () -> Unit,
 ) {
     if (!closedHelp) {
         Box(
@@ -389,13 +381,13 @@ fun TopPopup(
 }
 
 @Composable
-fun ModeButton(text: String, color: Color, onClick: () -> Unit, icon : ImageVector) {
+fun ModeButton(text: String, color: Color, onClick: () -> Unit, icon: ImageVector) {
     Button(
         onClick = onClick,
         modifier = Modifier
             .width(150.dp)
-            .height(50.dp), // Removed Modifier.background
-        colors = ButtonDefaults.buttonColors(containerColor = color), // Set the background color via ButtonDefaults
+            .height(50.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = color),
     ) {
         Icon(imageVector = icon, contentDescription = "mode", tint = Color.Black)
         Spacer(modifier = Modifier.width(10.dp))
@@ -418,9 +410,8 @@ fun MainButtons(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            //.height(280.dp)
             .padding(top = 5.dp, bottom = 5.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
-    ){
+    ) {
         Card(
             shape = RoundedCornerShape(20.dp),
             modifier = Modifier
@@ -443,23 +434,29 @@ fun MainButtons(
                             colors = listOf(
                                 colorUI.copy(red = 0.5f),
                                 colorUI
-                            ) // Green to Blue gradient
+                            )
                         )
                     ),
                 contentAlignment = Alignment.Center
             ) {
-
-
                 allPlaylist.find {
                     it.playlist.playlistId == allSongsId
                 }?.playlist?.title?.let {
-                    Text(it, color = Color(0xFF111111), fontSize = 20.sp, fontWeight = FontWeight.W900, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic) }
+                    Text(
+                        it,
+                        color = Color(0xFF111111),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.W900,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
             }
         }
         val haptics = LocalHapticFeedback.current
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
+            //long clicked not supported by all_songs and favorites
             itemsIndexed(allPlaylist.dropWhile { it.playlist.playlistId == allSongsId }) { index, playlist ->
                 val modifier = if (playlist.playlist.playlistId != favoritesId)
                     Modifier.combinedClickable(
@@ -486,7 +483,7 @@ fun MainButtons(
                                 Brush.linearGradient(
                                     colors = listOf(
                                         colorUI, colorUI.copy(red = 0.5f)
-                                    ) // Green to Blue gradient
+                                    )
                                 )
                             ),
                         contentAlignment = Alignment.Center
@@ -504,11 +501,3 @@ fun MainButtons(
 }
 
 
-@Composable
-fun SongsOfTheWeek(data: String) {
-    Text(
-        data,
-        fontWeight = FontWeight.Black,
-        modifier = Modifier.padding(vertical = 16.dp)
-    )
-}
