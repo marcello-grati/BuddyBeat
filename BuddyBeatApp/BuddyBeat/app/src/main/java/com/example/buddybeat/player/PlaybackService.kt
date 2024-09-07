@@ -47,7 +47,7 @@ import kotlin.math.floor
 import kotlin.math.log2
 import kotlin.math.min
 
-
+/*Playback Service for playback functionality (also in background))*/
 @UnstableApi @AndroidEntryPoint
 class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
@@ -63,7 +63,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
         var DEFAULT_BPM = 100
         var ALPHA = 0.5f
-        val BPM_STEP = 2
+        const val BPM_STEP = 2
 
         var speedMode = OFF_MODE
         var manualBpm = DEFAULT_BPM
@@ -76,54 +76,46 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     @Inject
     lateinit var dataStoreManager: DataStoreManager
 
+    //mediaSession
     private var mediaSession: MediaSession? = null
 
+    //connection to SensorService
     private lateinit var mService: SensorService
     private var mBound: Boolean = false
 
-
-
-    private val handler = Handler(Looper.getMainLooper())
-    private val interval: Long = 1000
-
     private val connection = object : ServiceConnection {
-
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance.
             val binder = service as SensorService.LocalBinder
             mService = binder.getService()
             mBound = true
         }
-
         override fun onServiceDisconnected(arg0: ComponentName) {
             mBound = false
         }
     }
 
-    // Create your Player and MediaSession in the onCreate lifecycle event
+
+    // Create Player and MediaSession
      @OptIn(UnstableApi::class) override fun onCreate() {
         super.onCreate()
+        //player
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT, true)
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
+        //if opened from the notification
         val intent = packageManager.getLaunchIntentForPackage(packageName)
         intent?.putExtra("DESTINATION", "player")
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT)
-
-        mediaSession = MediaSession.Builder(this, player).setCallback(this).setSessionActivity(pendingIntent)
-            /*.setSessionActivity(PendingIntent.getActivity(
-            this, 0,
-            Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE))*/
-            .build()
-
+        //mediaSession
+        mediaSession = MediaSession.Builder(this, player).setCallback(this).setSessionActivity(pendingIntent).build()
         mediaSession!!.setCustomLayout(notificationPlayerCustomCommandButtons)
         Intent(this, SensorService::class.java).also { int ->
             bindService(int, connection, Context.BIND_AUTO_CREATE)
         }
         handler.postDelayed(sensorDataRunnable, 15000) // after 10 seconds it starts to updateSpeedSongs
-        handler.postDelayed(orderSongsRunnable, 2000)
+        handler.postDelayed(orderSongsRunnable, 2000) // after 2 seconds it start to check if it's necessary to calculate the next song
         setMediaNotificationProvider(customMediaNotificationProvider)
     }
 
@@ -139,9 +131,10 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
 
-    // Remember to release the player and media session in onDestroy
+    // Release the player and media session
     override fun onDestroy() {
         if (!mBound) {
+            //reset mode and modality
             runBlocking {
                 dataStoreManager.setPreferenceLong(DataStoreManager.MODE, 0L)
                 mService.changeMode(0L)
@@ -150,11 +143,13 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 dataStoreManager.setPreferenceLong(DataStoreManager.MODALITY, 0L)
             }
         }
+        //release
         mediaSession?.run {
             player.release()
             release()
             mediaSession = null
         }
+        //reset values
         speedMode = OFF_MODE
         manualBpm = DEFAULT_BPM
         audiolist.clear()
@@ -167,34 +162,39 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
         super.onDestroy()
     }
 
+    //when MediaItem is added from controller, it will add it to playlist, that is the list of already played song
     override fun onAddMediaItems(
         mediaSession: MediaSession,
         controller: MediaSession.ControllerInfo,
         mediaItems: MutableList<MediaItem>
     ): ListenableFuture<List<MediaItem>> {
         val updatedMediaItems = mediaItems.map { mediaitem -> mediaitem.buildUpon().setUri(mediaitem.requestMetadata.mediaUri).build() }
-        Log.d("onAddMediaItems", playlist.toString())
         playlist.add(updatedMediaItems.last().mediaId)
         if(playlist.size > ((audiolist.size.div(2)))) {
-            Log.d("Playlist remove", playlist.removeFirstOrNull().toString())
+            playlist.removeFirstOrNull()
         }
-        Log.d("onAddMediaItems", playlist.toString())
+        Log.d("Playlist", playlist.toString())
         return Futures.immediateFuture(updatedMediaItems)
     }
 
 
+    //when MediaItem is added from this Service,it will add it to playlist, that is the list of already played song
     private fun onAddSong(media : MediaItem){
         playlist.add(media.mediaId)
         if(playlist.size > (audiolist.size.div(2)))
             playlist.removeFirstOrNull()
-        Log.d("onAddSong", playlist.toString())
+        Log.d("Playlist", playlist.toString())
     }
 
+    private val handler = Handler(Looper.getMainLooper())
+    private val interval: Long = 1000
+
+    //updateSpeedSong every 4 seconds
     private val sensorDataRunnable = object : Runnable {
         override fun run() {
             if (mBound) {
                 updateSpeedSong()
-                handler.postDelayed(this, interval*4) //every 3 seconds change ratio
+                handler.postDelayed(this, interval*4) //every 4 seconds change ratio
             }
         }
     }
@@ -203,40 +203,36 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
 
         var inRatio: Float
         var outRatio = ratio
-
         if (speedMode != OFF_MODE) {
-
+            //get bpm song playing
             var bpm = mediaSession?.player?.mediaMetadata?.extras?.getInt("bpm")
-
+            //if bpm valid
             if (bpm != 0 && bpm != null && bpm != -1) {
-
+                //collect SPM
                 val stepFreq = when (speedMode) {
                     AUTO_MODE -> {
-                        //mService.stepFreq.toFloat()
-                        //val d = mService.previousStepFrequency.takeLast(5)
                         if(System.currentTimeMillis()-mService.lastUpdate>3000)
                             0f
                         else {
-                            val d = mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }
-                            Log.d("PlaybackService - PreviousFreq updateSpeed playbackService", d.toString())
+                            //average of last StepFrequencies
+                            val d = mService.previousStepFrequency.takeLast(7).takeWhile { it > 65 }
                             var l = d.average()
                             if (l.isNaN()) {
                                 l = 0.0
                             }
-                            Log.d("PlaybackService - stepFreq when changing ratio", l.toString())
                             l.toFloat()
                         }
                     }
                     MANUAL_MODE -> {
-                        Log.d("Playback service", "manualBpm $manualBpm")
                         manualBpm.toFloat()
                     }
                     else -> throw Exception("Invalid speed mode")
                 }
-
+                Log.d("SPM for updating speed song", stepFreq.toString())
                 if (stepFreq < 60 && speedMode==AUTO_MODE)
                     inRatio = 1f
                 else {
+                    //calculation of ratio
                     // We compute the log_2() of step frequency and of double, half and original value of BPM
                     val logStepFreq = log2(stepFreq)
                     var logBpm = log2(bpm.toFloat())
@@ -257,30 +253,20 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                     // Speed-up ratio computed as step frequency / BPM
                     inRatio = stepFreq / bpm.toFloat()
 
-
                     // ratio forced into [0.8, 1.2] range
                     inRatio = inRatio.coerceAtLeast(0.8f)
                     inRatio = inRatio.coerceAtMost(1.25f)
                 }
-
+                //filter ratio
                 outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
 
                 ratio = outRatio
                 mService.updateBpm(ratio*bpm) //update Bpm in csv
             }
-            /*else {
-                inRatio = 1f
-                outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
-                ratio = outRatio
-            }
-        } else {
-            inRatio = 1f
-            outRatio = ALPHA * outRatio + (1 - ALPHA) * inRatio
-            ratio = outRatio
-        }*/else {
+            else { //if bpm not valid
                 ratio = 1f
             }
-        } else {
+        } else { // if off mode
             ratio = 1f
         }
         mediaSession?.player?.setPlaybackSpeed(ratio)
@@ -289,24 +275,29 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
 
+    //check if it's necessary to calculate next song every 6 second
     private val orderSongsRunnable = object : Runnable {
         override fun run() {
+            var int = interval*6
             if (mBound) {
                 val pos = mediaSession?.player?.currentPosition
                 val dur = mediaSession?.player?.duration
                 if(pos!=null && dur!=null && dur>0) {
-                    Log.d("pos", pos.toString())
-                    Log.d("dur", dur.toString())
-                    if (pos >= dur - min(5000.0, 0.9 * dur) && pos <= dur) {
+                    //if 5 seconds before the end of song start calculating next song
+                    if (pos >= dur - min(5000.0, 0.9 * dur) && pos <= dur ) {
                         nextSong()
+                    }
+                    else if(pos>=dur-7000.0){
+                        int = 2000
                     }
                 }
             }
-            handler.postDelayed(this, interval*6)
+            handler.postDelayed(this, int)
         }
     }
 
     private fun nextSong() {
+        //search for songs in queue (inserted by user)
         while (true) {
             val queueNext = queue.removeFirstOrNull()
             if (queueNext != null) {
@@ -317,10 +308,10 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
                 }
             } else break
         }
+        //get target Bpm according to the modality
         val target = when (speedMode) {
             AUTO_MODE -> run{
-                val d = mService.previousStepFrequency_3.takeLast(7).takeWhile { it > 65 }
-                Log.d("PreviousFreq nextSong playbackService", d.toString())
+                val d = mService.previousStepFrequency.takeLast(7).takeWhile { it > 65 }
                 var l = d.average()
                 if(l.isNaN()){
                     l=0.0
@@ -331,21 +322,20 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
             OFF_MODE -> 0.0
             else -> throw Exception("Invalid speed mode")
         }
-        Log.d("stepFreq before nextSong()", target.toString())
+        Log.d("SPM for choosing next Song", target.toString())
+        //orderSongs according to targetBpm
         val l = if (target!=0.0) orderSongs(target) else audiolist.toMutableList()
+        //removing songs without bpm
         if(speedMode!=OFF_MODE)
             l.removeAll { it.bpm == -1 || it.bpm == 0 }
+        //insert most fitting song in queue
         while(true){
             val nextSong = l.removeFirstOrNull()
             if(nextSong != null) {
                 val media = buildMediaItem(nextSong)
                 if(media!=null) {
-                    Log.d("IOOOO", "From Playback service, next song ${media.mediaId}?")
+                    //check if already played recently
                     if (!playlist.contains(media.mediaId)) {
-                        Log.d(
-                            "IOOOO",
-                            "From Playback service, it does not contain ${media.mediaId}"
-                        )
                         setSongInPlaylist(media)
                         break
                     }
@@ -355,18 +345,14 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     private fun setSongInPlaylist(media: MediaItem){
-        Log.d("IOOOO", "setting media: $media + id : ${media.mediaId} + title: ${media.mediaMetadata.title}")
-        Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
+        Log.d("Setting media:", media.mediaMetadata.title.toString() + ", " + media.mediaId)
         mediaSession?.player!!.addMediaItem(mediaSession?.player!!.currentMediaItemIndex+1,media)
         onAddSong(media)
-        Log.d("IOOOO", "currentMediaItemIndex + currentMediaItem" +mediaSession?.player?.currentMediaItemIndex.toString() + "   " + mediaSession?.player?.currentMediaItem.toString())
-        Log.d("IOOOO", "mediaItemCount: " + mediaSession?.player?.mediaItemCount.toString())
     }
+
+    //function for reordering songs
     private fun orderSongs(target : Double): MutableList<Song> {
-
-        Log.d("Ordering", "Song list reordered from PlayBackService")
         val myCustomComparator = Comparator<Song> { a, b ->
-
             when {
                 a.bpm <= 0 && b.bpm <= 0 -> return@Comparator 0
                 a.bpm <= 0 -> return@Comparator 1
@@ -398,6 +384,7 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     private fun buildMediaItem(audio: Song): MediaItem? {
+        //check if audio file exists
         try {
             contentResolver.openInputStream(audio.uri.toUri())?.close()
         } catch (e: FileNotFoundException) {
@@ -431,7 +418,6 @@ class PlaybackService : MediaSessionService(), MediaSession.Callback{
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
-
 
 
     // CUSTOM NOTIFICATION
