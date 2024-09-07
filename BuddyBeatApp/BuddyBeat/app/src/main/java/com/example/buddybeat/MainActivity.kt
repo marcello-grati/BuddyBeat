@@ -545,6 +545,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun nextSong() {
+        //search for songs in queue (inserted by user)
+        while (true) {
+            val queueNext = queue.removeFirstOrNull()
+            if (queueNext != null) {
+                val media = buildMediaItem(queueNext)
+                if (media != null) {
+                    setSongInPlaylist(media)
+                    return
+                }
+            } else break
+        }
         //get target Bpm according to the modality
         val target = when (speedMode) {
             AUTO_MODE -> run {
@@ -561,17 +572,6 @@ class MainActivity : ComponentActivity() {
             else -> throw Exception("Invalid speed mode")
         }
         Log.d("SPM for choosing next Song", target.toString())
-        //search for songs in queue (inserted by user)
-        while (true) {
-            val queueNext = queue.removeFirstOrNull()
-            if (queueNext != null) {
-                val media = buildMediaItem(queueNext)
-                if (media != null) {
-                    setSongInPlaylist(media)
-                    return
-                }
-            } else break
-        }
         //orderSongs according to targetBpm
         val l = if (target != 0.0) viewModel.orderSongs(
             target,
