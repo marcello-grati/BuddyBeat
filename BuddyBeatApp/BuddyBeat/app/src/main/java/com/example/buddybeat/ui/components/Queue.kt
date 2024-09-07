@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.example.buddybeat.data.models.Song
 import com.example.buddybeat.ui.CurrentSong
 
+/*Queue showing the next songs selected by the user and the next songs suggested by the system*/
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Queue(

@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.ui.CurrentSong
 
+/*BottomBarPlayer*/
 @Composable
 fun HomeBottomBar(
     song: CurrentSong,
@@ -62,8 +63,7 @@ fun HomeBottomBar(
     var offsetX by remember { mutableFloatStateOf(0f) }
 
     AnimatedVisibility(
-        visible = true,
-        //modifier = modifier.height(100.dp)
+        visible = true
     ) {
         Box(
             modifier = Modifier

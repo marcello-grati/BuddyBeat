@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+/*Indicator for showing the progress of calculation of bpm*/
 @Composable
 fun LinearDeterminateIndicator(
     currentProgress: Float,

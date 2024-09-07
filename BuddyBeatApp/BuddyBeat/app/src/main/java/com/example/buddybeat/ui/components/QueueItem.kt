@@ -34,6 +34,7 @@ import coil.compose.AsyncImage
 import com.example.buddybeat.R
 import com.example.buddybeat.data.models.Song
 
+/*Song Item in the Queue*/
 @Composable
 fun QueueItem(
     audio: Song,

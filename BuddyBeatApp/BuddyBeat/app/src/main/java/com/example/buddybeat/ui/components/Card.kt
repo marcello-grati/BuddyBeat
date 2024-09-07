@@ -15,8 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+/*Cards in PlaylistScreen showing the SPM, BPM and Ratio*/
 @Composable
-fun FilledCardExample(
+fun ValuesCard(
     stepFreq: String,
     bpm: String,
     ratio: String,

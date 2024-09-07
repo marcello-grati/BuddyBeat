@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.buddybeat.data.models.PlaylistWithSongs
 
+/*Dialogs*/
 @Composable
 fun NewPlaylist(shouldShowDialog : MutableState<Boolean>, insertPlaylist : (String) -> Unit) {
     var name by remember { mutableStateOf("") }
