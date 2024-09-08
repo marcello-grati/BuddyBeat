@@ -18,7 +18,7 @@ With BuddyBeat, workouts become more immersive, as the music responds to your pa
 ## Installation
 To install and use BuddyBeat, follow these steps:
 1. Clone the repository:
-`git clone https://github.com/marcello-grati/BuddyBeat`
+`git clone https://github.com/marcello-grati/BuddyBeat.git`
 2. Open the project in Android Studio.
 3. Build and run the project on your Android device.
 
