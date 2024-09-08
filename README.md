@@ -49,14 +49,16 @@ Once the mode is selected, you can choose the playlist and the song you want to 
 - Real-time Song Speed Adjustment: Based on your detected pace, the app adjusts the speed of the current song to match your activity level.
 - Dynamic Playlist: The playlist is updated in real-time to ensure that future songs align with your current rhythm.
 
-<img align="right" width="100" src="images/Walking_manual" alt="BuddyBeat Manual">
-
+<img align="right" width="100" src="images/Walking_manual.jpg" alt="BuddyBeat Manual">
 
 **4. Switch to Manual Mode (Optional)**
 
 If you prefer a fixed tempo, you can switch to Manual Mode and choose a specific BPM for your workout. The app will maintain this tempo across all songs, regardless of your movement.
 
+<br clear="right">
+
 ## DEMO
+
 
 ## Technologies Used
 - Android SDK
