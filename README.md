@@ -24,8 +24,10 @@ To install and use BuddyBeat, follow these steps:
 
 ## Usage
 **1. Launch the BuddyBeat App**
-<img width="30" src="images/First Screen.png" alt="BuddyBeat FirstScreen">
+
+<img width="100" src="images/First Screen.jpg" alt="BuddyBeat FirstScreen"> 
 After launching the app, BuddyBeat will automatically scan and load all songs stored locally on your device. The app will calculate the BPM (Beats Per Minute) of each song in your library to ensure that music tempo can be synchronized with your pace.
+
 
 **2. Select Your Mode**
 
