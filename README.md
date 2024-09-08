@@ -1,4 +1,4 @@
-# BuddyBeat   <img width="30" src="icon.png" alt="BuddyBeat Icon">
+# BuddyBeat   <img width="30" src="images/icon.png" alt="BuddyBeat Icon">
 **_An app that moves with you_**
 
 **BuddyBeat** is an Android mobile player application that adjusts the music playback speed in real time according to your walking or running pace, while also dynamically reordering your playlist to best match your workout rhythm.
@@ -24,7 +24,7 @@ To install and use BuddyBeat, follow these steps:
 
 ## Usage
 **1. Launch the BuddyBeat App**
-
+<img width="30" src="images/First Screen.png" alt="BuddyBeat FirstScreen">
 After launching the app, BuddyBeat will automatically scan and load all songs stored locally on your device. The app will calculate the BPM (Beats Per Minute) of each song in your library to ensure that music tempo can be synchronized with your pace.
 
 **2. Select Your Mode**
