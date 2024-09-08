@@ -10,7 +10,7 @@ The idea behind BuddyBeat was to create a simple, intuitive, and engaging app th
 
 ## Project Description
 The app is structured similarly to a standard music player, allowing the user to play, skip and pause songs, add them to favorites, create and manage playlists etc. However, BuddyBeat offers two new features: 
-- **Real-time Speed Adjustment**: Adjust the speed of the current song to match your activity, using your phone's accelerometer to detect your pa+ce.
+- **Real-time Speed Adjustment**: Adjust the speed of the current song to match your activity, using your phone's accelerometer to detect your pace.
 - **Dynamic Playlist Reordering**: Dynamically update the playlist queue to ensure future songs align with your workout rhythm, making transitions smoother and workouts more engaging.
 
 With BuddyBeat, workouts become more immersive, as the music responds to your pace, helping you maintain a consistent rhythm and enjoy a more enjoyable fitness routine.
