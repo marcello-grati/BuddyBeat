@@ -22,6 +22,23 @@ To install and use BuddyBeat, follow these steps:
 2. Open the project in Android Studio.
 3. Build and run the project on your Android device.
 
+## Usage
+Launch the BuddyBeat app.
+...
+
+## DEMO
+
+## Technologies Used
+- Android SDK
+- Java/Kotlin
+- Accelerometer Sensors: To track movement and adjust the music in real time.
+- media3: For handling music playback and speed adjustments.
+- Room: For storing playlists 
+- DataStoreManager: user preferences.
+- TarsosDSP: for BPM calculation
+
+
+
 ## Group
 - Marcello Grati
 - Chiara Lunghi
