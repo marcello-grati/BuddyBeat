@@ -61,15 +61,13 @@ If you prefer a fixed tempo, you can switch to Manual Mode and choose a specific
 
 
 ## Technologies Used
-- Android SDK
-- Java/Kotlin
-- Accelerometer Sensors: To track movement and adjust the music in real time.
-- media3: For handling music playback and speed adjustments.
-- Room: For storing playlists 
-- DataStoreManager: user preferences.
-- TarsosDSP: for BPM calculation
-
-
+- Android SDK for software development
+- Kotlin as programming language
+- [Jetpack Compose](https://developer.android.com/compose) for UI
+- [Jetpack Media3](https://developer.android.com/media/media3) for handling music playback and speed adjustments
+- [Room](https://developer.android.com/training/data-storage/room) for local database
+- [DataStore](https://developer.android.com/topic/libraries/architecture/datastore) for preferences storage
+- [TarsosDSP](https://0110.be/posts/TarsosDSP_on_Android_-_Audio_Processing_in_Java_on_Android) for BPM calculation
 
 ## Group
 - Marcello Grati
