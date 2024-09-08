@@ -23,8 +23,28 @@ To install and use BuddyBeat, follow these steps:
 3. Build and run the project on your Android device.
 
 ## Usage
-Launch the BuddyBeat app.
-...
+**1. Launch the BuddyBeat App**
+
+After launching the app, BuddyBeat will automatically scan and load all songs stored locally on your device. The app will calculate the BPM (Beats Per Minute) of each song in your library to ensure that music tempo can be synchronized with your pace.
+
+**2. Select Your Mode**
+
+Choose between two workout modes:
+  - Walking Mode
+  - Running Mode
+
+The UI color will change to visually indicate which mode you are in, helping you to easily distinguish between walking and running modes.
+
+**3. Choose a Playlist and a Song**
+
+Once the mode is selected, you can choose the playlist and the song you want to start with and the app operates in an automatic way:
+- Pace Detection: Using your phone's accelerometer, BuddyBeat continuously monitors your walking or running speed.
+- Real-time Song Speed Adjustment: Based on your detected pace, the app adjusts the speed of the current song to match your activity level.
+- Dynamic Playlist: The playlist is updated in real-time to ensure that future songs align with your current rhythm.
+
+**4. Switch to Manual Mode (Optional)**
+
+If you prefer a fixed tempo, you can switch to Manual Mode and choose a specific BPM for your workout. The app will maintain this tempo across all songs, regardless of your movement.
 
 ## DEMO
 
