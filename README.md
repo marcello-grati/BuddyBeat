@@ -1,5 +1,5 @@
 # BuddyBeat   <img width="30" src="images/icon.png" alt="BuddyBeat Icon">
-**_An app that moves with you_**
+**_Music that moves with you_**
 
 **BuddyBeat** is an Android mobile player application that adjusts the music playback speed in real time according to your walking or running pace, while also dynamically reordering your playlist to best match your workout rhythm.
 
