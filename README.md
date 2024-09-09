@@ -59,6 +59,7 @@ If you prefer a fixed tempo, you can switch to Manual Mode and choose a specific
 
 ## DEMO
 
+[BuddyBeat Demo](https://drive.google.com/file/d/1ew2s8qyJSlEIZ6_KyjIaAgWW6tbR2ach/view?usp=drive_link)
 
 ## Technologies Used
 - Android SDK for software development
