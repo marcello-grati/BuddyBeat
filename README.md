@@ -16,7 +16,14 @@ The app is structured similarly to a standard music player, allowing the user to
 With BuddyBeat, workouts become more immersive, as the music responds to your pace, helping you maintain a consistent rhythm and enjoy a more enjoyable fitness routine.
 
 ## Installation
-To install and use BuddyBeat, follow these steps:
+
+To install BuddyBeat, download and run the apk file from here:
+
+File|Description
+:---|:---
+[buddybeat.apk](https://github.com/marcello-grati/BuddyBeat/releases/download/v1.0.0/buddybeat.apk)|Android APK installation file
+
+Alternatively, follow these steps:
 1. Clone the repository:
 `git clone https://github.com/marcello-grati/BuddyBeat.git`
 2. Open the project in Android Studio.
